@@ -17,19 +17,29 @@
 # under the License.
 #
 
-{{- if .Values.extra.bastion }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bastion.component }}"
-  namespace: {{ .Values.namespace }}
-  labels:
-    app: {{ template "pulsar.name" . }}
-    chart: {{ template "pulsar.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    component: {{ .Values.bastion.component }}
-    cluster: {{ template "pulsar.fullname" . }}
-data:
-{{ toYaml .Values.bastion.configData | indent 2 }}
-{{- end }}
+metadataPrefix: "/configuration-store"
+
+## start
+components:
+  # zookeeper
+  zookeeper: true
+  # bookkeeper
+  bookkeeper: false
+  # bookkeeper - autorecovery
+  autorecovery: false
+  # broker
+  broker: false
+  # proxy
+  proxy: false
+  # toolset
+  toolset: false
+  # pulsar manager
+  pulsar_manager: false
+
+monitoring:
+  # monitoring - prometheus
+  prometheus: false
+  # monitoring - grafana
+  grafana: false
+  # monitoring - node_exporter
+  node_exporter: false
