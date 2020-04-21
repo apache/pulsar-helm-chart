@@ -23,7 +23,7 @@ on:
     branches:
       - '*'
     paths:
-      - 'pulsar/**'
+      - 'charts/pulsar/**'
 jobs:
   lint-test:
     runs-on: ubuntu-latest

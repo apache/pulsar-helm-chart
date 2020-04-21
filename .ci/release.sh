@@ -86,14 +86,12 @@ function release::publish_charts() {
     cp --force ${CHARTS_INDEX}/index.yaml index.yaml
     git add index.yaml
     git commit --message="Publish new charts to ${CHARTS_REPO}" --signoff
-    # git push --set-upstream origin gh-pages
+    git push --set-upstream origin gh-pages
 }
 
 # install cr
 # hack::ensure_cr
 docker pull quay.io/helmpack/chart-releaser:v${CR_VERSION}
-
-git::fetch_tags
 
 latest_tag=$(git::find_latest_tag)
 echo "Latest tag: $latest_tag"
@@ -106,16 +104,15 @@ echo "$head_rev HEAD"
 
 if [[ "$latest_tag_rev" == "$head_rev" ]]; then
     echo "Do nothing. Exiting ..."
-#    exit
+    exit
 fi
 
 release::ensure_dir ${CHARTS_PKGS}
 release::ensure_dir ${CHARTS_INDEX}
 
-release::package_chart pulsar
-#for chart in $(release::find_changed_charts charts); do
-#    release::package_chart ${chart}
-#done
+for chart in $(release::find_changed_charts charts); do
+    release::package_chart ${chart}
+done
 
 release::upload_packages
 release::update_chart_index

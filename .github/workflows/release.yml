@@ -19,12 +19,9 @@
 
 name: Post commit - Publish Pulsar Helm Chart
 on:
-  # push:
-  #   branches:
-  #     - master 
-  pull_request:
+  push:
     branches:
-      - '*'
+      - master 
 jobs:
   release:
     runs-on: ubuntu-latest
