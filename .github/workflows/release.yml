@@ -23,7 +23,7 @@ on:
     branches:
       - master 
 jobs:
-  lint-test:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,11 +31,7 @@ jobs:
 
       - name: Install chart
         env:
-          GITHUB_TOKEN: ${{ secrets.PULSARBOT_TOKEN }}
-          PULSARBOT_USER: ${{ secrets.PULSARBOT_USER }}
-          CHARTS_REPO: ${{ secrets.CHARTS_REPO }}
-          PUBLISH_CHARTS: ${{ secrets.PUBLISH_CHARTS }}
-          GITUSER: ${{ secrets.GITUSER }}
-          GITEMAIL: ${{ secrets.GITEMAIL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_CHARTS: true
         run: |
           .ci/release.sh
