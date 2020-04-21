@@ -106,7 +106,7 @@ echo "$head_rev HEAD"
 
 if [[ "$latest_tag_rev" == "$head_rev" ]]; then
     echo "Do nothing. Exiting ..."
-    exit
+#    exit
 fi
 
 release::ensure_dir ${CHARTS_PKGS}
