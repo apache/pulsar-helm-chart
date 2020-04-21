@@ -22,13 +22,10 @@ BINDIR=`dirname "$0"`
 CHARTS_HOME=`cd ${BINDIR}/..;pwd`
 CHARTS_PKGS=${CHARTS_HOME}/.chart-packages
 CHARTS_INDEX=${CHARTS_HOME}/.chart-index
-CHARTS_REPO=${CHARTS_REPO:-"https://charts.streamnative.io"}
-OWNER=${OWNER:-streamnative}
-REPO=${REPO:-charts}
-GITHUB_TOKEN=${GITHUB_TOKEN:-"UNSET"}
+CHARTS_REPO=${CHARTS_REPO:-"https://pulsar.apache.org/charts/"}
+OWNER=${OWNER:-apache}
+REPO=${REPO:-pulsar-helm-chart}
 PUBLISH_CHARTS=${PUBLISH_CHARTS:-"false"}
-GITUSER=${GITUSER:-"UNSET"}
-GITEMAIL=${GITEMAIL:-"UNSET"}
 
 # hack/common.sh need this variable to be set
 PULSAR_CHART_HOME=${CHARTS_HOME}
@@ -66,17 +63,30 @@ function release::update_chart_index() {
     ${CR} index -o ${OWNER} -r ${REPO} -t "${GITHUB_TOKEN}" -c ${CHARTS_REPO} --index-path /cr/.chart-index --package-path /cr/.chart-packages
 }
 
-function release::publish_charts() {
-    git config user.email "${GITEMAIL}"
-    git config user.name "${GITUSER}"
+function release::git_setup() {
+  cat <<- EOF > $HOME/.netrc
+		machine github.com
+		login $GITHUB_ACTOR
+		password $GITHUB_TOKEN
+		machine api.github.com
+		login $GITHUB_ACTOR
+		password $GITHUB_TOKEN
+EOF
+  chmod 600 $HOME/.netrc
 
+  git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+  git config --global user.name "$GITHUB_ACTOR"
+}
+
+function release::publish_charts() {
+    release::git_setup
+    git remote update
+    git fetch --all
     git checkout gh-pages
     cp --force ${CHARTS_INDEX}/index.yaml index.yaml
     git add index.yaml
     git commit --message="Publish new charts to ${CHARTS_REPO}" --signoff
-    git remote -v
-    git remote add sn https://${PULSARBOT_USER}:${GITHUB_TOKEN}@github.com/${OWNER}/${REPO} 
-    git push sn gh-pages 
+    git push --set-upstream origin gh-pages
 }
 
 # install cr

@@ -22,6 +22,8 @@ on:
   pull_request:
     branches:
       - '*'
+    paths:
+      - 'pulsar/**'
 jobs:
   lint-test:
     runs-on: ubuntu-latest
