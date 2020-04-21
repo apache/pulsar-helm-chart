@@ -35,6 +35,6 @@ jobs:
       - name: Install chart
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH_CHARTS: false
+          PUBLISH_CHARTS: true
         run: |
           .ci/release.sh

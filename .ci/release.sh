@@ -86,7 +86,7 @@ function release::publish_charts() {
     cp --force ${CHARTS_INDEX}/index.yaml index.yaml
     git add index.yaml
     git commit --message="Publish new charts to ${CHARTS_REPO}" --signoff
-    git push --set-upstream origin gh-pages
+    # git push --set-upstream origin gh-pages
 }
 
 # install cr
