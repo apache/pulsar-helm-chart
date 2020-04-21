@@ -112,9 +112,10 @@ fi
 release::ensure_dir ${CHARTS_PKGS}
 release::ensure_dir ${CHARTS_INDEX}
 
-for chart in $(release::find_changed_charts charts); do
-    release::package_chart ${chart}
-done
+release::package_chart pulsar
+#for chart in $(release::find_changed_charts charts); do
+#    release::package_chart ${chart}
+#done
 
 release::upload_packages
 release::update_chart_index
