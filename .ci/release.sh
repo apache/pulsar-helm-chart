@@ -94,7 +94,6 @@ function release::publish_charts() {
 docker pull quay.io/helmpack/chart-releaser:v${CR_VERSION}
 
 git::fetch_tags
-git fetch v2.5.0
 
 latest_tag=$(git::find_latest_tag)
 echo "Latest tag: $latest_tag"

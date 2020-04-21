@@ -21,6 +21,7 @@
 function git::fetch_tags() {
     echo "Fetching tags ..."
     git fetch --tags
+    git fetch origin 'refs/tags/*:refs/tags/*'
 }
 
 function git::find_latest_tag() {
