@@ -73,7 +73,7 @@ release=${release:-pulsar-dev}
 
 function delete_namespace() {
     if [[ "${delete_namespace}" == "true" ]]; then
-        kubectl create namespace ${namespace}
+        kubectl delete namespace ${namespace}
     fi
 }
 
