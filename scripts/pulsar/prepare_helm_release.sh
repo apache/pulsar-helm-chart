@@ -29,8 +29,6 @@ Options:
        -n,--namespace                   the k8s namespace to install the pulsar helm chart
        -k,--release                     the pulsar helm release name
        -s,--symmetric                   generate symmetric secret key. If not provided, an asymmetric pair of keys are generated.
-       --control-center-admin           the user name of control center administrator
-       --control-center-password        the password of control center administrator
        --pulsar-superusers              the superusers of pulsar cluster. a comma separated list of super users.
        -c,--create-namespace            flag to create k8s namespace.
 Usage:
@@ -61,16 +59,6 @@ case $key in
     shift
     shift
     ;;
-    --control-center-admin)
-    cc_admin="$2"
-    shift
-    shift
-    ;;
-    --control-center-password)
-    cc_password="$2"
-    shift
-    shift
-    ;;
     --pulsar-superusers)
     pulsar_superusers="$2"
     shift
@@ -94,15 +82,7 @@ done
 
 namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
-cc_admin=${cc_admin:-pulsar}
-cc_password=${cc_password:-pulsar}
 pulsar_superusers=${pulsar_superusers:-"proxy-admin,broker-admin,admin"}
-
-function generate_cc_admin_credentials() {
-    local secret_name="${release}-admin-secret"
-    kubectl create secret generic ${secret_name} -n ${namespace} \
-        --from-literal="USER=${cc_admin}" --from-literal="PASSWORD=${cc_password}"
-}
 
 function do_create_namespace() {
     if [[ "${create_namespace}" == "true" ]]; then
@@ -111,9 +91,6 @@ function do_create_namespace() {
 }
 
 do_create_namespace
-
-echo "create the credentials for the admin user of control center (grafana & pulsar-manager)"
-generate_cc_admin_credentials
 
 extra_opts=""
 if [[ "${symmetric}" == "true" ]]; then
@@ -147,9 +124,5 @@ for user in "${superusers[@]}"
 do
     echo "    - '${user}':secret('${release}-token-${user}')"
 done
-echo
-
-echo "The credentials of the administrator of Control Center (Grafana & Pulsar Manager)"
-echo "is stored at secret '${release}-admin-secret"
 echo
 

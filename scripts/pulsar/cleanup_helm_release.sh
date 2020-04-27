@@ -77,9 +77,6 @@ function delete_namespace() {
     fi
 }
 
-# delete the cc admin secrets
-kubectl delete -n ${namespace} secret ${release}-admin-secret
-
 # delete tokens
 kubectl get secrets -n ${namespace} | grep ${release}-token- | awk '{print $1}' | xargs kubectl delete secrets -n ${namespace}
 
