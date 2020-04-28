@@ -149,11 +149,11 @@ images:
     tag: 2.5.0
   prometheus:
     repository: prom/prometheus
-    tag: v1.6.3
+    tag: v2.17.2
     pullPolicy: IfNotPresent
   grafana:
     repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.4
+    tag: 0.0.6
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
