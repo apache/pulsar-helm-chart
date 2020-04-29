@@ -74,11 +74,11 @@ spec:
         - name: GRAFANA_ADMIN_USER
           valueFrom:
             secretKeyRef:
-              name: "{{ template "pulsar.fullname" . }}-admin-secret"
-              key: USER
+              name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-secret"
+              key: GRAFANA_ADMIN_USER
         - name: GRAFANA_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: "{{ template "pulsar.fullname" . }}-admin-secret"
-              key: PASSWORD
+              name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-secret"
+              key: GRAFANA_ADMIN_PASSWORD
 {{- end }}

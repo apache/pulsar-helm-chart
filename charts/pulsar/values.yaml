@@ -864,6 +864,9 @@ grafana:
     protocol: http
     path: /grafana
     port: 80
+  admin:
+    user: pulsar
+    password: pulsar
 
 ## Components Stack: pulsar_manager
 ## templates/pulsar-manager.yaml
