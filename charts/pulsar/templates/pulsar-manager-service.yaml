@@ -38,4 +38,8 @@ spec:
     app: {{ template "pulsar.name" . }}
     release: {{ .Release.Name }}
     component: {{ .Values.pulsar_manager.component }}
+{{- if .Values.pulsar_manager.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | indent 4 }}
+{{- end }}
 {{- end }}
