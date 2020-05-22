@@ -599,8 +599,8 @@ broker:
       -XX:+UseG1GC
       -XX:MaxGCPauseMillis=10
       "
-    managedLedgerDefaultEnsembleSize: "3"
-    managedLedgerDefaultWriteQuorum: "3"
+    managedLedgerDefaultEnsembleSize: "2"
+    managedLedgerDefaultWriteQuorum: "2"
     managedLedgerDefaultAckQuorum: "2"
   ## Broker service
   ## templates/broker-service.yaml
