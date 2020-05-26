@@ -113,8 +113,6 @@ extra:
   dashboard: false
   # pulsar manager
   pulsar_manager: false
-  # Bastion pod for administrative commands
-  bastion: false
   # Monitoring stack (prometheus and grafana)
   monitoring: false
   # Configure Kubernetes runtime for Functions
