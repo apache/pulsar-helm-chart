@@ -98,7 +98,9 @@ function pulsar::jwt::generate_symmetric_token() {
     trap "test -f $tokentmpfile && rm $tokentmpfile" RETURN
     kubectl get -n ${namespace} secrets ${secret_name} -o jsonpath="{.data['SECRETKEY']}" | base64 --decode > ${tmpfile}
     ${PULSARCTL_BIN} token create -a HS256 --secret-key-file ${tmpfile} --subject ${role} 2&> ${tokentmpfile}
-    kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${tokentmpfile}" --from-literal="TYPE=symmetric"
+    newtokentmpfile=$(mktemp)
+    tr -d '\n' < ${tokentmpfile} > ${newtokentmpfile}
+    kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=symmetric"
 }
 
 function pulsar::jwt::generate_asymmetric_token() {
@@ -111,7 +113,9 @@ function pulsar::jwt::generate_asymmetric_token() {
     trap "test -f $tokentmpfile && rm $tokentmpfile" RETURN
     kubectl get -n ${namespace} secrets ${secret_name} -o jsonpath="{.data['PRIVATEKEY']}" | base64 --decode > ${privatekeytmpfile}
     ${PULSARCTL_BIN} token create -a RS256 --private-key-file ${privatekeytmpfile} --subject ${role} 2&> ${tokentmpfile}
-    kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${tokentmpfile}" --from-literal="TYPE=asymmetric"
+    newtokentmpfile=$(mktemp)
+    tr -d '\n' < ${tokentmpfile} > ${newtokentmpfile}
+    kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=asymmetric"
 }
 
 if [[ "${symmetric}" == "true" ]]; then
