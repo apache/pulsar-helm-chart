@@ -17,15 +17,23 @@
 # under the License.
 #
 
-apiVersion: v1
-appVersion: "1.0"
-description: Apache Pulsar Helm chart for Kubernetes
-name: pulsar
-version: 2.6.0
-home: https://pulsar.apache.org
-sources:
-- https://github.com/apache/pulsar
-icon: http://pulsar.apache.org/img/pulsar.svg
-maintainers:
-- name: The Apache Pulsar Team
-  email: dev@pulsar.apache.org
+name: Precommit - Verify releasing Pulsar Helm Chart 
+on:
+  pull_request:
+    branches:
+      - '*'
+    paths:
+      - 'charts/pulsar/**'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install chart
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_CHARTS: false
+        run: |
+          .ci/release.sh
