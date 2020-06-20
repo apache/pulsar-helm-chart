@@ -123,35 +123,35 @@ extra:
 ## Control what images to use for each component
 images:
   zookeeper:
-    repository: streamnative/pulsar-all
-    tag: 2.6.0-sn-candidate-2
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   bookie:
-    repository: streamnative/pulsar-all
-    tag: 2.6.0-sn-candidate-2
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   autorecovery:
-    repository: streamnative/pulsar-all
-    tag: 2.6.0-sn-candidate-2
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   broker:
-    repository: streamnative/pulsar-all
-    tag: 2.6.0-sn-candidate-2
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   proxy:
-    repository: streamnative/pulsar-all
-    tag: 2.6.0-sn-candidate-2
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   functions:
-    repository: streamnative/pulsar-all
-    tag: 2.6.0-sn-candidate-2
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.0
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
     pullPolicy: IfNotPresent
   grafana:
     repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.6
+    tag: 0.0.8
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
