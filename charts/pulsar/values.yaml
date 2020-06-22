@@ -592,6 +592,10 @@ broker:
   pdb:
     usePolicy: true
     maxUnavailable: 1
+  ### Broker service account
+  ## templates/broker-service-account.yaml
+  service_account:
+    annotations: {}
 
 ## Pulsar: Functions Worker
 ## templates/function-worker-configmap.yaml
