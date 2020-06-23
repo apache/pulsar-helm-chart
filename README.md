@@ -8,3 +8,6 @@ a temp helm chart repo, until link/charts is automated
 `$ helm package stable/apache-pulsar -d docs/packages`
 - Update the index file</br>
 `$ helm repo index ./docs/packages  --merge=../index.yaml`
+
+### chart url
+https://github.optum.com/pages/link/pulsar-chart/
