@@ -40,18 +40,25 @@ data:
     keyStoreFile=/pulsar/${component}.keystore.jks
     trustStoreFile=/pulsar/${component}.truststore.jks
     
-    function ensureFileNotEmpty() {
+    function checkFile() {
         local file=$1
         local len=$(wc -c ${file} | awk '{print $1}')
         echo "processing ${file} : len = ${len}"
         if [ ! -f ${file} ]; then
             echo "${file} is not found"
-            exit -1
+            return -1
         fi
         if [ $len -le 0 ]; then
             echo "${file} is empty"
-            exit -1
+            return -1
         fi
+    }
+
+    function ensureFileNotEmpty() {
+        local file=$1
+        until checkFile ${file}; do
+            echo "file isn't initialized yet ... check in 3 seconds ..." && sleep 3;
+        done;
     }
     
     ensureFileNotEmpty ${crtFile}
