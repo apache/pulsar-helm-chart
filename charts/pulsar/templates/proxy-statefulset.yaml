@@ -143,7 +143,6 @@ spec:
         args:
         - >
           bin/apply-config-from-env.py conf/proxy.conf &&
-          bin/apply-config-from-env.py conf/pulsar_env.sh &&
           echo "OK" > status &&
           bin/pulsar proxy
         ports:
