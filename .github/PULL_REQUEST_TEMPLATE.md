@@ -1,13 +1,13 @@
-Fixes #<xyz>
-
-### Motivation
+### Overview
 
 *Explain here the context, and why you're making that change. What is the problem you're trying to solve.*
+
+Fixes #<xyz>
 
 ### Modifications
 
 *Describe the modifications you've done.*
 
-### Verifying this change
+### Checklist
 
-- [ ] Make sure that the change passes the CI checks.
+- [ ] Documentation updates
