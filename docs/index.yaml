@@ -8,6 +8,6 @@ entries:
       digest: 32df2c076c3587a8be4095f07df72cac4e4db5eb08546e0d112547c6a0e96a71
       name: pulsar
       urls:
-        - https://github.optum.com/pages/link/pulsar-chart/packages/pulsar-1.0.0.tgz
+        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-1.0.0.tgz
       version: 1.0.0
 generated: "2020-06-26T23:44:31.917154+05:30"
