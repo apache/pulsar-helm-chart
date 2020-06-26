@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  pulsar:
+    - apiVersion: v1
+      appVersion: "1.0"
+      created: "2020-06-23T15:23:23.403515+05:30"
+      description: Customized apache Pulsar Helm chart for Kubernetes
+      digest: 32df2c076c3587a8be4095f07df72cac4e4db5eb08546e0d112547c6a0e96a71
+      name: pulsar
+      urls:
+        - https://github.optum.com/pages/link/pulsar-chart/packages/pulsar-1.0.0.tgz
+      version: 1.0.0
+generated: "2020-06-23T15:23:23.399015+05:30"

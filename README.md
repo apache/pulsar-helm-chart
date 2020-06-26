@@ -1,25 +1,24 @@
-<!--
+# Pulsar Helm Chart
 
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
-
--->
-# Official Apache Pulsar Helm Chart
-
-This is the officially supported Helm Chart for installing Apache Pulsar on Kubernetes.
+Customized version of [official apache helm chart](https://github.com/apache/pulsar-helm-chart).
 
 Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/en/deploy-kubernetes/) for more details.
+
+### Steps to package and publish the chart
+
+- Make sure chart version is updated after any changes in chart
+- Package apache pulsar chart</br>
+`$ helm package stable/apache-pulsar -d docs/packages`
+- Update the index file</br>
+`$ helm repo index ./docs/packages  --merge=../index.yaml`
+
+### Chart url
+https://github.optum.com/pages/link/pulsar-chart/
+
+### Steps to update the chart from apache repo
+
+- Clone this repo
+- Add apache pulsar chart remote
+- Set upstream of your branch to pulsar remote
+- Pull and resolve conflicts
+- Switch upstream of your branch to link remote
