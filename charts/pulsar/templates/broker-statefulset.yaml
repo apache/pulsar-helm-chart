@@ -164,7 +164,6 @@ spec:
         args:
         - >
           bin/apply-config-from-env.py conf/broker.conf;
-          bin/apply-config-from-env.py conf/pulsar_env.sh;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > status;
           {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 10 }}

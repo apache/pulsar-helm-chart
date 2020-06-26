@@ -107,7 +107,6 @@ spec:
         args:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
-          bin/apply-config-from-env.py conf/bkenv.sh;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
           bin/bookkeeper autorecovery
         ports:
