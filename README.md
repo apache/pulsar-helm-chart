@@ -18,7 +18,8 @@ https://github.optum.com/pages/link/pulsar-chart/
 ### Steps to update the chart from apache repo
 
 - Clone this repo
-- Add apache pulsar chart remote
-- Set upstream of your branch to pulsar remote
-- Pull and resolve conflicts
-- Switch upstream of your branch to link remote
+- Add remote apache pulsar chart 
+- Set upstream of your branch to apache remote
+- Pull and merge
+- Switch back upstream to link remote
+- Push
