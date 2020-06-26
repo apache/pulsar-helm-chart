@@ -8,9 +8,9 @@ Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/en/deploy-ku
 
 - Make sure chart version is updated after any changes in chart
 - Package apache pulsar chart</br>
-`$ helm package stable/apache-pulsar -d docs/packages`
-- Update the index file</br>
-`$ helm repo index ./docs/packages  --merge=../index.yaml`
+`$ helm package charts/pulsar -d docs/packages`
+- Generate index file</br>
+`$ helm repo index ./docs/packages`
 
 ### Chart url
 https://github.optum.com/pages/link/pulsar-chart/

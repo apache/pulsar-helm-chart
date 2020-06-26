@@ -24,7 +24,7 @@
 
 ## Namespace to deploy pulsar
 namespace: pulsar
-namespaceCreate: false
+namespaceCreate: true
 
 ###
 ### Global Settings
