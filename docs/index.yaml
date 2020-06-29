@@ -17,6 +17,6 @@ entries:
       digest: 50430b72b9c95753a9abd791359a7b524a0c5120270a4ea68dcd3b76751c4da1
       name: pulsar
       urls:
-        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-2.5.2.1.tgz
-      version: 2.5.2.1
+        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-2.5.2.tgz
+      version: 2.5.2
 generated: "2020-06-29T14:21:23.063738+05:30"
