@@ -3,15 +3,6 @@ entries:
   pulsar:
     - apiVersion: v1
       appVersion: "1.0"
-      created: "2020-06-29T12:27:10.708875+05:30"
-      description: Apache Pulsar Helm chart for Kubernetes
-      digest: b00cef6dfc95281a631fae5c1076127042164fc0881be1200a47fd22cc11e86a
-      name: pulsar
-      urls:
-        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-2.5.2.tgz
-      version: 2.5.2
-    - apiVersion: v1
-      appVersion: "1.0"
       created: "2020-06-26T23:44:31.920605+05:30"
       description: Customized apache Pulsar Helm chart for Kubernetes
       digest: 32df2c076c3587a8be4095f07df72cac4e4db5eb08546e0d112547c6a0e96a71
@@ -19,4 +10,13 @@ entries:
       urls:
         - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-1.0.0.tgz
       version: 1.0.0
-generated: "2020-06-29T12:27:10.702744+05:30"
+    - apiVersion: v1
+      appVersion: 2.5.2
+      created: "2020-06-29T14:21:23.069739+05:30"
+      description: Apache Pulsar Helm chart for Kubernetes
+      digest: 50430b72b9c95753a9abd791359a7b524a0c5120270a4ea68dcd3b76751c4da1
+      name: pulsar
+      urls:
+        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-2.5.2.1.tgz
+      version: 2.5.2.1
+generated: "2020-06-29T14:21:23.063738+05:30"
