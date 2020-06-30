@@ -348,7 +348,7 @@ bookkeeper:
     image:
       # the image used for running `bookkeeper-cluster-initialize` job
       repository: apachepulsar/pulsar-all
-      tag: 2.5.0
+      tag: 2.6.0
       pullPolicy: IfNotPresent
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
@@ -509,7 +509,7 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.5.0
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
