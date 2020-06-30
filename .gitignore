@@ -1,0 +1,8 @@
+.terraform/
+env.sh
+config.dev-jake-base.tfvars
+config.dev-jake-edge.tfvars
+.DS_Store
+.idea
+*tfplan
+.log

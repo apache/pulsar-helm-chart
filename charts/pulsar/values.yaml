@@ -24,7 +24,8 @@
 
 ## Namespace to deploy pulsar
 namespace: pulsar
-namespaceCreate: true
+## Link - namespce is already created by TF helm_release resource
+namespaceCreate: false
 
 ###
 ### Global Settings
