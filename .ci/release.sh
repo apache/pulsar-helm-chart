@@ -64,29 +64,25 @@ function release::update_chart_index() {
 }
 
 function release::git_setup() {
-  cat <<- EOF > $HOME/.netrc
-		machine github.com
-		login $GITHUB_ACTOR
-		password $GITHUB_TOKEN
-		machine api.github.com
-		login $GITHUB_ACTOR
-		password $GITHUB_TOKEN
-EOF
-  chmod 600 $HOME/.netrc
-
-  git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
-  git config --global user.name "$GITHUB_ACTOR"
+  git config --global user.email "dev@pulsar.apache.org"
+  git config --global user.name "Apache Pulsar Team"
 }
 
 function release::publish_charts() {
     release::git_setup
-    git remote update
-    git fetch --all
-    git checkout gh-pages
-    cp --force ${CHARTS_INDEX}/index.yaml index.yaml
-    git add index.yaml
+    git clone https://${GITHUB_TOKEN}@github.com/apache/pulsar
+    cd pulsar
+    git checkout asf-site
+    mkdir -p content/charts
+    cp --force ${CHARTS_INDEX}/index.yaml content/charts/index.yaml
+    git add content/charts/index.yaml
+    ls content/charts
     git commit --message="Publish new charts to ${CHARTS_REPO}" --signoff
-    git push --set-upstream origin gh-pages
+    if [[ "x${PUBLISH_CHARTS}" == "xtrue" ]]; then
+      git push --set-upstream origin asf-site
+    else
+      git push --dry-run --set-upstream origin asf-site
+    fi
 }
 
 # install cr
@@ -116,7 +112,4 @@ done
 
 release::upload_packages
 release::update_chart_index
-
-if [[ "x${PUBLISH_CHARTS}" == "xtrue" ]]; then
-    release::publish_charts
-fi
+release::publish_charts

@@ -28,10 +28,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PULSARBOT_TOKEN }}
 
       - name: Install chart
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PULSARBOT_TOKEN }}
           PUBLISH_CHARTS: true
         run: |
           .ci/release.sh
