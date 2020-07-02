@@ -804,7 +804,7 @@ grafana:
   annotations: {}
   tolerations: []
   gracePeriod: 30
-  port: 3000
+  port: 80
   resources:
     requests:
       memory: 250Mi
@@ -814,6 +814,7 @@ grafana:
   ##
   service:
     type: LoadBalancer
+    targetPort: 3000
     annotations: {}
   plugins: []
   ## Grafana ingress
@@ -849,7 +850,7 @@ grafana:
 ##
 pulsar_manager:
   component: pulsar-manager
-  port: 9527
+  port: 80
   replicaCount: 1
   # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
@@ -874,6 +875,7 @@ pulsar_manager:
   ##
   service:
     type: LoadBalancer
+    targetPort: 9527
     annotations: {}
   admin:
     user: pulsar

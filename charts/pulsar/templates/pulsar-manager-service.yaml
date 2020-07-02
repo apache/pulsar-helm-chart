@@ -33,6 +33,7 @@ spec:
   ports:
     - name: server
       port: {{ .Values.pulsar_manager.port }}
+      targetPort: {{ .Values.pulsar_manager.service.targetPort }}
       protocol: TCP
   selector:
     app: {{ template "pulsar.name" . }}
