@@ -23,3 +23,16 @@
 This is the officially supported Helm Chart for installing Apache Pulsar on Kubernetes.
 
 Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/en/deploy-kubernetes/) for more details.
+
+## Release Process
+
+1. Bump the version in [charts/pulsar/Chart.yaml](https://github.com/apache/pulsar-helm-chart/blob/master/charts/pulsar/Chart.yaml#L24).
+
+2. Send a pull request for reviews.
+
+3. After the pull request is approved, merge it. The release workflow will be triggered automatically.
+   - It creates a tag named `pulsar-<version>`.
+   - Published the packaged helm chart to Github releases.
+   - Update the `charts/index.yaml` in Pulsar website.
+
+4. Trigger the Pulsar website build to make the release available under https://pulsar.apache.org/charts.
