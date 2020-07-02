@@ -24,10 +24,10 @@ affinity:
 images:
   broker:
     repository: apachepulsar/pulsar-all
-    tag: 2.5.0
+    tag: 2.6.0
   functions:
     repository: apachepulsar/pulsar-all
-    tag: 2.5.0
+    tag: 2.6.0
 
 # disable auto recovery
 components:
