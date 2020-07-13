@@ -345,11 +345,6 @@ bookkeeper:
   ## BookKeeper Cluster Initialize
   ## templates/bookkeeper-cluster-initialize.yaml
   metadata:
-    image:
-      # the image used for running `bookkeeper-cluster-initialize` job
-      repository: apachepulsar/pulsar-all
-      tag: 2.6.0
-      pullPolicy: IfNotPresent
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
