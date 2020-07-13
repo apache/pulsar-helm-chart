@@ -510,6 +510,11 @@ pulsar_metadata:
   # configurationStore:
   configurationStoreMetadataPrefix: ""
 
+  ## optional, you can provide your own zookeeper metadata store for other components
+  # to use this, you should explicit set components.zookeeper to false
+  #
+  # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
+
 ## Pulsar: Broker cluster
 ## templates/broker-statefulset.yaml
 ##
