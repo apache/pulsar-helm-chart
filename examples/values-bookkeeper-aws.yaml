@@ -22,7 +22,7 @@ metadataPrefix: "/configuration-store"
 ## start
 components:
   # zookeeper
-  zookeeper: false
+  zookeeper: true
   # bookkeeper
   bookkeeper: true
   # bookkeeper - autorecovery
