@@ -61,7 +61,7 @@ spec:
       {{- end }}
         ports:
         - name: server
-          containerPort: {{ .Values.grafana.port }}
+          containerPort: {{ .Values.grafana.service.port }}
         env:
         # for supporting apachepulsar/pulsar-grafana
         - name: PROMETHEUS_URL
