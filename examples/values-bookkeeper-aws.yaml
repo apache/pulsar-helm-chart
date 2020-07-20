@@ -17,8 +17,6 @@
 # under the License.
 #
 
-metadataPrefix: "/configuration-store"
-
 ## start
 components:
   # zookeeper
