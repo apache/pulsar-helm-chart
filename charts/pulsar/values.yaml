@@ -668,6 +668,21 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
+  ## Proxy ingress
+  ## templates/proxy-ingress.yaml
+  ##
+  ingress:
+    enabled: false
+    annotations: {}
+    tls:
+      enabled: false
+
+      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
+      secretName: ""
+
+    ## Required if ingress is enabled
+    hostname: ""
+    path: "/"
   ## Proxy PodDisruptionBudget
   ## templates/proxy-pdb.yaml
   ##
@@ -876,6 +891,22 @@ pulsar_manager:
     port: 9527
     targetPort: 9527
     annotations: {}
+  ## Pulsar manager ingress
+  ## templates/pulsar-manager-ingress.yaml
+  ##
+  ingress:
+    enabled: false
+    annotations: {}
+    tls:
+      enabled: false
+
+      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
+      secretName: ""
+
+    ## Required if ingress is enabled
+    hostname: ""
+    path: "/"
+
   admin:
     user: pulsar
     password: pulsar
