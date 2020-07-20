@@ -254,6 +254,7 @@ zookeeper:
     type: RollingUpdate
   podManagementPolicy: OrderedReady
   ports:
+    http: 8000
     client: 2181
     clientTls: 2281
     follower: 2888
