@@ -26,7 +26,9 @@ components:
   # bookkeeper - autorecovery
   autorecovery: true
   # broker
-  broker: false
+  broker: true
+  # functions
+  functions: true
   # proxy
   proxy: false
   # toolset
@@ -41,6 +43,8 @@ monitoring:
   grafana: false
   # monitoring - node_exporter
   node_exporter: false
+  # alerting - alert-manager
+  alert_manager: false
 
 zookeeper:
   volumes:
