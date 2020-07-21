@@ -17,7 +17,6 @@
 # under the License.
 #
 
-
 ###
 ### K8S Settings
 ###
@@ -260,7 +259,7 @@ zookeeper:
     follower: 2888
     leaderElection: 3888
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -303,9 +302,9 @@ zookeeper:
       ## If left undefined no storage class will be defined along with PVC
       ##
       # storageClass:
-        # type: pd-ssd
-        # fsType: xfs
-        # provisioner: kubernetes.io/gce-pd
+      # type: pd-ssd
+      # fsType: xfs
+      # provisioner: kubernetes.io/gce-pd
   ## Zookeeper configmap
   ## templates/zookeeper-configmap.yaml
   ##
@@ -346,17 +345,12 @@ bookkeeper:
   ## BookKeeper Cluster Initialize
   ## templates/bookkeeper-cluster-initialize.yaml
   metadata:
-    image:
-      # the image used for running `bookkeeper-cluster-initialize` job
-      repository: apachepulsar/pulsar-all
-      tag: 2.5.0
-      pullPolicy: IfNotPresent
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
       # requests:
-        # memory: 4Gi
-        # cpu: 2
+      # memory: 4Gi
+      # cpu: 2
   replicaCount: 4
   updateStrategy:
     type: RollingUpdate
@@ -365,7 +359,7 @@ bookkeeper:
     http: 8000
     bookie: 3181
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -406,9 +400,9 @@ bookkeeper:
       ## If left undefined no storage class will be defined along with PVC
       ##
       # storageClass:
-        # type: pd-ssd
-        # fsType: xfs
-        # provisioner: kubernetes.io/gce-pd
+      # type: pd-ssd
+      # fsType: xfs
+      # provisioner: kubernetes.io/gce-pd
     ledgers:
       name: ledgers
       size: 50Gi
@@ -421,9 +415,9 @@ bookkeeper:
       ## If left undefined no storage class will be defined along with PVC
       ##
       # storageClass:
-        # type: pd-ssd
-        # fsType: xfs
-        # provisioner: kubernetes.io/gce-pd
+      # type: pd-ssd
+      # fsType: xfs
+      # provisioner: kubernetes.io/gce-pd
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
   ##
@@ -482,7 +476,7 @@ autorecovery:
   ports:
     http: 8000
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   affinity:
     anti_affinity: true
   annotations: {}
@@ -510,11 +504,16 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.5.0
+    tag: 2.6.0
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
   configurationStoreMetadataPrefix: ""
+
+  ## optional, you can provide your own zookeeper metadata store for other components
+  # to use this, you should explicit set components.zookeeper to false
+  #
+  # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
 
 ## Pulsar: Broker cluster
 ## templates/broker-statefulset.yaml
@@ -530,7 +529,7 @@ broker:
     pulsar: 6650
     pulsarssl: 6651
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -611,7 +610,7 @@ proxy:
   component: proxy
   replicaCount: 3
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -669,6 +668,21 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
+  ## Proxy ingress
+  ## templates/proxy-ingress.yaml
+  ##
+  ingress:
+    enabled: false
+    annotations: {}
+    tls:
+      enabled: false
+
+      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
+      secretName: ""
+
+    ## Required if ingress is enabled
+    hostname: ""
+    path: "/"
   ## Proxy PodDisruptionBudget
   ## templates/proxy-pdb.yaml
   ##
@@ -684,7 +698,7 @@ dashboard:
   component: dashboard
   replicaCount: 1
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
   gracePeriod: 0
@@ -702,8 +716,8 @@ dashboard:
   service:
     annotations: {}
     ports:
-    - name: server
-      port: 80
+      - name: server
+        port: 80
   ingress:
     enabled: false
     annotations: {}
@@ -718,7 +732,6 @@ dashboard:
     path: "/"
     port: 80
 
-
 ## Pulsar ToolSet
 ## templates/toolset-deployment.yaml
 ##
@@ -727,7 +740,7 @@ toolset:
   useProxy: true
   replicaCount: 1
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -760,7 +773,7 @@ prometheus:
     enabled: true
   replicaCount: 1
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
   gracePeriod: 5
@@ -784,9 +797,9 @@ prometheus:
       ## If left undefined no storage class will be defined along with PVC
       ##
       # storageClass:
-        # type: pd-standard
-        # fsType: xfs
-        # provisioner: kubernetes.io/gce-pd
+      # type: pd-standard
+      # fsType: xfs
+      # provisioner: kubernetes.io/gce-pd
   ## Prometheus service
   ## templates/prometheus-service.yaml
   ##
@@ -800,7 +813,7 @@ grafana:
   component: grafana
   replicaCount: 1
   # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -877,6 +890,22 @@ pulsar_manager:
     type: LoadBalancer
     targetPort: 9527
     annotations: {}
+  ## Pulsar manager ingress
+  ## templates/pulsar-manager-ingress.yaml
+  ##
+  ingress:
+    enabled: false
+    annotations: {}
+    tls:
+      enabled: false
+
+      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
+      secretName: ""
+
+    ## Required if ingress is enabled
+    hostname: ""
+    path: "/"
+
   admin:
     user: pulsar
     password: pulsar

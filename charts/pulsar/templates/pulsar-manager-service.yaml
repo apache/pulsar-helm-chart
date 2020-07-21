@@ -32,7 +32,7 @@ spec:
   type: {{ .Values.pulsar_manager.service.type }}
   ports:
     - name: server
-      port: {{ .Values.pulsar_manager.port }}
+      port: {{ .Values.pulsar_manager.service.port }}
       targetPort: {{ .Values.pulsar_manager.service.targetPort }}
       protocol: TCP
   selector:

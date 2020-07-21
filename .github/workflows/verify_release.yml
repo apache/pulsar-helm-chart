@@ -17,38 +17,23 @@
 # under the License.
 #
 
-# disabled AntiAffinity
-affinity:
-  anti_affinity: false
+name: Precommit - Verify releasing Pulsar Helm Chart 
+on:
+  pull_request:
+    branches:
+      - '*'
+    paths:
+      - 'charts/pulsar/**'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-images:
-  broker:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  functions:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-
-# disable auto recovery
-components:
-  autorecovery: false
-
-zookeeper:
-  replicaCount: 1
-
-bookkeeper:
-  replicaCount: 1
-
-broker:
-  replicaCount: 1
-  configData:
-    ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
-    ## without persistence
-    autoSkipNonRecoverableData: "true"
-    # storage settings
-    managedLedgerDefaultEnsembleSize: "1"
-    managedLedgerDefaultWriteQuorum: "1"
-    managedLedgerDefaultAckQuorum: "1"
-
-proxy:
-  replicaCount: 1
+      - name: Install chart
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_CHARTS: false
+        run: |
+          .ci/release.sh
