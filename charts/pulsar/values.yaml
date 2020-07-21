@@ -828,6 +828,7 @@ grafana:
   service:
     type: LoadBalancer
     targetPort: 3000
+    port: 3000
     annotations: {}
   plugins: []
   ## Grafana ingress
@@ -889,6 +890,7 @@ pulsar_manager:
   service:
     type: LoadBalancer
     targetPort: 9527
+    port: 9527
     annotations: {}
   ## Pulsar manager ingress
   ## templates/pulsar-manager-ingress.yaml
