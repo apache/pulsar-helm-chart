@@ -10,7 +10,7 @@ Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/en/deploy-ku
 - Package apache pulsar chart</br>
   `$ helm package charts/pulsar -d docs/packages`
 - Generate index file</br>
-  `$ helm repo index ./docs/packages`
+  `$ helm repo index ./docs`
 
 ### Chart url
 
