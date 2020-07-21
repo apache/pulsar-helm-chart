@@ -30,7 +30,7 @@ components:
   # functions
   functions: true
   # proxy
-  proxy: false
+  proxy: true
   # toolset
   toolset: false
   # pulsar manager
