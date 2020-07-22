@@ -1,0 +1,22 @@
+{{- if $.Values.proxy.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ template "pulsar.name" . }}-proxy
+  labels:
+    app: {{ template "pulsar.name" . }}
+    chart: {{ template "pulsar.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  jobLabel: proxy
+  podMetricsEndpoints:
+    - port: http
+      path: /metrics
+      scheme: http
+      interval: {{ $.Values.proxy.podMonitor.interval }}
+      scrapeTimeout: {{ $.Values.proxy.podMonitor.scrapeTimeout }}
+  selector:
+    matchLabels:
+      component: proxy
+{{- end }}

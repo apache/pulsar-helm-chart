@@ -1,0 +1,22 @@
+{{- if $.Values.broker.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ template "pulsar.name" . }}-broker
+  labels:
+    app: {{ template "pulsar.name" . }}
+    chart: {{ template "pulsar.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  jobLabel: broker
+  podMetricsEndpoints:
+    - port: http
+      path: /metrics
+      scheme: http
+      interval: {{ $.Values.broker.podMonitor.interval }}
+      scrapeTimeout: {{ $.Values.broker.podMonitor.scrapeTimeout }}
+  selector:
+    matchLabels:
+      component: broker
+{{- end }}

@@ -1,0 +1,22 @@
+{{- if $.Values.bookkeeper.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ template "pulsar.name" . }}-bookie
+  labels:
+    app: {{ template "pulsar.name" . }}
+    chart: {{ template "pulsar.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  jobLabel: bookie
+  podMetricsEndpoints:
+    - port: http
+      path: /metrics
+      scheme: http
+      interval: {{ $.Values.bookkeeper.podMonitor.interval }}
+      scrapeTimeout: {{ $.Values.bookkeeper.podMonitor.scrapeTimeout }}
+  selector:
+    matchLabels:
+      component: bookie
+{{- end }}
