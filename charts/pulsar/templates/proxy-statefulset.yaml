@@ -86,9 +86,15 @@ spec:
         command: ["sh", "-c"]
         args:
           - >-
+            {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
+            until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
+              echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
+            done;
+            {{ else }}
             until bin/pulsar zookeeper-shell -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.fullname" . }}; do
               sleep 3;
             done;
+            {{- end}}
       # This init container will wait for at least one broker to be ready before
       # deploying the proxy
       - name: wait-broker-ready

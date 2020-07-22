@@ -21,10 +21,10 @@ apiVersion: v1
 appVersion: "2.6.0"
 description: Apache Pulsar Helm chart for Kubernetes
 name: pulsar
-version: 1.0.2
+version: 1.1.0
 home: https://github.optum.com/link/apache-pulsar-chart
 sources:
-- https://github.optum.com/link/apache-pulsar-chart
+  - https://github.optum.com/link/apache-pulsar-chart
 maintainers:
-- name: Link Storm
-  email: AppsDashTeam_DL@ds.uhc.com
+  - name: Link Storm
+    email: AppsDashTeam_DL@ds.uhc.com

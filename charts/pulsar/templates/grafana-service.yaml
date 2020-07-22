@@ -34,7 +34,7 @@ spec:
   type: {{ .Values.grafana.service.type }}
   ports:
     - name: server
-      port: {{ .Values.grafana.port }}
+      port: {{ .Values.grafana.service.port }}
       targetPort: {{ .Values.grafana.service.targetPort }}
       protocol: TCP
   selector:

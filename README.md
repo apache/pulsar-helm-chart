@@ -8,17 +8,18 @@ Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/en/deploy-ku
 
 - Make sure chart version is updated after any changes in chart
 - Package apache pulsar chart</br>
-`$ helm package charts/pulsar -d docs/packages`
+  `$ helm package charts/pulsar -d docs/packages`
 - Generate index file</br>
-`$ helm repo index ./docs/packages`
+  `$ helm repo index ./docs`
 
 ### Chart url
+
 https://github.optum.com/pages/link/pulsar-chart/
 
 ### Steps to update the chart from apache repo
 
 - Clone this repo
-- Add remote apache pulsar chart 
+- Add remote apache pulsar chart
 - Set upstream of your branch to apache remote
 - Pull and merge
 - Switch back upstream to link remote
