@@ -763,7 +763,6 @@ toolset:
 
 ## Monitoring Stack: Prometheus
 ## templates/prometheus-deployment.yaml
-##
 
 ## Deprecated in favor of using `prometheus.rbac.enabled`
 prometheus_rbac: false
