@@ -1,34 +1,49 @@
 apiVersion: v1
 entries:
   pulsar:
-    - apiVersion: v1
-      appVersion: 2.6.0
-      created: "2020-07-02T20:02:22.700442+05:30"
-      description: Apache Pulsar Helm chart for Kubernetes
-      digest: 77047a012813568ec02e00f61cd97b9bde004238ac18c20998a3cba40b122c0a
-      home: https://github.optum.com/link/apache-pulsar-chart
-      maintainers:
-        - email: AppsDashTeam_DL@ds.uhc.com
-          name: Link Storm
-      name: pulsar
-      sources:
-        - https://github.optum.com/link/apache-pulsar-chart
-      urls:
-        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-1.0.1.tgz
-      version: 1.0.1
-    - apiVersion: v1
-      appVersion: 2.6.0
-      created: "2020-07-02T20:02:22.692651+05:30"
-      description: Apache Pulsar Helm chart for Kubernetes
-      digest: b2822a0e453e5392e54e625c04b4253adcbcd9816e4e06609fa64199170f0a13
-      home: https://github.optum.com/link/apache-pulsar-chart
-      maintainers:
-        - email: AppsDashTeam_DL@ds.uhc.com
-          name: Link Storm
-      name: pulsar
-      sources:
-        - https://github.optum.com/link/apache-pulsar-chart
-      urls:
-        - https://github.optum.com/pages/link/apache-pulsar-chart/packages/pulsar-1.0.0.tgz
-      version: 1.0.0
-generated: "2020-07-02T20:02:22.687982+05:30"
+  - apiVersion: v1
+    appVersion: 2.6.0
+    created: "2020-07-21T17:55:33.405476-05:00"
+    description: Apache Pulsar Helm chart for Kubernetes
+    digest: a191278119c47acc46d1249183e5489ecec7d81d8574ec211d0261bcc3f66226
+    home: https://github.optum.com/link/apache-pulsar-chart
+    maintainers:
+    - email: AppsDashTeam_DL@ds.uhc.com
+      name: Link Storm
+    name: pulsar
+    sources:
+    - https://github.optum.com/link/apache-pulsar-chart
+    urls:
+    - packages/pulsar-1.1.0.tgz
+    version: 1.1.0
+  - apiVersion: v1
+    appVersion: 2.6.0
+    created: "2020-07-21T17:55:33.40148-05:00"
+    description: Apache Pulsar Helm chart for Kubernetes
+    digest: 77047a012813568ec02e00f61cd97b9bde004238ac18c20998a3cba40b122c0a
+    home: https://github.optum.com/link/apache-pulsar-chart
+    maintainers:
+    - email: AppsDashTeam_DL@ds.uhc.com
+      name: Link Storm
+    name: pulsar
+    sources:
+    - https://github.optum.com/link/apache-pulsar-chart
+    urls:
+    - packages/pulsar-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v1
+    appVersion: 2.6.0
+    created: "2020-07-21T17:55:33.395091-05:00"
+    description: Apache Pulsar Helm chart for Kubernetes
+    digest: b2822a0e453e5392e54e625c04b4253adcbcd9816e4e06609fa64199170f0a13
+    home: https://github.optum.com/link/apache-pulsar-chart
+    maintainers:
+    - email: AppsDashTeam_DL@ds.uhc.com
+      name: Link Storm
+    name: pulsar
+    sources:
+    - https://github.optum.com/link/apache-pulsar-chart
+    urls:
+    - packages/pulsar-1.0.0.tgz
+    version: 1.0.0
+generated: "2020-07-21T17:55:33.390275-05:00"
