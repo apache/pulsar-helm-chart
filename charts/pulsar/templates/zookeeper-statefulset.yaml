@@ -90,6 +90,9 @@ spec:
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
           bin/pulsar zookeeper;
         ports:
+        # prometheus needs to access /metrics endpoint
+        - name: http
+          containerPort: {{ .Values.zookeeper.ports.http }}
         - name: client
           containerPort: {{ .Values.zookeeper.ports.client }}
         - name: follower

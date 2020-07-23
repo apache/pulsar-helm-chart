@@ -253,7 +253,14 @@ zookeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: OrderedReady
+  # If using Prometheus-Operator enable this PodMonitor to discover zookeeper scrape targets
+  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  podMonitor:
+    enabled: false
+    interval: 10s
+    scrapeTimeout: 10s
   ports:
+    http: 8000
     client: 2181
     clientTls: 2281
     follower: 2888
@@ -355,6 +362,12 @@ bookkeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
+  # If using Prometheus-Operator enable this PodMonitor to discover bookie scrape targets
+  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  podMonitor:
+    enabled: false
+    interval: 10s
+    scrapeTimeout: 10s
   ports:
     http: 8000
     bookie: 3181
@@ -523,6 +536,12 @@ broker:
   # so the metrics are correctly rendered in grafana dashboard
   component: broker
   replicaCount: 3
+  # If using Prometheus-Operator enable this PodMonitor to discover broker scrape targets
+  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  podMonitor:
+    enabled: false
+    interval: 10s
+    scrapeTimeout: 10s
   ports:
     http: 8080
     https: 8443
@@ -609,6 +628,12 @@ proxy:
   # so the metrics are correctly rendered in grafana dashboard
   component: proxy
   replicaCount: 3
+  # If using Prometheus-Operator enable this PodMonitor to discover proxy scrape targets
+  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  podMonitor:
+    enabled: false
+    interval: 10s
+    scrapeTimeout: 10s
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
