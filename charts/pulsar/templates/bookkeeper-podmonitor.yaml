@@ -17,26 +17,26 @@
 # under the License.
 #
 
-# deploy zookeeper PodMonitor only when `$.Values.zookeeper.podMonitor.enabled` is true
-{{- if $.Values.zookeeper.podMonitor.enabled }}
+# deploy bookkeeper PodMonitor only when `$.Values.bookkeeper.podMonitor.enabled` is true
+{{- if $.Values.bookkeeper.podMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: {{ template "pulsar.name" . }}-zookeeper
+  name: {{ template "pulsar.name" . }}-bookie
   labels:
     app: {{ template "pulsar.name" . }}
     chart: {{ template "pulsar.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  jobLabel: zookeeper
+  jobLabel: bookie
   podMetricsEndpoints:
     - port: http
       path: /metrics
       scheme: http
-      interval: {{ $.Values.zookeeper.podMonitor.interval }}
-      scrapeTimeout: {{ $.Values.zookeeper.podMonitor.scrapeTimeout }}
+      interval: {{ $.Values.bookkeeper.podMonitor.interval }}
+      scrapeTimeout: {{ $.Values.bookkeeper.podMonitor.scrapeTimeout }}
   selector:
     matchLabels:
-      component: zookeeper
+      component: bookie
 {{- end }}
