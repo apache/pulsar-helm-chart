@@ -151,7 +151,7 @@ images:
     pullPolicy: IfNotPresent
   grafana:
     repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.9
+    tag: 0.0.10
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
@@ -856,16 +856,16 @@ grafana:
     targetPort: 3000
     annotations: {}
   plugins: []
+  ## Grafana configMap
+  ## templates/grafana-configmap.yaml
+  ##
+  configData: {}
   ## Grafana ingress
   ## templates/grafana-ingress.yaml
   ##
   ingress:
     enabled: false
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      # nginx.ingress.kubernetes.io/rewrite-target: /$1
-      # ingress.kubernetes.io/force-ssl-redirect: "true"
-      ingress.kubernetes.io/rewrite-target: /
+    annotations: {}
     labels: {}
 
     tls: []
