@@ -61,7 +61,7 @@ data:
   {{- end }}
   # Authentication Settings
   {{- if .Values.auth.authentication.enabled }}
-  {{- if eq .Values.auth.authentication.provider "jwt" }}
+  {{- if .Values.auth.authentication.providers.jwt }}
   authParams: "file:///pulsar/tokens/client/token"
   authPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
   {{- end }} 

@@ -73,7 +73,7 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
         volumeMounts:
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.providers.jwt }}
         - mountPath: "/pulsar/tokens"
           name: client-token
           readOnly: true
@@ -87,7 +87,7 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- if .Values.auth.authentication.enabled }}
-      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      {{- if .Values.auth.authentication.providers.jwt }}
       - name: client-token
         secret:
           secretName: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.client }}"
