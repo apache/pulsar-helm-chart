@@ -80,5 +80,6 @@ data:
   {{- else }}
   tokenPublicKey: "file:///pulsar/keys/token/public.key"
   {{- end }}
+  {{- end }}
 {{ toYaml .Values.proxy.configData | indent 2 }}
 {{- end }}

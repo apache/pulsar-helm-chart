@@ -197,7 +197,7 @@ spec:
         {{- if .Values.auth.authentication.providers.jwt }}
         - name: token-keys
           secret:
-            {{- if not .Values.auth.authentication.proviers.jwt.usingSecretKey }}
+            {{- if not .Values.auth.authentication.providers.jwt.usingSecretKey }}
             secretName: "{{ .Release.Name }}-token-asymmetric-key"
             {{- end}}
             {{- if .Values.auth.authentication.providers.jwt.usingSecretKey }}
