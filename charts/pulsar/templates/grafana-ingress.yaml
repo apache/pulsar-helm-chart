@@ -39,7 +39,8 @@ spec:
 {{ toYaml .Values.grafana.ingress.tls | indent 4 }}
 {{- end }}
   rules:
-    - http:
+    - host: {{ required "Grafana ingress hostname not provided" .Values.grafana.ingress.hostname }}
+      http:
         paths:
         - path: {{ .Values.grafana.ingress.path }}
           backend:
