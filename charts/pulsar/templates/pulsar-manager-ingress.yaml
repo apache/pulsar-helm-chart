@@ -43,11 +43,13 @@ spec:
       {{- end }}
 {{- end }}
   rules:
-    - host: {{ required "pulsar_manager ingress hostname not provided" .Values.pulsar_manager.ingress.hostname }}
-      http:
+    - http:
         paths:
           - path: {{ .Values.pulsar_manager.ingress.path }}
             backend:
               serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
               servicePort: {{ .Values.pulsar_manager.service.targetPort }}
+      {{- if .Values.pulsar_manager.ingress.hostname }}
+      host: {{ .Values.pulsar_manager.ingress.hostname }}
+      {{- end }}
 {{- end }}
