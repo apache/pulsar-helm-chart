@@ -120,7 +120,7 @@ data:
   brokerClientAuthenticationParameters: {{ .Values.auth.authentication.brokerClient.authenticationParameters | quote}}
   brokerClientAuthenticationPlugin: {{ .Values.auth.authentication.brokerClient.authenticationPlugin | quote}}
   {{- end}}
-  {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+  {{- if .Values.auth.authentication.providers.jwt.usingSecretKey }}
   tokenSecretKey: "file:///pulsar/keys/token/secret.key"
   {{- else }}
   tokenPublicKey: "file:///pulsar/keys/token/public.key"
