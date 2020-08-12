@@ -72,8 +72,8 @@ data:
     {{- range .Values.auth.authentication.providers }}
     - {{ .class | quote }}
     {{- end }}
-  brokerClientAuthenticationParameters: {{ .Values.auth.authentication.brokerClient.authenticationParameters | quote}}
-  brokerClientAuthenticationPlugin: {{ .Values.auth.authentication.brokerClient.authenticationPlugin | quote}}
+  brokerClientAuthenticationParameters: {{ .Values.auth.authentication.proxyClient.authenticationParameters | quote}}
+  brokerClientAuthenticationPlugin: {{ .Values.auth.authentication.proxyClient.authenticationPlugin | quote}}
   {{- end}}
   {{- if .Values.auth.authentication.jwt.usingSecretKey }}
   tokenSecretKey: "file:///pulsar/keys/token/secret.key"
