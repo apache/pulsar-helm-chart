@@ -113,9 +113,9 @@ data:
   superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
   {{- end }}
   {{- if .Values.auth.authentication.providers }}
-  authenticationProviders: {{join "," .Values.auth.authentication.providers.classes  }}
+  authenticationProviders: "{{join "," .Values.auth.authentication.providers.classes  }}"
   {{- range $key, $value := .Values.auth.authentication.providers.extraConfigs }}
-  {{ $key }} : {{ $value | quote}}
+  {{ $key }}: {{ $value | quote}}
   {{- end }}
   brokerClientAuthenticationParameters: {{ .Values.auth.authentication.brokerClient.authenticationParameters | quote}}
   brokerClientAuthenticationPlugin: {{ .Values.auth.authentication.brokerClient.authenticationPlugin | quote}}
