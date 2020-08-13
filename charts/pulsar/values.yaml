@@ -30,6 +30,9 @@ namespaceCreate: false
 ### Global Settings
 ###
 
+## Set to true on install
+initialize: false
+
 ## Pulsar Metadata Prefix
 ##
 ## By default, pulsar stores all the metadata at root path.
