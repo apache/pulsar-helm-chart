@@ -56,7 +56,8 @@ spec:
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
+          {{ if eq .Values.zookeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{ .Values.zookeeper.affinity.type }}:
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -72,6 +73,26 @@ spec:
                 values:
                 - {{ .Values.zookeeper.component }}
             topologyKey: "kubernetes.io/hostname"
+        {{ else }}
+          {{ .Values.zookeeper.affinity.type }}:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component" 
+                      operator: In
+                      values:
+                      - {{ .Values.zookeeper.component }}
+                topologyKey: "kubernetes.io/hostname"
+        {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}
       containers:
