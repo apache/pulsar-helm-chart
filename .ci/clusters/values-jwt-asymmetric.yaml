@@ -17,8 +17,6 @@
 # under the License.
 #
 
-initalize: true
-
 monitoring:
   prometheus: false
   grafana: false
