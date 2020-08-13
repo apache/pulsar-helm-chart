@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
+{{- if .Values.initialize }}
 {{- if .Values.components.bookkeeper }}
 apiVersion: batch/v1
 kind: Job
@@ -74,4 +74,5 @@ spec:
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
       restartPolicy: Never
+{{- end }}
 {{- end }}
