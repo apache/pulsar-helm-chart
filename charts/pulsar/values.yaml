@@ -30,6 +30,9 @@ namespaceCreate: false
 ### Global Settings
 ###
 
+## Set to true on install
+initialize: false
+
 ## Pulsar Metadata Prefix
 ##
 ## By default, pulsar stores all the metadata at root path.
@@ -66,6 +69,10 @@ volumes:
 ## the `affinity.anti_affinity` settings to `false` for that component.
 affinity:
   anti_affinity: true
+  # Set the anti affinity type. Valid values: 
+  # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+  # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+  type: requiredDuringSchedulingIgnoredDuringExecution 
 
 ## Components
 ##
@@ -285,6 +292,10 @@ zookeeper:
       periodSeconds: 30
   affinity:
     anti_affinity: true
+    # Set the anti affinity type. Valid values: 
+    # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+    # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+    type: requiredDuringSchedulingIgnoredDuringExecution 
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8000"
@@ -391,6 +402,10 @@ bookkeeper:
       periodSeconds: 30
   affinity:
     anti_affinity: true
+    # Set the anti affinity type. Valid values: 
+    # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+    # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+    type: requiredDuringSchedulingIgnoredDuringExecution 
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -492,6 +507,10 @@ autorecovery:
     # cloud.google.com/gke-nodepool: default-pool
   affinity:
     anti_affinity: true
+    # Set the anti affinity type. Valid values: 
+    # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+    # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+    type: requiredDuringSchedulingIgnoredDuringExecution 
   annotations: {}
   # tolerations: []
   gracePeriod: 30
@@ -567,6 +586,10 @@ broker:
       periodSeconds: 10
   affinity:
     anti_affinity: true
+    # Set the anti affinity type. Valid values: 
+    # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+    # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+    type: preferredDuringSchedulingIgnoredDuringExecution 
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -654,6 +677,10 @@ proxy:
       periodSeconds: 10
   affinity:
     anti_affinity: true
+    # Set the anti affinity type. Valid values: 
+    # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+    # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+    type: requiredDuringSchedulingIgnoredDuringExecution 
   annotations: {}
   tolerations: []
   gracePeriod: 30
