@@ -732,7 +732,6 @@ proxy:
       ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
       secretName: ""
 
-    ## Required if ingress is enabled
     hostname: ""
     path: "/"
   ## Proxy PodDisruptionBudget
@@ -902,7 +901,6 @@ grafana:
 
     ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
     extraPaths: []
-    ## Required if ingress is enabled
     hostname: ""
     protocol: http
     path: /grafana
@@ -955,7 +953,6 @@ pulsar_manager:
       ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
       secretName: ""
 
-    ## Required if ingress is enabled
     hostname: ""
     path: "/"
 
