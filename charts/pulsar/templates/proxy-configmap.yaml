@@ -70,7 +70,7 @@ data:
   {{- if .Values.auth.authentication.providers }}
   authenticationProviders: "{{join "," .Values.auth.authentication.providers.classes  }}"
   {{- range $key, $value := .Values.auth.authentication.providers.extraConfigs }}
-  {{ $key }}: {{ $value | quote}}
+  PULSAR_PREFIX_{{ $key }}: {{ $value | quote}}
   {{- end }}
   brokerClientAuthenticationParameters: {{ .Values.auth.authentication.proxyClient.authenticationParameters | quote}}
   brokerClientAuthenticationPlugin: {{ .Values.auth.authentication.proxyClient.authenticationPlugin | quote}}
