@@ -110,7 +110,10 @@ data:
   authenticationEnabled: "true"
   {{- if .Values.auth.authorization.enabled }}
   authorizationEnabled: "true"
+  authenticateOriginalAuthData: "true"
+  proxyRoles: {{ .Values.auth.superUsers.proxy }}
   superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
+  authorizationProvider: {{ .Values.auth.authorization.class | quote }}
   {{- end }}
   {{- if .Values.auth.authentication.providers }}
   authenticationProviders: "{{join "," .Values.auth.authentication.providers.classes  }}"
