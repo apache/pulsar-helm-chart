@@ -131,27 +131,27 @@ extra:
 images:
   zookeeper:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   bookie:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   autorecovery:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   broker:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   proxy:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   functions:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
@@ -536,7 +536,7 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
