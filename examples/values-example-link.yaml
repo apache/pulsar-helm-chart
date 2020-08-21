@@ -125,27 +125,27 @@ extra:
 images:
   zookeeper:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.11
+    tag: 0.0.2
     pullPolicy: IfNotPresent
   bookie:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.11
+    tag: 0.0.2
     pullPolicy: IfNotPresent
   autorecovery:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.11
+    tag: 0.0.2
     pullPolicy: IfNotPresent
   broker:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.11
+    tag: 0.0.2
     pullPolicy: IfNotPresent
   proxy:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.11
+    tag: 0.0.2
     pullPolicy: IfNotPresent
   functions:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.11
+    tag: 0.0.2
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
@@ -315,7 +315,7 @@ zookeeper:
         ##
         # storageClass:
         # type: pd-ssd
-        # fsType: xfs
+      # fsType: xfs
       # provisioner: kubernetes.io/gce-pd
   ## Zookeeper configmap
   ## templates/zookeeper-configmap.yaml
@@ -419,7 +419,7 @@ bookkeeper:
         ##
         # storageClass:
         # type: pd-ssd
-        # fsType: xfs
+      # fsType: xfs
       # provisioner: kubernetes.io/gce-pd
     ledgers:
       name: ledgers
@@ -434,7 +434,7 @@ bookkeeper:
         ##
         # storageClass:
         # type: pd-ssd
-        # fsType: xfs
+      # fsType: xfs
       # provisioner: kubernetes.io/gce-pd
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
@@ -635,7 +635,7 @@ proxy:
   # so the metrics are correctly rendered in grafana dashboard
   component: proxy
   replicaCount: 3
-    # nodeSelector:
+  # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
@@ -715,7 +715,7 @@ proxy:
 dashboard:
   component: dashboard
   replicaCount: 1
-    # nodeSelector:
+  # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
@@ -758,7 +758,7 @@ toolset:
   component: toolset
   useProxy: true
   replicaCount: 1
-    # nodeSelector:
+  # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
@@ -791,7 +791,7 @@ prometheus:
   rbac:
     enabled: true
   replicaCount: 1
-    # nodeSelector:
+  # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
@@ -817,7 +817,7 @@ prometheus:
         ##
         # storageClass:
         # type: pd-standard
-        # fsType: xfs
+      # fsType: xfs
       # provisioner: kubernetes.io/gce-pd
   ## Prometheus service
   ## templates/prometheus-service.yaml
@@ -831,7 +831,7 @@ prometheus:
 grafana:
   component: grafana
   replicaCount: 1
-    # nodeSelector:
+  # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
   tolerations: []
