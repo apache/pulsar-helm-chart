@@ -65,7 +65,7 @@ data:
   # disable authorization on proxy and forward authorization credentials to broker
   authorizationEnabled: "false"
   forwardAuthorizationCredentials: "true"
-  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
+  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }},pulsar-admin-client
   {{- end }}
   {{- if .Values.auth.authentication.providers }}
   authenticationProviders: "{{join "," .Values.auth.authentication.providers.classes  }}"

@@ -112,7 +112,7 @@ data:
   authorizationEnabled: "true"
   authenticateOriginalAuthData: "true"
   proxyRoles: {{ .Values.auth.superUsers.proxy }}
-  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
+  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }},pulsar-admin-client
   authorizationProvider: {{ .Values.auth.authorization.class | quote }}
   {{- end }}
   {{- if .Values.auth.authentication.providers }}

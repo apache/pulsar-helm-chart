@@ -81,7 +81,7 @@ components:
   # broker
   broker: true
   # functions disable until needed
-  functions: false
+  functions: true
   # proxy
   proxy: true
   # toolset
@@ -126,23 +126,23 @@ images:
   zookeeper:
     repository: pulsarnonprod.azurecr.io/link-pulsar
     tag: 0.0.2
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   bookie:
     repository: pulsarnonprod.azurecr.io/link-pulsar
     tag: 0.0.2
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   autorecovery:
     repository: pulsarnonprod.azurecr.io/link-pulsar
     tag: 0.0.2
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   broker:
     repository: pulsarnonprod.azurecr.io/link-pulsar
     tag: 0.0.2
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   proxy:
     repository: pulsarnonprod.azurecr.io/link-pulsar
     tag: 0.0.2
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   functions:
     repository: pulsarnonprod.azurecr.io/link-pulsar
     tag: 0.0.2
