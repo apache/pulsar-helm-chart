@@ -195,7 +195,7 @@ spec:
             bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
           cat conf/pulsar_env.sh;
-          bin/pulsar broker;
+          exec bin/pulsar broker;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http

@@ -154,7 +154,7 @@ spec:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
-          bin/pulsar bookie;
+          exec bin/pulsar bookie;
         ports:
         - name: bookie
           containerPort: {{ .Values.bookkeeper.ports.bookie }}
