@@ -171,7 +171,7 @@ spec:
         - >
           bin/apply-config-from-env.py conf/proxy.conf &&
           echo "OK" > status &&
-          bin/pulsar proxy
+          exec bin/pulsar proxy
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http

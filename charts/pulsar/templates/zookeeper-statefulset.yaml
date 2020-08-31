@@ -109,7 +109,7 @@ spec:
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
-          bin/pulsar zookeeper;
+          exec bin/pulsar zookeeper;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
