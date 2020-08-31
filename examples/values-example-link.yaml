@@ -81,7 +81,7 @@ components:
   # broker
   broker: true
   # functions disable until needed
-  functions: true
+  functions: false
   # proxy
   proxy: true
   # toolset
@@ -204,7 +204,7 @@ tls:
 # Enable or disable broker authentication and authorization.
 auth:
   authentication:
-    enabled: true
+    enabled: false
     providers:
       classes:
         - com.optum.link.pulsar.broker.authentication.AuthenticationProviderIdx
@@ -222,7 +222,7 @@ auth:
       authenticationParameters: file:///pulsar/tokens/proxy/token
       authenticationPlugin: org.apache.pulsar.client.impl.auth.AuthenticationToken
   authorization:
-    enabled: true
+    enabled: false
     class: com.optum.link.pulsar.broker.authorization.AuthorizationProviderIdx
   superUsers:
     # broker to broker communication

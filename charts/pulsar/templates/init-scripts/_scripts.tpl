@@ -128,7 +128,7 @@
     fi
 
     echo "generate the token keys for the pulsar cluster"
-    /scripts/pulsar/generate_token_secret_key.sh -n ${namespace} -k ${release} ${extra_opts}
+    bash /scripts/pulsar/generate_token_secret_key.sh -n ${namespace} -k ${release} ${extra_opts}
 
     echo "generate the tokens for the super-users: ${pulsar_superusers}"
 
@@ -136,7 +136,7 @@
     for user in "${superusers[@]}"
     do
         echo "generate the token for $user"
-        /scripts/pulsar/generate_token.sh -n ${namespace} -k ${release} -r ${user} ${extra_opts}
+        bash /scripts/pulsar/generate_token.sh -n ${namespace} -k ${release} -r ${user} ${extra_opts}
     done
 
     echo "-------------------------------------"
@@ -405,62 +405,52 @@
 
 {{- define "common_auth.sh" -}}
 
-    #!/bin/sh
+    #!/usr/bin/env bash
+    if [ -z "$CHART_HOME" ]; then
+        echo "error: CHART_HOME should be initialized"
+        exit 1
+    fi
 
-    set -eu
+    OUTPUT=${CHART_HOME}/output
+    OUTPUT_BIN=${OUTPUT}/bin
+    PULSARCTL_VERSION=v0.4.0
+    PULSARCTL_BIN=${HOME}/.pulsarctl/pulsarctl
+    export PATH=${HOME}/.pulsarctl/plugins:${PATH}
 
-    # Checks that appropriate gke params are set and
-    # that gcloud and kubectl are properly installed and authenticated
-
-    function need_tool(){
-      local tool="${1}"
-      local url="${2}"
-
-      echo >&2 "${tool} is required. Please follow ${url}"
-      exit 1
+    discoverArch() {
+      ARCH=$(uname -m)
+      case $ARCH in
+        x86) ARCH="386";;
+        x86_64) ARCH="amd64";;
+        i686) ARCH="386";;
+        i386) ARCH="386";;
+      esac
     }
 
-    function need_gcloud(){
-      need_tool "gcloud" "https://cloud.google.com/sdk/downloads"
+    discoverArch
+    OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+
+    test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
+
+    function pulsar::verify_pulsarctl() {
+        if test -x "$PULSARCTL_BIN"; then
+            return
+        fi
+        return 1
     }
 
-    function need_kubectl(){
-      need_tool "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl"
+    function pulsar::ensure_pulsarctl() {
+        if pulsar::verify_pulsarctl; then
+            return 0
+        fi
+        echo "Get pulsarctl install.sh script ..."
+        install_script=$(mktemp)
+        trap "test -f $install_script && rm $install_script" RETURN
+        curl --retry 10 -L -o $install_script https://raw.githubusercontent.com/streamnative/pulsarctl/master/install.sh
+        chmod +x $install_script
+        $install_script --user --version ${PULSARCTL_VERSION}
     }
 
-    function need_helm(){
-      need_tool "helm" "https://github.com/helm/helm/#install"
-    }
-
-    function need_eksctl(){
-      need_tool "eksctl" "https://eksctl.io"
-    }
-
-    function validate_gke_required_tools(){
-      if [ -z "$PROJECT" ]; then
-        echo "\$PROJECT needs to be set to your project id";
-        exit 1;
-      fi
-
-      for comm in gcloud kubectl helm
-      do
-        command  -v "${comm}" > /dev/null 2>&1 || "need_${comm}"
-      done
-
-      gcloud container clusters list --project $PROJECT >/dev/null 2>&1 || { echo >&2 "Gcloud seems to be configured incorrectly or authentication is unsuccessfull"; exit 1; }
-
-    }
-
-    function cluster_admin_password_gke(){
-      gcloud container clusters describe $CLUSTER_NAME --zone $ZONE --project $PROJECT --format='value(masterAuth.password)';
-    }
-
-    function validate_eks_required_tools(){
-      for comm in eksctl kubectl helm
-      do
-        command -v "${comm}" > /dev/null 2>&1 || "need_${comm}"
-      done
-    }
 
 {{- end }}
 
@@ -532,7 +522,7 @@
         exit 1
     fi
 
-    source scripts/pulsar/common_auth.sh
+    source /scripts/pulsar/common_auth.sh
 
     pulsar::ensure_pulsarctl
 
@@ -634,7 +624,8 @@
     esac
     done
 
-    source scripts/pulsar/common_auth.sh
+    ls -al /scripts/pulsar
+    source /scripts/pulsar/common_auth.sh
 
     pulsar::ensure_pulsarctl
 
@@ -737,7 +728,7 @@
         exit 1
     fi
 
-    source scripts/pulsar/common_auth.sh
+    source /scripts/pulsar/common_auth.sh
 
     pulsar::ensure_pulsarctl
 
