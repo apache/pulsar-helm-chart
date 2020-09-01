@@ -45,7 +45,5 @@ spec:
               chmod +x /scripts/pulsar/*.sh
               echo "execute prepare_helm_release.sh now"
               bash /scripts/pulsar/prepare_helm_release.sh -n pulsar -k pulsar
-              echo "execute install_cert_manager.sh now"
-              bash /scripts/pulsar/install_cert_manager.sh
 
     restartPolicy: Never
