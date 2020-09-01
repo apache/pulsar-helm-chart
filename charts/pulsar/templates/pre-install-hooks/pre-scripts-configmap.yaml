@@ -44,6 +44,6 @@ spec:
               echo "apply 'chmod +x' to scripts/pulsar/*.sh"
               chmod +x /scripts/pulsar/*.sh
               echo "execute prepare_helm_release.sh now"
-              bash /scripts/pulsar/prepare_helm_release.sh -n pulsar -k pulsar
+              bash /scripts/pulsar/prepare_helm_release.sh -n pulsar -k pulsar -s
 
     restartPolicy: Never

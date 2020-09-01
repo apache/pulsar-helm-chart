@@ -125,27 +125,27 @@ extra:
 images:
   zookeeper:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.2
+    tag: pr-3
     pullPolicy: Always
   bookie:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.2
+    tag: pr-3
     pullPolicy: Always
   autorecovery:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.2
+    tag: pr-3
     pullPolicy: Always
   broker:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.2
+    tag: pr-3
     pullPolicy: Always
   proxy:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.2
+    tag: pr-3
     pullPolicy: Always
   functions:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: 0.0.2
+    tag: pr-3
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
@@ -204,7 +204,7 @@ tls:
 # Enable or disable broker authentication and authorization.
 auth:
   authentication:
-    enabled: false
+    enabled: true
     providers:
       classes:
         - com.optum.link.pulsar.broker.authentication.AuthenticationProviderIdx
@@ -222,7 +222,7 @@ auth:
       authenticationParameters: file:///pulsar/tokens/proxy/token
       authenticationPlugin: org.apache.pulsar.client.impl.auth.AuthenticationToken
   authorization:
-    enabled: false
+    enabled: true
     class: com.optum.link.pulsar.broker.authorization.AuthorizationProviderIdx
   superUsers:
     # broker to broker communication
