@@ -110,18 +110,23 @@ data:
   authenticationEnabled: "true"
   {{- if .Values.auth.authorization.enabled }}
   authorizationEnabled: "true"
-  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
+  authenticateOriginalAuthData: "true"
+  proxyRoles: {{ .Values.auth.superUsers.proxy }}
+  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }},pulsar-admin-client
+  authorizationProvider: {{ .Values.auth.authorization.class | quote }}
   {{- end }}
-  {{- if eq .Values.auth.authentication.provider "jwt" }}
-  # token authentication configuration
-  authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken"
-  brokerClientAuthenticationParameters: "file:///pulsar/tokens/broker/token"
-  brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
-  {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+  {{- if .Values.auth.authentication.providers }}
+  authenticationProviders: "{{join "," .Values.auth.authentication.providers.classes  }}"
+  {{- range $key, $value := .Values.auth.authentication.providers.extraConfigs }}
+  PULSAR_PREFIX_{{ $key }}: {{ $value | quote}}
+  {{- end }}
+  brokerClientAuthenticationParameters: {{ .Values.auth.authentication.brokerClient.authenticationParameters | quote}}
+  brokerClientAuthenticationPlugin: {{ .Values.auth.authentication.brokerClient.authenticationPlugin | quote}}
+  {{- end}}
+  {{- if .Values.auth.authentication.providers.jwt.usingSecretKey }}
   tokenSecretKey: "file:///pulsar/keys/token/secret.key"
   {{- else }}
   tokenPublicKey: "file:///pulsar/keys/token/public.key"
-  {{- end }}
   {{- end }}
   {{- end }}
 

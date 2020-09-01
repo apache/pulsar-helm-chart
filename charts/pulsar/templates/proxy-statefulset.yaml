@@ -171,7 +171,7 @@ spec:
         {{- if or .Values.auth.authentication.enabled (and .Values.tls.enabled (or .Values.tls.proxy.enabled .Values.tls.broker.enabled)) }}
         volumeMounts:
           {{- if .Values.auth.authentication.enabled }}
-          {{- if eq .Values.auth.authentication.provider "jwt" }}
+          {{- if .Values.auth.authentication.providers.jwt }}
           - mountPath: "/pulsar/keys"
             name: token-keys
             readOnly: true
@@ -194,17 +194,17 @@ spec:
       {{- if or .Values.auth.authentication.enabled (and .Values.tls.enabled .Values.tls.proxy.enabled) }}
       volumes:
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.providers.jwt }}
         - name: token-keys
           secret:
-            {{- if not .Values.auth.authentication.jwt.usingSecretKey }}
+            {{- if not .Values.auth.authentication.providers.jwt.usingSecretKey }}
             secretName: "{{ .Release.Name }}-token-asymmetric-key"
             {{- end}}
-            {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            {{- if .Values.auth.authentication.providers.jwt.usingSecretKey }}
             secretName: "{{ .Release.Name }}-token-symmetric-key"
             {{- end}}
             items:
-              {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+              {{- if .Values.auth.authentication.providers.jwt.usingSecretKey }}
               - key: SECRETKEY
                 path: token/secret.key
               {{- else }}
