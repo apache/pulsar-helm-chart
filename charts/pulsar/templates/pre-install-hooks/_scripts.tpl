@@ -1,5 +1,3 @@
-{{- if .Values.auth.authentication.providers.jwt }}
-
 {{- define "install_cert_manager.sh" -}}
 
     #!/bin/sh
@@ -873,7 +871,5 @@
         upload_client_cert ${component}
     done
 
-
-{{- end }}
 
 {{- end }}
