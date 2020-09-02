@@ -125,27 +125,27 @@ extra:
 images:
   zookeeper:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: pr-3
+    tag: 0.0.2
     pullPolicy: Always
   bookie:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: pr-3
+    tag: 0.0.2
     pullPolicy: Always
   autorecovery:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: pr-3
+    tag: 0.0.2
     pullPolicy: Always
   broker:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: pr-3
+    tag: 0.0.2
     pullPolicy: Always
   proxy:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: pr-3
+    tag: 0.0.2
     pullPolicy: Always
   functions:
     repository: pulsarnonprod.azurecr.io/link-pulsar
-    tag: pr-3
+    tag: 0.0.2
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
