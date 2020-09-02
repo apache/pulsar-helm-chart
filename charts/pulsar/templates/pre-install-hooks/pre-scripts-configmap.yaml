@@ -1,3 +1,5 @@
+{{- if .Values.auth.authentication.providers.jwt }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -47,3 +49,5 @@ spec:
               bash /scripts/pulsar/prepare_helm_release.sh -n pulsar -k pulsar -s
 
     restartPolicy: Never
+
+{{- end }}
