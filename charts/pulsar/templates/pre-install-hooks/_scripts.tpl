@@ -1,0 +1,875 @@
+{{- define "install_cert_manager.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    NAMESPACE=cert-manager
+    NAME=cert-manager
+    VERSION=v0.13.0
+
+    # Install cert-manager CustomResourceDefinition resources
+    echo "Installing cert-manager CRD resources ..."
+    kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/${VERSION}/deploy/manifests/00-crds.yaml
+
+    # Create the namespace
+    kubectl get ns ${NAMESPACE}
+    if [ $? == 0 ]; then
+        echo "Namespace '${NAMESPACE}' already exists."
+    else
+        echo "Creating namespace '${NAMESPACE}' ..."
+        kubectl create namespace ${NAMESPACE}
+        echo "Successfully created namespace '${NAMESPACE}'."
+    fi
+
+    # Add the Jetstack Helm repository.
+    echo "Adding Jetstack Helm repository."
+    helm repo add jetstack https://charts.jetstack.io
+    echo "Successfully added Jetstack Helm repository."
+
+    # Update local helm chart repository cache.
+    echo "Updating local helm chart repository cache ..."
+    helm repo update
+
+    echo "Installing cert-manager ${VERSION} to namespace ${NAMESPACE} as '${NAME}' ..."
+    helm install \
+      --namespace ${NAMESPACE} \
+      --version ${VERSION} \
+      ${NAME} \
+      jetstack/cert-manager
+    echo "Successfully installed cert-manager ${VERSION}."
+
+{{- end }}
+
+
+{{- define "prepare_helm_release.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    usage() {
+        cat <<EOF
+    This script is used to bootstrap the pulsar namespace before deploying a helm chart.
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart
+           -k,--release                     the pulsar helm release name
+           -s,--symmetric                   generate symmetric secret key. If not provided, an asymmetric pair of keys are generated.
+           --pulsar-superusers              the superusers of pulsar cluster. a comma separated list of super users.
+           -c,--create-namespace            flag to create k8s namespace.
+    Usage:
+        $0 --namespace pulsar --release pulsar-release
+    EOF
+    }
+
+    symmetric=false
+    create_namespace=false
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -c|--create-namespace)
+        create_namespace=true
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        --pulsar-superusers)
+        pulsar_superusers="$2"
+        shift
+        shift
+        ;;
+        -s|--symmetric)
+        symmetric=true
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+    pulsar_superusers=${pulsar_superusers:-"proxy-admin,broker-admin,admin"}
+
+    function do_create_namespace() {
+        if [[ "${create_namespace}" == "true" ]]; then
+            kubectl create namespace ${namespace}
+        fi
+    }
+
+    do_create_namespace
+
+    extra_opts=""
+    if [[ "${symmetric}" == "true" ]]; then
+      extra_opts="${extra_opts} -s"
+    fi
+
+    echo "generate the token keys for the pulsar cluster"
+    bash /scripts/pulsar/generate_token_secret_key.sh -n ${namespace} -k ${release} ${extra_opts}
+
+    echo "generate the tokens for the super-users: ${pulsar_superusers}"
+
+    IFS=', ' read -r -a superusers <<< "$pulsar_superusers"
+    for user in "${superusers[@]}"
+    do
+        echo "generate the token for $user"
+        bash /scripts/pulsar/generate_token.sh -n ${namespace} -k ${release} -r ${user} ${extra_opts}
+    done
+
+    echo "-------------------------------------"
+    echo
+    echo "The jwt token secret keys are generated under:"
+    if [[ "${symmetric}" == "true" ]]; then
+        echo "    - '${release}-token-symmetric-key'"
+    else
+        echo "    - '${release}-token-asymmetric-key'"
+    fi
+    echo
+
+    echo "The jwt tokens for superusers are generated and stored as below:"
+    for user in "${superusers[@]}"
+    do
+        echo "    - '${user}':secret('${release}-token-${user}')"
+    done
+    echo
+
+
+{{- end }}
+
+
+{{- define "clean_tls.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+    clientComponents=${clientComponents:-"toolset"}
+    serverComponents=${serverComponents:-"bookie,broker,proxy,recovery,zookeeper"}
+
+    usage() {
+        cat <<EOF
+    This script is used to delete tls certs for a given pulsar helm deployment generated by "upload_tls.sh".
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart. Defaut to ${namespace}.
+           -k,--release                     the pulsar helm release name. Default to ${release}.
+           -c,--client-components           the client components of pulsar cluster. a comma separated list of components. Default to ${clientComponents}.
+           -s,--server-components           the server components of pulsar cluster. a comma separated list of components. Default to ${serverComponents}.
+    Usage:
+        $0 --namespace pulsar --release pulsar-dev
+    EOF
+    }
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        -c|--client-components)
+        clientComponents="$2"
+        shift
+        shift
+        ;;
+        -s|--server-components)
+        serverComponents="$2"
+        shift
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    function delete_ca() {
+        local tls_ca_secret="${release}-ca-tls"
+        kubectl delete secret ${tls_ca_secret} -n ${namespace}
+    }
+
+    function delete_server_cert() {
+        local component=$1
+        local server_cert_secret="${release}-tls-${component}"
+
+        kubectl delete secret ${server_cert_secret} \
+            -n ${namespace}
+    }
+
+    function delete_client_cert() {
+        local component=$1
+        local client_cert_secret="${release}-tls-${component}"
+
+        kubectl delete secret ${client_cert_secret} \
+            -n ${namespace}
+    }
+
+    delete_ca
+
+    IFS=', ' read -r -a server_components <<< "$serverComponents"
+    for component in "${server_components[@]}"
+    do
+        delete_server_cert ${component}
+    done
+
+    IFS=', ' read -r -a client_components <<< "$clientComponents"
+    for component in "${client_components[@]}"
+    do
+        delete_client_cert ${component}
+    done
+
+
+{{- end }}
+
+
+{{- define "cleanup_helm_release.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    usage() {
+        cat <<EOF
+    This script is used to cleanup the credentials for a given pulsar helm release.
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart
+           -k,--release                     the pulsar helm release name
+           -d,--delete-namespace            flag to delete k8s namespace.
+    Usage:
+        $0 --namespace pulsar --release pulsar-release
+    EOF
+    }
+
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    delete_namespace=false
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -d|--delete-namespace)
+        delete_namespace=true
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+
+    function delete_namespace() {
+        if [[ "${delete_namespace}" == "true" ]]; then
+            kubectl delete namespace ${namespace}
+        fi
+    }
+
+    # delete tokens
+    kubectl get secrets -n ${namespace} | grep ${release}-token- | awk '{print $1}' | xargs kubectl delete secrets -n ${namespace}
+
+    # delete namespace
+    delete_namespace
+
+
+{{- end }}
+
+
+
+{{- define "common.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    # Checks that appropriate gke params are set and
+    # that gcloud and kubectl are properly installed and authenticated
+
+    function need_tool(){
+      local tool="${1}"
+      local url="${2}"
+
+      echo >&2 "${tool} is required. Please follow ${url}"
+      exit 1
+    }
+
+    function need_gcloud(){
+      need_tool "gcloud" "https://cloud.google.com/sdk/downloads"
+    }
+
+    function need_kubectl(){
+      need_tool "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl"
+    }
+
+    function need_helm(){
+      need_tool "helm" "https://github.com/helm/helm/#install"
+    }
+
+    function need_eksctl(){
+      need_tool "eksctl" "https://eksctl.io"
+    }
+
+    function validate_gke_required_tools(){
+      if [ -z "$PROJECT" ]; then
+        echo "\$PROJECT needs to be set to your project id";
+        exit 1;
+      fi
+
+      for comm in gcloud kubectl helm
+      do
+        command  -v "${comm}" > /dev/null 2>&1 || "need_${comm}"
+      done
+
+      gcloud container clusters list --project $PROJECT >/dev/null 2>&1 || { echo >&2 "Gcloud seems to be configured incorrectly or authentication is unsuccessfull"; exit 1; }
+
+    }
+
+    function cluster_admin_password_gke(){
+      gcloud container clusters describe $CLUSTER_NAME --zone $ZONE --project $PROJECT --format='value(masterAuth.password)';
+    }
+
+    function validate_eks_required_tools(){
+      for comm in eksctl kubectl helm
+      do
+        command -v "${comm}" > /dev/null 2>&1 || "need_${comm}"
+      done
+    }
+
+
+{{- end }}
+
+
+{{- define "common_auth.sh" -}}
+
+    #!/usr/bin/env bash
+    if [ -z "$CHART_HOME" ]; then
+        echo "error: CHART_HOME should be initialized"
+        exit 1
+    fi
+
+    OUTPUT=${CHART_HOME}/output
+    OUTPUT_BIN=${OUTPUT}/bin
+    PULSARCTL_VERSION=v0.4.0
+    PULSARCTL_BIN=${HOME}/.pulsarctl/pulsarctl
+    export PATH=${HOME}/.pulsarctl/plugins:${PATH}
+
+    discoverArch() {
+      ARCH=$(uname -m)
+      case $ARCH in
+        x86) ARCH="386";;
+        x86_64) ARCH="amd64";;
+        i686) ARCH="386";;
+        i386) ARCH="386";;
+      esac
+    }
+
+    discoverArch
+    OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+
+    test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
+
+    function pulsar::verify_pulsarctl() {
+        if test -x "$PULSARCTL_BIN"; then
+            return
+        fi
+        return 1
+    }
+
+    function pulsar::ensure_pulsarctl() {
+        if pulsar::verify_pulsarctl; then
+            return 0
+        fi
+        echo "Get pulsarctl install.sh script ..."
+        install_script=$(mktemp)
+        trap "test -f $install_script && rm $install_script" RETURN
+        curl --retry 10 -L -o $install_script https://raw.githubusercontent.com/streamnative/pulsarctl/master/install.sh
+        chmod +x $install_script
+        $install_script --user --version ${PULSARCTL_VERSION}
+    }
+
+
+{{- end }}
+
+
+{{- define "generate_token.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    usage() {
+        cat <<EOF
+    This script is used to generate token for a given pulsar role.
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart
+           -k,--release                     the pulsar helm release name
+           -r,--role                        the pulsar role
+           -s,--symmetric                   use symmetric secret key for generating the token. If not provided, the private key of an asymmetric pair of keys is used.
+    Usage:
+        $0 --namespace pulsar --release pulsar-dev -c <pulsar-role>
+    EOF
+    }
+
+    symmetric=false
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        -r|--role)
+        role="$2"
+        shift
+        shift
+        ;;
+        -s|--symmetric)
+        symmetric=true
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    if [[ "x${role}" == "x" ]]; then
+        echo "No pulsar role is provided!"
+        usage
+        exit 1
+    fi
+
+    source /scripts/pulsar/common_auth.sh
+
+    pulsar::ensure_pulsarctl
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+
+    function pulsar::jwt::generate_symmetric_token() {
+        local token_name="${release}-token-${role}"
+        local secret_name="${release}-token-symmetric-key"
+
+        tmpfile=$(mktemp)
+        trap "test -f $tmpfile && rm $tmpfile" RETURN
+        tokentmpfile=$(mktemp)
+        trap "test -f $tokentmpfile && rm $tokentmpfile" RETURN
+        kubectl get -n ${namespace} secrets ${secret_name} -o jsonpath="{.data['SECRETKEY']}" | base64 --decode > ${tmpfile}
+        ${PULSARCTL_BIN} token create -a HS256 --secret-key-file ${tmpfile} --subject ${role} 2&> ${tokentmpfile}
+        newtokentmpfile=$(mktemp)
+        tr -d '\n' < ${tokentmpfile} > ${newtokentmpfile}
+        kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=symmetric"
+    }
+
+    function pulsar::jwt::generate_asymmetric_token() {
+        local token_name="${release}-token-${role}"
+        local secret_name="${release}-token-asymmetric-key"
+
+        privatekeytmpfile=$(mktemp)
+        trap "test -f $privatekeytmpfile && rm $privatekeytmpfile" RETURN
+        tokentmpfile=$(mktemp)
+        trap "test -f $tokentmpfile && rm $tokentmpfile" RETURN
+        kubectl get -n ${namespace} secrets ${secret_name} -o jsonpath="{.data['PRIVATEKEY']}" | base64 --decode > ${privatekeytmpfile}
+        ${PULSARCTL_BIN} token create -a RS256 --private-key-file ${privatekeytmpfile} --subject ${role} 2&> ${tokentmpfile}
+        newtokentmpfile=$(mktemp)
+        tr -d '\n' < ${tokentmpfile} > ${newtokentmpfile}
+        kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=asymmetric"
+    }
+
+    if [[ "${symmetric}" == "true" ]]; then
+        pulsar::jwt::generate_symmetric_token
+    else
+        pulsar::jwt::generate_asymmetric_token
+    fi
+
+
+{{- end }}
+
+
+{{- define "generate_token_secret_key.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    usage() {
+        cat <<EOF
+    This script is used to generate token secret key for a given pulsar helm release.
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart
+           -k,--release                     the pulsar helm release name
+           -s,--symmetric                   generate symmetric secret key. If not provided, an asymmetric pair of keys are generated.
+    Usage:
+        $0 --namespace pulsar --release pulsar-dev
+    EOF
+    }
+
+    symmetric=false
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        -s|--symmetric)
+        symmetric=true
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    ls -al /scripts/pulsar
+    source /scripts/pulsar/common_auth.sh
+
+    pulsar::ensure_pulsarctl
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+
+    function pulsar::jwt::generate_symmetric_key() {
+        local secret_name="${release}-token-symmetric-key"
+
+        tmpfile=$(mktemp)
+        trap "test -f $tmpfile && rm $tmpfile" RETURN
+        ${PULSARCTL_BIN} token create-secret-key --output-file ${tmpfile}
+        mv $tmpfile SECRETKEY
+        kubectl create secret generic ${secret_name} -n ${namespace} --from-file=SECRETKEY
+        rm SECRETKEY
+    }
+
+    function pulsar::jwt::generate_asymmetric_key() {
+        local secret_name="${release}-token-asymmetric-key"
+
+        privatekeytmpfile=$(mktemp)
+        trap "test -f $privatekeytmpfile && rm $privatekeytmpfile" RETURN
+        publickeytmpfile=$(mktemp)
+        trap "test -f $publickeytmpfile && rm $publickeytmpfile" RETURN
+        ${PULSARCTL_BIN} token create-key-pair -a RS256 --output-private-key ${privatekeytmpfile} --output-public-key ${publickeytmpfile}
+        mv $privatekeytmpfile PRIVATEKEY
+        mv $publickeytmpfile PUBLICKEY
+        kubectl create secret generic ${secret_name} -n ${namespace} --from-file=PRIVATEKEY --from-file=PUBLICKEY
+        rm PRIVATEKEY
+        rm PUBLICKEY
+    }
+
+    if [[ "${symmetric}" == "true" ]]; then
+        pulsar::jwt::generate_symmetric_key
+    else
+        pulsar::jwt::generate_asymmetric_key
+    fi
+
+
+{{- end }}
+
+
+{{- define "get_token.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    usage() {
+        cat <<EOF
+    This script is used to retrieve token for a given pulsar role.
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart
+           -k,--release                     the pulsar helm release name
+           -r,--role                        the pulsar role
+    Usage:
+        $0 --namespace pulsar --release pulsar-dev -r <pulsar-role>
+    EOF
+    }
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        -r|--role)
+        role="$2"
+        shift
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    if [[ "x${role}" == "x" ]]; then
+        echo "No pulsar role is provided!"
+        usage
+        exit 1
+    fi
+
+    source /scripts/pulsar/common_auth.sh
+
+    pulsar::ensure_pulsarctl
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+
+    function pulsar::jwt::get_token() {
+        local token_name="${release}-token-${role}"
+
+        local token=$(kubectl get -n ${namespace} secrets ${token_name} -o jsonpath="{.data['TOKEN']}" | base64 --decode)
+        local token_type=$(kubectl get -n ${namespace} secrets ${token_name} -o jsonpath="{.data['TYPE']}" | base64 --decode)
+
+        echo "token type: ${token_type}"
+        echo "-------------------------"
+        echo "${token}"
+    }
+
+    pulsar::jwt::get_token
+
+
+{{- end }}
+
+
+{{- define "upload_tls.sh" -}}
+
+    #!/bin/sh
+
+    set -eu
+
+    CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+    cd ${CHART_HOME}
+
+    namespace=${namespace:-pulsar}
+    release=${release:-pulsar-dev}
+    tlsdir=${tlsdir:-"${HOME}/.config/pulsar/security_tool/gen/ca"}
+    clientComponents=${clientComponents:-""}
+    serverComponents=${serverComponents:-"bookie,broker,proxy,recovery,zookeeper,toolset"}
+
+    usage() {
+        cat <<EOF
+    This script is used to upload tls for a given pulsar helm deployment.
+    The tls certs are generated by using "pulsarctl security-tool".
+    Options:
+           -h,--help                        prints the usage message
+           -n,--namespace                   the k8s namespace to install the pulsar helm chart. Defaut to ${namespace}.
+           -k,--release                     the pulsar helm release name. Default to ${release}.
+           -d,--dir                         the dir for storing tls certs. Default to ${tlsdir}.
+           -c,--client-components           the client components of pulsar cluster. a comma separated list of components. Default to ${clientComponents}.
+           -s,--server-components           the server components of pulsar cluster. a comma separated list of components. Default to ${serverComponents}.
+    Usage:
+        $0 --namespace pulsar --release pulsar-dev
+    EOF
+    }
+
+    while [[ $# -gt 0 ]]
+    do
+    key="$1"
+
+    case $key in
+        -n|--namespace)
+        namespace="$2"
+        shift
+        shift
+        ;;
+        -k|--release)
+        release="$2"
+        shift
+        shift
+        ;;
+        -d|--dir)
+        tlsdir="$2"
+        shift
+        shift
+        ;;
+        -c|--client-components)
+        clientComponents="$2"
+        shift
+        shift
+        ;;
+        -s|--server-components)
+        serverComponents="$2"
+        shift
+        shift
+        ;;
+        -h|--help)
+        usage
+        exit 0
+        ;;
+        *)
+        echo "unknown option: $key"
+        usage
+        exit 1
+        ;;
+    esac
+    done
+
+    ca_cert_file=${tlsdir}/certs/ca.cert.pem
+
+    function upload_ca() {
+        local tls_ca_secret="${release}-ca-tls"
+        kubectl create secret generic ${tls_ca_secret} -n ${namespace} --from-file="ca.crt=${ca_cert_file}"
+    }
+
+    function upload_server_cert() {
+        local component=$1
+        local server_cert_secret="${release}-tls-${component}"
+        local tls_cert_file="${tlsdir}/servers/${component}/${component}.cert.pem"
+        local tls_key_file="${tlsdir}/servers/${component}/${component}.key-pk8.pem"
+
+        kubectl create secret generic ${server_cert_secret} \
+            -n ${namespace} \
+            --from-file="tls.crt=${tls_cert_file}" \
+            --from-file="tls.key=${tls_key_file}" \
+            --from-file="ca.crt=${ca_cert_file}"
+    }
+
+    function upload_client_cert() {
+        local component=$1
+        local client_cert_secret="${release}-tls-${component}"
+        local tls_cert_file="${tlsdir}/clients/${component}/${component}.cert.pem"
+        local tls_key_file="${tlsdir}/clients/${component}/${component}.key-pk8.pem"
+
+        kubectl create secret generic ${client_cert_secret} \
+            -n ${namespace} \
+            --from-file="tls.crt=${tls_cert_file}" \
+            --from-file="tls.key=${tls_key_file}" \
+            --from-file="ca.crt=${ca_cert_file}"
+    }
+
+    upload_ca
+
+    IFS=', ' read -r -a server_components <<< "$serverComponents"
+    for component in "${server_components[@]}"
+    do
+        upload_server_cert ${component}
+    done
+
+    IFS=', ' read -r -a client_components <<< "$clientComponents"
+    for component in "${client_components[@]}"
+    do
+        upload_client_cert ${component}
+    done
+
+
+{{- end }}

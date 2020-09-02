@@ -81,7 +81,7 @@ components:
   # broker
   broker: true
   # functions disable until needed
-  functions: true
+  functions: false
   # proxy
   proxy: true
   # toolset

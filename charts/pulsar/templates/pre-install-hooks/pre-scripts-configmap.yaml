@@ -1,0 +1,53 @@
+{{- if .Values.auth.authentication.enabled }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-pre-scripts
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "4"
+data:
+  {{- range $name := tuple "install_cert_manager.sh" "clean_tls.sh"  "cleanup_helm_release.sh"  "common.sh"  "common_auth.sh"  "generate_token.sh"  "generate_token_secret_key.sh"  "get_token.sh"  "prepare_helm_release.sh"  "upload_tls.sh" }}
+  {{ $name }}: |-
+    {{ include $name . }}
+  {{ end }}
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-pre-scripts-job
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "5"
+spec:
+    serviceAccountName: pod-kubectl
+    volumes:
+      - name: {{ .Release.Name }}-pre-scripts-volume
+        configMap:
+          name: {{ .Release.Name }}-pre-scripts
+    containers:
+        - name: {{ .Release.Name }}-pre-scripts-job
+          image: trstringer/internal-kubectl:latest
+          volumeMounts:
+            - mountPath: /{{ .Release.Name }}-pre-scripts
+              name: {{ .Release.Name }}-pre-scripts-volume
+          env:
+              - name: HOME
+                value: /tmp
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "copy scripts to /tmp/scripts/pulsar"
+              mkdir scripts && mkdir scripts/pulsar
+              cp /{{ .Release.Name }}-pre-scripts/*.sh scripts/pulsar/
+              echo "apply 'chmod +x' to scripts/pulsar/*.sh"
+              chmod +x /scripts/pulsar/*.sh
+              echo "execute prepare_helm_release.sh now"
+              bash /scripts/pulsar/prepare_helm_release.sh -n pulsar -k pulsar -s
+
+    restartPolicy: Never
+
+{{- end }}
