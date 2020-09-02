@@ -600,9 +600,6 @@ broker:
     defaultRetentionSizeInMB: "5000"
     backlogQuotaDefaultLimitGB: "5"
     ttlDurationDefaultInSeconds: "432000"
-    idxIssuer: "https://idx-stage.linkhealth.com/auth/realms/developer-platform"
-    pulsarClientId: "pulsar-cluster"
-    idxJwksUrl: "https://idx-stage.linkhealth.com/auth/realms/developer-platform/protocol/openid-connect/certs"
 
   ## Broker service
   ## templates/broker-service.yaml
