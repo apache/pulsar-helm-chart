@@ -17,7 +17,6 @@
 # under the License.
 #
 
-
 ###
 ### K8S Settings
 ###
@@ -80,7 +79,7 @@ components:
   autorecovery: true
   # broker
   broker: true
-  # functions disable until needed
+  # functions
   functions: false
   # proxy
   proxy: true
@@ -270,8 +269,8 @@ zookeeper:
     clientTls: 2281
     follower: 2888
     leaderElection: 3888
-    # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # nodeSelector:
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -306,13 +305,13 @@ zookeeper:
       name: data
       size: 20Gi
       local_storage: true
-        ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-        ##
-        # storageClassName: existent-storage-class
-        #
-        ## Instead if you want to create a new storage class define it below
-        ## If left undefined no storage class will be defined along with PVC
-        ##
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class
+      #
+      ## Instead if you want to create a new storage class define it below
+      ## If left undefined no storage class will be defined along with PVC
+      ##
       # storageClass:
       # type: pd-ssd
       # fsType: xfs
@@ -334,7 +333,6 @@ zookeeper:
       -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
       -Dzookeeper.forceSync=no
-    #maxClientCnxns: 3
   ## Zookeeper service
   ## templates/zookeeper-service.yaml
   ##
@@ -358,17 +356,12 @@ bookkeeper:
   ## BookKeeper Cluster Initialize
   ## templates/bookkeeper-cluster-initialize.yaml
   metadata:
-    image:
-      # the image used for running `bookkeeper-cluster-initialize` job
-      repository: apachepulsar/pulsar-all
-      tag: 2.5.0
-      pullPolicy: IfNotPresent
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
-    # requests:
-    # memory: 4Gi
-    # cpu: 2
+      # requests:
+      # memory: 4Gi
+      # cpu: 2
   replicaCount: 4
   updateStrategy:
     type: RollingUpdate
@@ -376,8 +369,8 @@ bookkeeper:
   ports:
     http: 8000
     bookie: 3181
-    # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # nodeSelector:
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -410,13 +403,13 @@ bookkeeper:
       name: journal
       size: 10Gi
       local_storage: true
-        ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-        ##
-        # storageClassName: existent-storage-class
-        #
-        ## Instead if you want to create a new storage class define it below
-        ## If left undefined no storage class will be defined along with PVC
-        ##
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class
+      #
+      ## Instead if you want to create a new storage class define it below
+      ## If left undefined no storage class will be defined along with PVC
+      ##
       # storageClass:
       # type: pd-ssd
       # fsType: xfs
@@ -425,13 +418,13 @@ bookkeeper:
       name: ledgers
       size: 50Gi
       local_storage: true
-        ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-        ##
-        # storageClassName: existent-storage-class
-        #
-        ## Instead if you want to create a new storage class define it below
-        ## If left undefined no storage class will be defined along with PVC
-        ##
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class
+      #
+      ## Instead if you want to create a new storage class define it below
+      ## If left undefined no storage class will be defined along with PVC
+      ##
       # storageClass:
       # type: pd-ssd
       # fsType: xfs
@@ -493,8 +486,8 @@ autorecovery:
   replicaCount: 1
   ports:
     http: 8000
-    # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # nodeSelector:
+  # cloud.google.com/gke-nodepool: default-pool
   affinity:
     anti_affinity: true
   annotations: {}
@@ -522,11 +515,16 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.5.0
+    tag: 2.6.1
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
   configurationStoreMetadataPrefix: ""
+
+  ## optional, you can provide your own zookeeper metadata store for other components
+  # to use this, you should explicit set components.zookeeper to false
+  #
+  # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
 
 ## Pulsar: Broker cluster
 ## templates/broker-statefulset.yaml
@@ -541,9 +539,8 @@ broker:
     https: 8443
     pulsar: 6650
     pulsarssl: 6651
-    debug: 5005
-    # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+  # nodeSelector:
+  # cloud.google.com/gke-nodepool: default-pool
   probe:
     liveness:
       enabled: true
@@ -600,7 +597,6 @@ broker:
     defaultRetentionSizeInMB: "5000"
     backlogQuotaDefaultLimitGB: "5"
     ttlDurationDefaultInSeconds: "432000"
-
   ## Broker service
   ## templates/broker-service.yaml
   ##
@@ -679,10 +675,6 @@ proxy:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-
-
-
-
   ## Proxy service
   ## templates/proxy-service.yaml
   ##
@@ -691,10 +683,24 @@ proxy:
     https: 443
     pulsar: 6650
     pulsarssl: 6651
-    debug: 5005
   service:
     annotations: {}
     type: LoadBalancer
+  ## Proxy ingress
+  ## templates/proxy-ingress.yaml
+  ##
+  ingress:
+    enabled: false
+    annotations: {}
+    tls:
+      enabled: false
+
+      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
+      secretName: ""
+
+    ## Required if ingress is enabled
+    hostname: ""
+    path: "/"
   ## Proxy PodDisruptionBudget
   ## templates/proxy-pdb.yaml
   ##
@@ -744,7 +750,6 @@ dashboard:
     path: "/"
     port: 80
 
-
 ## Pulsar ToolSet
 ## templates/toolset-deployment.yaml
 ##
@@ -776,7 +781,6 @@ toolset:
 
 ## Monitoring Stack: Prometheus
 ## templates/prometheus-deployment.yaml
-##
 
 ## Deprecated in favor of using `prometheus.rbac.enabled`
 prometheus_rbac: false
@@ -802,13 +806,13 @@ prometheus:
       name: data
       size: 10Gi
       local_storage: true
-        ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-        ##
-        # storageClassName: existent-storage-class
-        #
-        ## Instead if you want to create a new storage class define it below
-        ## If left undefined no storage class will be defined along with PVC
-        ##
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class
+      #
+      ## Instead if you want to create a new storage class define it below
+      ## If left undefined no storage class will be defined along with PVC
+      ##
       # storageClass:
       # type: pd-standard
       # fsType: xfs
@@ -830,6 +834,7 @@ grafana:
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  port: 80
   resources:
     requests:
       memory: 250Mi
@@ -839,8 +844,8 @@ grafana:
   ##
   service:
     type: LoadBalancer
-    port: 80
     targetPort: 3000
+    port: 3000
     annotations: {}
   plugins: []
   ## Grafana ingress
@@ -876,6 +881,7 @@ grafana:
 ##
 pulsar_manager:
   component: pulsar-manager
+  port: 80
   replicaCount: 1
   # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
@@ -900,9 +906,25 @@ pulsar_manager:
   ##
   service:
     type: LoadBalancer
-    port: 80
     targetPort: 9527
+    port: 9527
     annotations: {}
+  ## Pulsar manager ingress
+  ## templates/pulsar-manager-ingress.yaml
+  ##
+  ingress:
+    enabled: false
+    annotations: {}
+    tls:
+      enabled: false
+
+      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
+      secretName: ""
+
+    ## Required if ingress is enabled
+    hostname: ""
+    path: "/"
+
   admin:
     user: pulsar
     password: pulsar
