@@ -18,7 +18,7 @@
 #
 
 apiVersion: v1
-appVersion: "2.6.0"
+appVersion: "2.6.1"
 description: Apache Pulsar Helm chart for Kubernetes
 name: pulsar
 version: 1.1.3
