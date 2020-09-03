@@ -33,6 +33,17 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Define cluster's name
+*/}}
+{{- define "pulsar.cluster.name" -}}
+{{- if .Values.clusterName }}
+{{- .Values.clusterName }}
+{{- else -}}
+{{- template "pulsar.fullname" .}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "pulsar.chart" -}}
@@ -47,7 +58,7 @@ app: {{ template "pulsar.name" . }}
 chart: {{ template "pulsar.chart" . }}
 release: {{ .Release.Name }}
 heritage: {{ .Release.Service }}
-cluster: {{ template "pulsar.fullname" . }}
+cluster: {{ template "pulsar.cluster.name" . }}
 {{- end }}
 
 {{/*
@@ -56,7 +67,7 @@ Create the template labels.
 {{- define "pulsar.template.labels" -}}
 app: {{ template "pulsar.name" . }}
 release: {{ .Release.Name }}
-cluster: {{ template "pulsar.fullname" . }}
+cluster: {{ template "pulsar.cluster.name" . }}
 {{- end }}
 
 {{/*

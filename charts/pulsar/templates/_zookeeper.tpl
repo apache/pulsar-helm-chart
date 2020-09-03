@@ -26,7 +26,7 @@ Define the pulsar zookeeper
 Define the zookeeper hostname
 */}}
 {{- define "pulsar.zookeeper.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.zookeeper.service" . }}.{{ .Values.namespace }}.svc.cluster.local
+${HOSTNAME}.{{ template "pulsar.zookeeper.service" . }}.{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}
 {{- end -}}
 
 {{/*

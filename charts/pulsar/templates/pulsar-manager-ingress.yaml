@@ -18,22 +18,19 @@
 #
 
 {{- if .Values.pulsar_manager.ingress.enabled }}
-apiVersion: extensions/v1beta1                                                                                                                                                            
-kind: Ingress                                                                                                                                                                             
-metadata:                                                                                                                                                                                 
-  labels:                                                                                                                                                                                 
-    app: {{ template "pulsar.name" . }}
-    chart: {{ template "pulsar.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    cluster: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
-  annotations:                                                                                                                                                                            
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}
+  annotations:
 {{- with .Values.pulsar_manager.ingress.annotations }}
 {{ toYaml . | indent 4 }}
 {{- end }}
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
   namespace: {{ .Values.namespace }}
-spec:                                                                                                                                                                                     
+spec:
 {{- if .Values.pulsar_manager.ingress.tls.enabled }}
   tls:
     - hosts:

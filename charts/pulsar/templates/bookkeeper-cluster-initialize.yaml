@@ -62,7 +62,7 @@ spec:
                 echo "bookkeeper cluster already initialized";
             else
                 {{- if not (eq .Values.metadataPrefix "") }}
-                bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} 'created for pulsar cluster "{{ template "pulsar.fullname" . }}"' || yes &&
+                bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' || yes &&
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;
             fi

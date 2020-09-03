@@ -91,7 +91,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Release.Name }}
-                    - key: "component" 
+                    - key: "component"
                       operator: In
                       values:
                       - {{ .Values.broker.component }}
@@ -110,12 +110,12 @@ spec:
           - >-
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             {{- if .Values.pulsar_metadata.configurationStore }}
-            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ .Values.pulsar_metadata.configurationStore}} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.fullname" . }}; do
+            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
             {{- if not .Values.pulsar_metadata.configurationStore }}
-            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.fullname" . }}; do
+            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
-              echo "pulsar cluster {{ template "pulsar.fullname" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
+              echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
@@ -136,7 +136,7 @@ spec:
             echo "bookkeeper cluster is already initialized";
             bookieServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }} | grep Name | wc -l)";
             until [ ${bookieServiceNumber} -ge {{ .Values.broker.configData.managedLedgerDefaultEnsembleSize }} ]; do
-              echo "bookkeeper cluster {{ template "pulsar.fullname" . }} isn't ready yet ... check in 10 seconds ...";
+              echo "bookkeeper cluster {{ template "pulsar.cluster.name" . }} isn't ready yet ... check in 10 seconds ...";
               sleep 10;
               bookieServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }} | grep Name | wc -l)";
             done;

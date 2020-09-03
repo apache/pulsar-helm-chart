@@ -30,14 +30,14 @@ data:
   # Metadata settings
   zookeeperServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
   {{- if .Values.pulsar_metadata.configurationStore }}
-  configurationStoreServers: "{{ .Values.pulsar_metadata.configurationStore }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
+  configurationStoreServers: "{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
   {{- end }}
   {{- if not .Values.pulsar_metadata.configurationStore }}
   configurationStoreServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
   {{- end }}
 
   # Broker settings
-  clusterName: {{ template "pulsar.fullname" . }}
+  clusterName: {{ template "pulsar.cluster.name" . }}
   exposeTopicLevelMetricsInPrometheus: "true"
   numHttpServerThreads: "8"
   zooKeeperSessionTimeoutMillis: "30000"
@@ -51,7 +51,7 @@ data:
   {{- if or .Values.components.functions .Values.extra.functionsAsPods }}
   functionsWorkerEnabled: "true"
   PF_functionRuntimeFactoryClassName: "org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactory"
-  PF_pulsarFunctionsCluster: {{ template "pulsar.fullname" . }}
+  PF_pulsarFunctionsCluster: {{ template "pulsar.cluster.name" . }}
   PF_connectorsDirectory: ./connectors
   PF_containerFactory: k8s
   PF_numFunctionPackageReplicas: "{{ .Values.broker.configData.managedLedgerDefaultEnsembleSize }}"
@@ -90,7 +90,7 @@ data:
   PF_kubernetesContainerFactory_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
   PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ .Values.namespace }}
   {{- end }}
-  
+
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.broker.ports.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
