@@ -57,10 +57,12 @@ spec:
 {{ toYaml .Values.proxy.tolerations | indent 8 }}
     {{- end }}
       affinity:
-        {{- if and .Values.affinity.anti_affinity .Values.proxy.affinity.anti_affinity}}
+        {{- if and .Values.anti_affinity.enabled .Values.proxy.anti_affinity.enabled }}
+        {{- $type := default .Values.anti_affinity.type .Values.proxy.anti_affinity.type }}
+        {{- $topologyKey := default .Values.anti_affinity.topologyKey .Values.proxy.anti_affinity.topologyKey }}
         podAntiAffinity:
-        {{ if eq .Values.proxy.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
-          {{ .Values.proxy.affinity.type }}:
+        {{- if eq $type "requiredDuringSchedulingIgnoredDuringExecution" }}
+          {{ $type }}:
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -75,9 +77,9 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.proxy.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ $topologyKey }}
         {{ else }}
-          {{ .Values.proxy.affinity.type }}:
+          {{ $type }}:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
@@ -90,11 +92,11 @@ spec:
                       operator: In
                       values:
                       - {{ .Release.Name }}
-                    - key: "component" 
+                    - key: "component"
                       operator: In
                       values:
                       - {{ .Values.proxy.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ $topologyKey }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
@@ -102,8 +104,10 @@ spec:
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
-        image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"
-        imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        {{- with .Values.images.proxy }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
         command: ["sh", "-c"]
         args:
           - >-
@@ -119,8 +123,10 @@ spec:
       # This init container will wait for at least one broker to be ready before
       # deploying the proxy
       - name: wait-broker-ready
-        image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"
-        imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        {{- with .Values.images.proxy }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
         command: ["sh", "-c"]
         args:
           - >-
@@ -133,8 +139,10 @@ spec:
             done;
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
-        image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"
-        imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        {{- with .Values.images.proxy }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
         {{- if .Values.proxy.probe.liveness.enabled }}
         livenessProbe:
           httpGet:

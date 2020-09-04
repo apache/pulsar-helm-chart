@@ -28,5 +28,7 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.functions.component }}
 data:
-  pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
+  {{- with .Values.images.functions }}
+  pulsarDockerImageName: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+  {{- end }}
 {{- end }}

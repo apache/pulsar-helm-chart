@@ -55,8 +55,10 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        {{- with .Values.images.broker }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
       {{- if .Values.toolset.resources }}
         resources:
 {{ toYaml .Values.toolset.resources | indent 10 }}

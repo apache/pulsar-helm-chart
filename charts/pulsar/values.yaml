@@ -61,18 +61,22 @@ volumes:
   # the local provisioner should be installed prior to enable local persistent volume
   local_storage: false
 
-## AntiAffinity
+## podAntiAffinity
 ##
-## Flag to enable and disable `AntiAffinity` for all components.
-## This is a global setting that is applied to all components.
-## If you need to disable AntiAffinity for a component, you can set
-## the `affinity.anti_affinity` settings to `false` for that component.
-affinity:
-  anti_affinity: true
-  # Set the anti affinity type. Valid values: 
+## Sets podAntiAffinity rules for statefulSets
+anti_affinity:
+  # Flag to enable and disable `AntiAffinity` for all components.
+  # This is a global setting that is applied to all components.
+  # If you need to disable AntiAffinity for a component, you can set
+  # the `anti_affinity.enabled` settings to `false` for that component.
+  enabled: true
+  # Set the anti affinity topologyKey.
+  # See some examples here https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#built-in-node-labels
+  topologyKey: kubernetes.io/hostname
+  # Set the anti affinity type. Valid values:
   # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
   # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
-  type: requiredDuringSchedulingIgnoredDuringExecution 
+  type: requiredDuringSchedulingIgnoredDuringExecution
 
 ## Components
 ##
@@ -129,29 +133,33 @@ extra:
 ##
 ## Control what images to use for each component
 images:
+  pulsar_default:
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+    pullPolicy: IfNotPresent
   zookeeper:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
-    pullPolicy: IfNotPresent
+    repository:
+    tag:
+    pullPolicy:
   bookie:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
-    pullPolicy: IfNotPresent
+    repository:
+    tag:
+    pullPolicy:
   autorecovery:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
-    pullPolicy: IfNotPresent
+    repository:
+    tag:
+    pullPolicy:
   broker:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
-    pullPolicy: IfNotPresent
+    repository:
+    tag:
+    pullPolicy:
   proxy:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
-    pullPolicy: IfNotPresent
+    repository:
+    tag:
+    pullPolicy:
   functions:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
+    repository:
+    tag:
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
@@ -290,12 +298,15 @@ zookeeper:
       failureThreshold: 30
       initialDelaySeconds: 10
       periodSeconds: 30
-  affinity:
-    anti_affinity: true
-    # Set the anti affinity type. Valid values: 
+  anti_affinity:
+    enabled: true
+    # Set the anti affinity topologyKey.
+    # See some examples here https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#built-in-node-labels
+    topologyKey:
+    # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
-    type: requiredDuringSchedulingIgnoredDuringExecution 
+    type:
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8000"
@@ -345,7 +356,7 @@ zookeeper:
   ##
   service:
     annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    publishNotReadyAddresses: true
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
@@ -400,12 +411,15 @@ bookkeeper:
       failureThreshold: 30
       initialDelaySeconds: 60
       periodSeconds: 30
-  affinity:
-    anti_affinity: true
-    # Set the anti affinity type. Valid values: 
+  anti_affinity:
+    enabled: true
+    # Set the anti affinity topologyKey.
+    # See some examples here https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#built-in-node-labels
+    topologyKey:
+    # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
-    type: requiredDuringSchedulingIgnoredDuringExecution 
+    type:
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -485,7 +499,7 @@ bookkeeper:
   ##
   service:
     annotations:
-      publishNotReadyAddresses: "true"
+    publishNotReadyAddresses: true
   ## Bookkeeper PodDisruptionBudget
   ## templates/bookkeeper-pdb.yaml
   ##
@@ -505,14 +519,17 @@ autorecovery:
     http: 8000
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
-  affinity:
-    anti_affinity: true
-    # Set the anti affinity type. Valid values: 
+  anti_affinity:
+    enabled: true
+    # Set the anti affinity topologyKey.
+    # See some examples here https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#built-in-node-labels
+    topologyKey:
+    # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
-    type: requiredDuringSchedulingIgnoredDuringExecution 
+    type:
   annotations: {}
-  # tolerations: []
+  tolerations: []
   gracePeriod: 30
   resources:
     requests:
@@ -584,12 +601,15 @@ broker:
       failureThreshold: 30
       initialDelaySeconds: 60
       periodSeconds: 10
-  affinity:
-    anti_affinity: true
-    # Set the anti affinity type. Valid values: 
+  anti_affinity:
+    enabled: true
+    # Set the anti affinity topologyKey.
+    # See some examples here https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#built-in-node-labels
+    topologyKey:
+    # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
-    type: preferredDuringSchedulingIgnoredDuringExecution 
+    type: preferredDuringSchedulingIgnoredDuringExecution
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -675,12 +695,15 @@ proxy:
       failureThreshold: 30
       initialDelaySeconds: 60
       periodSeconds: 10
-  affinity:
-    anti_affinity: true
-    # Set the anti affinity type. Valid values: 
+  anti_affinity:
+    enabled: true
+    # Set the anti affinity topologyKey.
+    # See some examples here https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#built-in-node-labels
+    topologyKey:
+    # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
-    type: requiredDuringSchedulingIgnoredDuringExecution 
+    type:
   annotations: {}
   tolerations: []
   gracePeriod: 30

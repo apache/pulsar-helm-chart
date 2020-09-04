@@ -29,6 +29,7 @@ metadata:
   annotations:
 {{ toYaml .Values.bookkeeper.service.annotations | indent 4 }}
 spec:
+  publishNotReadyAddresses: {{ .Values.bookkeeper.service.publishNotReadyAddresses }}
   ports:
   - name: bookie
     port: {{ .Values.bookkeeper.ports.bookie }}
