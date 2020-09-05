@@ -30,6 +30,7 @@ metadata:
   annotations:
 {{ toYaml .Values.zookeeper.service.annotations | indent 4 }}
 spec:
+  publishNotReadyAddresses: {{ .Values.zookeeper.service.publishNotReadyAddresses }}
   ports:
     - name: follower
       port: {{ .Values.zookeeper.ports.follower }}

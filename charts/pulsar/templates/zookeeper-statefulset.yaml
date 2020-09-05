@@ -54,10 +54,12 @@ spec:
 {{ toYaml .Values.zookeeper.tolerations | indent 8 }}
     {{- end }}
       affinity:
-        {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
+        {{- if and .Values.anti_affinity.enabled .Values.zookeeper.anti_affinity.enabled }}
+        {{- $type := default .Values.anti_affinity.type .Values.zookeeper.anti_affinity.type }}
+        {{- $topologyKey := default .Values.anti_affinity.topologyKey .Values.zookeeper.anti_affinity.topologyKey }}
         podAntiAffinity:
-          {{ if eq .Values.zookeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
-          {{ .Values.zookeeper.affinity.type }}:
+          {{- if eq $type "requiredDuringSchedulingIgnoredDuringExecution" }}
+          {{ $type }}:
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -72,9 +74,9 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.zookeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ $topologyKey }}
         {{ else }}
-          {{ .Values.zookeeper.affinity.type }}:
+          {{ $type }}:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
@@ -87,18 +89,20 @@ spec:
                       operator: In
                       values:
                       - {{ .Release.Name }}
-                    - key: "component" 
+                    - key: "component"
                       operator: In
                       values:
                       - {{ .Values.zookeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ $topologyKey }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
-        image: "{{ .Values.images.zookeeper.repository }}:{{ .Values.images.zookeeper.tag }}"
-        imagePullPolicy: {{ .Values.images.zookeeper.pullPolicy }}
+        {{- with .Values.images.zookeeper }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
       {{- if .Values.zookeeper.resources }}
         resources:
 {{ toYaml .Values.zookeeper.resources | indent 10 }}

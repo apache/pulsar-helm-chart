@@ -60,10 +60,12 @@ spec:
 {{- end }}
     {{- end }}
       affinity:
-        {{- if and .Values.affinity.anti_affinity .Values.autorecovery.affinity.anti_affinity}}
+        {{- if and .Values.anti_affinity.enabled .Values.autorecovery.anti_affinity.enabled }}
+        {{- $type := default .Values.anti_affinity.type .Values.autorecovery.anti_affinity.type }}
+        {{- $topologyKey := default .Values.anti_affinity.topologyKey .Values.autorecovery.anti_affinity.topologyKey }}
         podAntiAffinity:
-          {{ if eq .Values.autorecovery.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
-          {{ .Values.autorecovery.affinity.type }}:
+          {{- if eq $type "requiredDuringSchedulingIgnoredDuringExecution" }}
+          {{ $type }}:
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -78,9 +80,9 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.autorecovery.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ $topologyKey }}
         {{ else }}
-          {{ .Values.autorecovery.affinity.type }}:
+          {{ $type }}:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
@@ -93,11 +95,11 @@ spec:
                       operator: In
                       values:
                       - {{ .Release.Name }}
-                    - key: "component" 
+                    - key: "component"
                       operator: In
                       values:
                       - {{ .Values.autorecovery.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ $topologyKey }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
@@ -105,8 +107,10 @@ spec:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
-        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        {{- with .Values.images.autorecovery }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
         command: ["sh", "-c"]
         args:
         - >
@@ -118,8 +122,10 @@ spec:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
-        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        {{- with .Values.images.autorecovery }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
       {{- if .Values.autorecovery.resources }}
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
@@ -141,4 +147,3 @@ spec:
       volumes:
       {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
 {{- end }}
-

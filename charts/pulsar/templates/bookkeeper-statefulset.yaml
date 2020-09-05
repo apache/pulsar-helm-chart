@@ -57,10 +57,12 @@ spec:
 {{ toYaml .Values.bookkeeper.tolerations | indent 8 }}
     {{- end }}
       affinity:
-        {{- if and .Values.affinity.anti_affinity .Values.bookkeeper.affinity.anti_affinity}}
+        {{- if and .Values.anti_affinity.enabled .Values.bookkeeper.anti_affinity.enabled }}
+        {{- $type := default .Values.anti_affinity.type .Values.bookkeeper.anti_affinity.type }}
+        {{- $topologyKey := default .Values.anti_affinity.topologyKey .Values.bookkeeper.anti_affinity.topologyKey }}
         podAntiAffinity:
-          {{ if eq .Values.bookkeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
-          {{ .Values.bookkeeper.affinity.type }}:
+          {{- if eq $type "requiredDuringSchedulingIgnoredDuringExecution" }}
+          {{ $type }}:
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -75,9 +77,9 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.bookkeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ $topologyKey }}
         {{ else }}
-          {{ .Values.bookkeeper.affinity.type }}:
+          {{ $type }}:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
@@ -90,11 +92,11 @@ spec:
                       operator: In
                       values:
                       - {{ .Release.Name }}
-                    - key: "component" 
+                    - key: "component"
                       operator: In
                       values:
                       - {{ .Values.bookkeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ $topologyKey }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
@@ -102,8 +104,10 @@ spec:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
-        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        {{- with .Values.images.bookie }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
         command: ["sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
@@ -116,8 +120,10 @@ spec:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
-        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        {{- with .Values.images.bookie }}
+        image: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+        imagePullPolicy: {{ default $.Values.images.pulsar_default.pullPolicy .pullPolicy }}
+        {{- end }}
         {{- if .Values.bookkeeper.probe.liveness.enabled }}
         livenessProbe:
           httpGet:

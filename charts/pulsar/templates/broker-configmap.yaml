@@ -58,7 +58,9 @@ data:
   # support version >= 2.5.0
   PF_functionRuntimeFactoryConfigs_pulsarRootDir: {{ template "pulsar.home" . }}
   PF_kubernetesContainerFactory_pulsarRootDir: {{ template "pulsar.home" . }}
-  PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
+  {{- with .Values.images.functions }}
+  PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+  {{- end }}
   PF_functionRuntimeFactoryConfigs_submittingInsidePod: "true"
   PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
   PF_functionRuntimeFactoryConfigs_jobNamespace: {{ .Values.namespace }}
@@ -74,7 +76,9 @@ data:
   PF_functionRuntimeFactoryConfigs_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
   PF_functionRuntimeFactoryConfigs_changeConfigMapNamespace: {{ .Values.namespace }}
   # support version < 2.5.0
-  PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
+  {{- with .Values.images.functions }}
+  PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ default $.Values.images.pulsar_default.repository .repository }}:{{ default $.Values.images.pulsar_default.tag .tag }}"
+  {{- end }}
   PF_kubernetesContainerFactory_submittingInsidePod: "true"
   PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
   PF_kubernetesContainerFactory_jobNamespace: {{ .Values.namespace }}
@@ -90,7 +94,7 @@ data:
   PF_kubernetesContainerFactory_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
   PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ .Values.namespace }}
   {{- end }}
-  
+
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.broker.ports.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
