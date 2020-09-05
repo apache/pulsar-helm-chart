@@ -137,6 +137,11 @@ images:
     repository: apachepulsar/pulsar-all
     tag: 2.6.1
     pullPolicy: IfNotPresent
+  # the image used for running `pulsar-cluster-initialize` job
+  pulsar_metadata:
+    repository:
+    tag:
+    pullPolicy:
   zookeeper:
     repository:
     tag:
@@ -550,11 +555,6 @@ autorecovery:
 ## metadata deployed
 pulsar_metadata:
   component: pulsar-init
-  image:
-    # the image used for running `pulsar-cluster-initialize` job
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.1
-    pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
   configurationStoreMetadataPrefix: ""

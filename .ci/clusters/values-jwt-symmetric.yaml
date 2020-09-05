@@ -27,8 +27,8 @@ volumes:
   local_storage: true
 
 # disabled AntiAffinity
-affinity:
-  anti_affinity: false
+anti_affinity:
+  enabled: false
 
 # disable auto recovery and pulsar manager
 components:
