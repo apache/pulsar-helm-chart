@@ -9,7 +9,7 @@ Define the pulsar brroker service
 Define the hostname
 */}}
 {{- define "pulsar.broker.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.broker.service" . }}.{{ .Values.namespace }}.svc.cluster.local
+${HOSTNAME}.{{ template "pulsar.broker.service" . }}.{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}
 {{- end -}}
 
 {{/*

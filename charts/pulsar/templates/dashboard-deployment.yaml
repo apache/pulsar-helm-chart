@@ -24,12 +24,8 @@ metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
   namespace: {{ .Values.namespace }}
   labels:
-    app: {{ template "pulsar.name" . }}
-    chart: {{ template "pulsar.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.dashboard.component }}
-    cluster: {{ template "pulsar.fullname" . }}
 spec:
   replicas: {{ .Values.dashboard.replicaCount }}
   selector:
@@ -40,10 +36,9 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "pulsar.name" . }}
-        release: {{ .Release.Name }}
+        {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.dashboard.component }}
-        cluster: {{ template "pulsar.fullname" . }}
+
       annotations:
 {{ toYaml .Values.dashboard.annotations | indent 8 }}
     spec:

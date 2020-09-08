@@ -9,7 +9,7 @@ Define the pulsar toolset service
 Define the toolset hostname
 */}}
 {{- define "pulsar.toolset.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.toolset.service" . }}.{{ .Values.namespace }}.svc.cluster.local
+${HOSTNAME}.{{ template "pulsar.toolset.service" . }}.{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}
 {{- end -}}
 
 {{/*

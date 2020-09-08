@@ -35,7 +35,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   secretName: "{{ .Release.Name }}-ca-tls"
-  commonName: "{{ .Values.namespace }}.svc.cluster.local"
+  commonName: "{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}"
   usages:
     - server auth
     - client auth

@@ -9,7 +9,7 @@ Define the pulsar autorecovery service
 Define the autorecovery hostname
 */}}
 {{- define "pulsar.autorecovery.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.autorecovery.service" . }}.{{ .Values.namespace }}.svc.cluster.local
+${HOSTNAME}.{{ template "pulsar.autorecovery.service" . }}.{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}
 {{- end -}}
 
 {{/*
