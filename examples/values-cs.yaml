@@ -35,11 +35,3 @@ components:
   toolset: false
   # pulsar manager
   pulsar_manager: false
-
-monitoring:
-  # monitoring - prometheus
-  prometheus: false
-  # monitoring - grafana
-  grafana: false
-  # monitoring - node_exporter
-  node_exporter: false
