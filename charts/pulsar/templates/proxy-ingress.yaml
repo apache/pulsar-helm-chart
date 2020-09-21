@@ -40,8 +40,7 @@ spec:
       {{- end }}
 {{- end }}
   rules:
-    - host: {{ required "proxy ingress hostname not provided" .Values.proxy.ingress.hostname }}
-      http:
+    - http:
         paths:
           - path: {{ .Values.proxy.ingress.path }}
             backend:
@@ -51,4 +50,7 @@ spec:
               {{- else }}
               servicePort: {{ .Values.proxy.ports.http }}
               {{- end }}
+      {{- if .Values.proxy.ingress.hostname }}
+      host: {{ .Values.proxy.ingress.hostname }}
+      {{- end }}
 {{- end }}

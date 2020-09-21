@@ -39,12 +39,15 @@ spec:
 {{ toYaml .Values.grafana.ingress.tls | indent 4 }}
 {{- end }}
   rules:
-    - host: {{ required "Grafana ingress hostname not provided" .Values.grafana.ingress.hostname }}
-      http:
+    - http:
         paths:
         - path: {{ .Values.grafana.ingress.path }}
           backend:
             serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
             servicePort: {{ .Values.grafana.ingress.port }}
-{{- end }}
-{{- end }}
+      {{- if .Values.grafana.ingress.hostname }}
+      host: {{ .Values.grafana.ingress.hostname }}
+      {{- end }}
+      
+  {{- end }}
+  {{- end }}
