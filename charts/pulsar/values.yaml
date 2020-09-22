@@ -345,7 +345,6 @@ zookeeper:
       -XX:+DoEscapeAnalysis
       -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
-      -Dzookeeper.forceSync=no
   ## Zookeeper service
   ## templates/zookeeper-service.yaml
   ##
