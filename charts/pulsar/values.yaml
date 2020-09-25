@@ -963,6 +963,8 @@ pulsar_manager:
     hostname: ""
     path: "/"
 
+  ## If set use existing secret with specified name to set pulsar admin credentials.
+  existingSecretName:
   admin:
     user: pulsar
     password: pulsar
