@@ -38,6 +38,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.prometheus.component }}
       annotations:
+      {{- if .Values.prometheus.restartPodsOnConfigMapChange }}
+      checksum/config: {{ include (print $.Template.BasePath "/prometheus-configmap.yaml") . | sha256sum }}
+      {{- end }}
 {{ toYaml .Values.prometheus.annotations | indent 8 }}
     spec:
     {{- if .Values.prometheus.nodeSelector }}
