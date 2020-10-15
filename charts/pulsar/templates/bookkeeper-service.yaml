@@ -26,8 +26,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.bookkeeper.component }}
+{{- if .Values.bookkeeper.service.annotations }}
   annotations:
 {{ toYaml .Values.bookkeeper.service.annotations | indent 4 }}
+{{- end }}
 spec:
   ports:
   - name: bookie
@@ -38,4 +40,7 @@ spec:
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.bookkeeper.component }}
+  {{- if .Values.bookkeeper.service.spec }}
+    {{- toYaml .Values.bookkeeper.service.spec | trim | nindent 2 }}
+  {{- end }}
 {{- end }}

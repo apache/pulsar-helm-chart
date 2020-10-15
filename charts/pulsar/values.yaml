@@ -489,8 +489,8 @@ bookkeeper:
   ## templates/bookkeeper-service.yaml
   ##
   service:
-    annotations:
-      publishNotReadyAddresses: "true"
+    spec:
+      publishNotReadyAddresses: true
   ## Bookkeeper PodDisruptionBudget
   ## templates/bookkeeper-pdb.yaml
   ##
