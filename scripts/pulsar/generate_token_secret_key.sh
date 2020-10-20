@@ -31,6 +31,7 @@ Options:
        -n,--namespace                   the k8s namespace to install the pulsar helm chart
        -k,--release                     the pulsar helm release name
        -s,--symmetric                   generate symmetric secret key. If not provided, an asymmetric pair of keys are generated.
+       -l,--local                       read and write output from local filesystem, do not install secret to kubernetes
 Usage:
     $0 --namespace pulsar --release pulsar-dev
 EOF
@@ -57,6 +58,10 @@ case $key in
     symmetric=true
     shift
     ;;
+    -l|--local)
+    local=true
+    shift
+    ;;
     -h|--help)
     usage
     exit 0
@@ -75,6 +80,7 @@ pulsar::ensure_pulsarctl
 
 namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
+local_cmd=${file:+-o yaml --dry-run=client >secret.yaml}
 
 function pulsar::jwt::generate_symmetric_key() {
     local secret_name="${release}-token-symmetric-key"
@@ -83,8 +89,10 @@ function pulsar::jwt::generate_symmetric_key() {
     trap "test -f $tmpfile && rm $tmpfile" RETURN
     ${PULSARCTL_BIN} token create-secret-key --output-file ${tmpfile}
     mv $tmpfile SECRETKEY
-    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=SECRETKEY
-    rm SECRETKEY
+    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=SECRETKEY ${local:+ -o yaml --dry-run=client}
+    if [[ "${local}" != "true" ]]; then
+        rm SECRETKEY
+    fi
 }
 
 function pulsar::jwt::generate_asymmetric_key() {
@@ -97,9 +105,11 @@ function pulsar::jwt::generate_asymmetric_key() {
     ${PULSARCTL_BIN} token create-key-pair -a RS256 --output-private-key ${privatekeytmpfile} --output-public-key ${publickeytmpfile}
     mv $privatekeytmpfile PRIVATEKEY
     mv $publickeytmpfile PUBLICKEY
-    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=PRIVATEKEY --from-file=PUBLICKEY
-    rm PRIVATEKEY
-    rm PUBLICKEY
+    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=PRIVATEKEY --from-file=PUBLICKEY ${local:+ -o yaml --dry-run=client}
+    if [[ "${local}" != "true" ]]; then
+        rm PRIVATEKEY
+        rm PUBLICKEY
+    fi
 }
 
 if [[ "${symmetric}" == "true" ]]; then
