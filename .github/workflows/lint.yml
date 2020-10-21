@@ -24,6 +24,7 @@ on:
       - '*'
     paths:
       - 'charts/pulsar/**'
+      - '.ci/ct.sh'
 jobs:
   lint-test:
     runs-on: ubuntu-latest
