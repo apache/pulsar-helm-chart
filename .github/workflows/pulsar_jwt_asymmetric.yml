@@ -24,6 +24,7 @@ on:
       - '*'
     paths:
       - 'charts/pulsar/**'
+      - 'hack/kind-cluster-build.sh'
 jobs:
   lint-test:
     runs-on: ubuntu-latest
