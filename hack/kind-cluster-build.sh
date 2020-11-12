@@ -117,7 +117,7 @@ configFile=${workDir}/kind-config.yaml
 
 cat <<EOF > ${configFile}
 kind: Cluster
-apiVersion: kind.sigs.k8s.io/v1alpha3
+apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
   extraPortMappings:
