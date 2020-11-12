@@ -23,7 +23,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
   labels:
     app: {{ template "pulsar.name" . }}
     chart: {{ template "pulsar.chart" . }}
