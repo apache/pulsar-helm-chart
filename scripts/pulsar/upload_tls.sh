@@ -40,6 +40,7 @@ Options:
        -d,--dir                         the dir for storing tls certs. Default to ${tlsdir}.
        -c,--client-components           the client components of pulsar cluster. a comma separated list of components. Default to ${clientComponents}.
        -s,--server-components           the server components of pulsar cluster. a comma separated list of components. Default to ${serverComponents}.
+       -l,--local                       read and write output from local filesystem, do not install secret to kubernetes
 Usage:
     $0 --namespace pulsar --release pulsar-dev
 EOF
@@ -75,6 +76,10 @@ case $key in
     shift
     shift
     ;;
+    -l|--local)
+    local=true
+    shift
+    ;;
     -h|--help)
     usage
     exit 0
@@ -91,7 +96,7 @@ ca_cert_file=${tlsdir}/certs/ca.cert.pem
 
 function upload_ca() {
     local tls_ca_secret="${release}-ca-tls"
-    kubectl create secret generic ${tls_ca_secret} -n ${namespace} --from-file="ca.crt=${ca_cert_file}"
+    kubectl create secret generic ${tls_ca_secret} -n ${namespace} --from-file="ca.crt=${ca_cert_file}" ${local:+ -o yaml --dry-run=client}
 }
 
 function upload_server_cert() {
@@ -104,7 +109,8 @@ function upload_server_cert() {
         -n ${namespace} \
         --from-file="tls.crt=${tls_cert_file}" \
         --from-file="tls.key=${tls_key_file}" \
-        --from-file="ca.crt=${ca_cert_file}"
+        --from-file="ca.crt=${ca_cert_file}" \
+        ${local:+ -o yaml --dry-run=client}
 }
 
 function upload_client_cert() {
@@ -117,7 +123,8 @@ function upload_client_cert() {
         -n ${namespace} \
         --from-file="tls.crt=${tls_cert_file}" \
         --from-file="tls.key=${tls_key_file}" \
-        --from-file="ca.crt=${ca_cert_file}"
+        --from-file="ca.crt=${ca_cert_file}" \
+        ${local:+ -o yaml --dry-run=client}
 }
 
 upload_ca

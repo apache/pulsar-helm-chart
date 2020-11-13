@@ -31,6 +31,7 @@ Options:
        -s,--symmetric                   generate symmetric secret key. If not provided, an asymmetric pair of keys are generated.
        --pulsar-superusers              the superusers of pulsar cluster. a comma separated list of super users.
        -c,--create-namespace            flag to create k8s namespace.
+       -l,--local                       read and write output from local filesystem, do not deploy to kubernetes
 Usage:
     $0 --namespace pulsar --release pulsar-release
 EOF
@@ -67,6 +68,10 @@ case $key in
     symmetric=true
     shift
     ;;
+    -l|--local)
+    local=true
+    shift
+    ;;
     -h|--help)
     usage
     exit 0
@@ -83,9 +88,16 @@ namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
 pulsar_superusers=${pulsar_superusers:-"proxy-admin,broker-admin,admin"}
 
+function new_k8s_object() {
+    if [[ "${local}" == "true" ]]; then
+        echo ---
+    fi
+}
+
 function do_create_namespace() {
     if [[ "${create_namespace}" == "true" ]]; then
-        kubectl create namespace ${namespace}
+        new_k8s_object
+        kubectl create namespace ${namespace} ${local:+ -o yaml --dry-run=client}
     fi
 }
 
@@ -96,32 +108,38 @@ if [[ "${symmetric}" == "true" ]]; then
   extra_opts="${extra_opts} -s"
 fi
 
-echo "generate the token keys for the pulsar cluster"
+if [[ "${local}" == "true" ]]; then
+  extra_opts="${extra_opts} -l"
+fi
+
+echo "generate the token keys for the pulsar cluster" >&2
+new_k8s_object
 ${CHART_HOME}/scripts/pulsar/generate_token_secret_key.sh -n ${namespace} -k ${release} ${extra_opts}
 
-echo "generate the tokens for the super-users: ${pulsar_superusers}"
+echo "generate the tokens for the super-users: ${pulsar_superusers}" >&2
 
 IFS=', ' read -r -a superusers <<< "$pulsar_superusers"
 for user in "${superusers[@]}"
 do
-    echo "generate the token for $user"
+    echo "generate the token for $user" >&2
+    new_k8s_object
     ${CHART_HOME}/scripts/pulsar/generate_token.sh -n ${namespace} -k ${release} -r ${user} ${extra_opts} 
 done
 
-echo "-------------------------------------"
-echo
-echo "The jwt token secret keys are generated under:"
+echo "-------------------------------------" >&2
+echo >&2
+echo "The jwt token secret keys are generated under:" >&2
 if [[ "${symmetric}" == "true" ]]; then
-    echo "    - '${release}-token-symmetric-key'"
+    echo "    - '${release}-token-symmetric-key'" >&2
 else
-    echo "    - '${release}-token-asymmetric-key'"
+    echo "    - '${release}-token-asymmetric-key'" >&2
 fi
-echo
+echo >&2
 
-echo "The jwt tokens for superusers are generated and stored as below:"
+echo "The jwt tokens for superusers are generated and stored as below:" >&2
 for user in "${superusers[@]}"
 do
-    echo "    - '${user}':secret('${release}-token-${user}')"
+    echo "    - '${user}':secret('${release}-token-${user}')" >&2
 done
-echo
+echo >&2
 

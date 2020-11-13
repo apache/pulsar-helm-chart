@@ -17,14 +17,14 @@
 # under the License.
 #
 
-name: Precommit - Pulsar Helm Chart (BK TLS Only)
+name: Precommit - Helm Chart Lint
 on:
   pull_request:
     branches:
       - '*'
     paths:
       - 'charts/pulsar/**'
-      - 'hack/kind-cluster-build.sh'
+      - '.ci/ct.sh'
 jobs:
   lint-test:
     runs-on: ubuntu-latest
@@ -41,8 +41,8 @@ jobs:
         with:
           args: site2 .asf.yaml ct.yaml
 
-      - name: Run chart-testing (install)
-        run: |
-          .ci/chart_test.sh .ci/clusters/values-bk-tls.yaml
-        # Only build a kind cluster if there are chart changes to test.
-        if: steps.docs.outputs.changed_only == 'no'
+      - name: Lint chart
+        id: lint
+        uses: helm/chart-testing-action@v2.0.0
+        with:
+          command: lint
