@@ -1,0 +1,70 @@
+{{- if and .Values.rbac.enabled .Values.rbac.psp }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ .Values.namespace }}
+rules:
+  - apiGroups:
+      - policy
+    resourceNames:
+      - "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ .Values.namespace }}
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+subjects:
+- kind: ServiceAccount
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ .Values.namespace }}
+---
+
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ .Values.namespace }}
+spec:
+  readOnlyRootFilesystem: false
+  privileged: false
+  allowPrivilegeEscalation: false
+  runAsUser:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  seLinux:
+    rule: 'RunAsAny'
+  volumes:
+  - configMap
+  - emptyDir
+  - projected
+  - secret
+  - downwardAPI
+  - persistentVolumeClaim
+  {{- end}}

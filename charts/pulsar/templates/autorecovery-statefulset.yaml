@@ -101,6 +101,9 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
+    {{- if and .Values.rbac.enabled  .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+    {{- end}}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
@@ -124,6 +127,10 @@ spec:
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end}}
         command: ["sh", "-c"]
         args:
         - >
