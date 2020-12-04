@@ -22,7 +22,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.bookkeeper.component }}

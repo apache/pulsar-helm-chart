@@ -22,7 +22,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: "{{ .Values.bookkeeper.component }}-init"
@@ -41,7 +41,7 @@ spec:
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else }}
-            until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}.{{ .Values.namespace }}; do
+            until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}.{{ template "pulsar.namespace" . }}; do
               sleep 3;
             done;
             {{- end}}
