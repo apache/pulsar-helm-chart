@@ -9,7 +9,7 @@ Define the pulsar bookkeeper service
 Define the bookkeeper hostname
 */}}
 {{- define "pulsar.bookkeeper.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.bookkeeper.service" . }}.{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}
+${HOSTNAME}.{{ template "pulsar.bookkeeper.service" . }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}
 {{- end -}}
 
 

@@ -40,7 +40,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -54,6 +54,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 {{- end }}
 {{- end }}

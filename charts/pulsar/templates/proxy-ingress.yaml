@@ -29,7 +29,7 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
 {{- if .Values.proxy.ingress.tls.enabled }}
   tls:

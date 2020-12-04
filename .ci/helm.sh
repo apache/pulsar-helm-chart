@@ -78,12 +78,12 @@ function ci::install_pulsar_chart() {
     ${KUBECTL} create namespace ${NAMESPACE}
     echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
     ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
-    ${CHARTS_HOME}/scripts/pulsar/upload_tls.sh -k ${CLUSTER} -d ${PULSAR_HOME}/.ci/tls
+    ${CHARTS_HOME}/scripts/pulsar/upload_tls.sh -k ${CLUSTER} -n ${NAMESPACE} -d ${PULSAR_HOME}/.ci/tls
     sleep 10
 
     echo ${HELM} install --set initialize=true --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
     ${HELM} template --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
-    ${HELM} install --set initialize=true --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
+    ${HELM} install --set initialize=true --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
 
     echo "wait until broker is alive"
     WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-broker | wc -l)
