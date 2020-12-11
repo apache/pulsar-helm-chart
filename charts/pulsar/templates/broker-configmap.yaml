@@ -22,7 +22,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
@@ -61,7 +61,7 @@ data:
   PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
   PF_functionRuntimeFactoryConfigs_submittingInsidePod: "true"
   PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
-  PF_functionRuntimeFactoryConfigs_jobNamespace: {{ .Values.namespace }}
+  PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
   PF_functionRuntimeFactoryConfigs_expectedMetricsCollectionInterval: "30"
   {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
   PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
@@ -72,12 +72,12 @@ data:
   PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
   PF_functionRuntimeFactoryConfigs_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
-  PF_functionRuntimeFactoryConfigs_changeConfigMapNamespace: {{ .Values.namespace }}
+  PF_functionRuntimeFactoryConfigs_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
   # support version < 2.5.0
   PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
   PF_kubernetesContainerFactory_submittingInsidePod: "true"
   PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
-  PF_kubernetesContainerFactory_jobNamespace: {{ .Values.namespace }}
+  PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}
   PF_kubernetesContainerFactory_expectedMetricsCollectionInterval: "30"
   {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
   PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
@@ -88,7 +88,7 @@ data:
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
   PF_kubernetesContainerFactory_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
-  PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ .Values.namespace }}
+  PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
   {{- end }}
 
   # prometheus needs to access /metrics endpoint

@@ -30,7 +30,7 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
 {{- if .Values.dashboard.ingress.tls.enabled }}
   tls:
