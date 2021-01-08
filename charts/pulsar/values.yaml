@@ -68,6 +68,17 @@ volumes:
   # the local provisioner should be installed prior to enable local persistent volume
   local_storage: false
 
+## RBAC
+##
+## Configure settings related to RBAC such as limiting broker access to single
+## namespece or enabling PSP
+
+rbac:
+  enabled: false
+  psp: false
+  limit_to_namespace: false
+
+
 ## AntiAffinity
 ##
 ## Flag to enable and disable `AntiAffinity` for all components.

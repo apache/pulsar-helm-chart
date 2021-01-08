@@ -20,7 +20,11 @@
 {{- if .Values.components.broker }}
 ## TODO create our own cluster role with less privledges than admin
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.limit_to_namespace }}
+kind: RoleBinding
+{{- else}}
 kind: ClusterRoleBinding
+{{- end}}
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-clusterrolebinding"
   labels:
