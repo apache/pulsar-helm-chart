@@ -44,6 +44,9 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.broker.ports.http }}"
+        {{- if .Values.broker.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/broker-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{- with .Values.broker.annotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}

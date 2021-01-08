@@ -44,6 +44,9 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.proxy.ports.http }}"
+        {{- if .Values.proxy.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/proxy-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{- with .Values.proxy.annotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}

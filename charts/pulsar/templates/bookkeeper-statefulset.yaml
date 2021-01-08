@@ -44,6 +44,9 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.bookkeeper.ports.http }}"
+        {{- if .Values.bookkeeper.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/bookkeeper-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{- with .Values.bookkeeper.annotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}
