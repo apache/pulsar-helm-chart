@@ -456,17 +456,20 @@ bookkeeper:
       name: ledgers
       size: 50Gi
       local_storage: true
-      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-      ##
-      # storageClassName: existent-storage-class
-      #
-      ## Instead if you want to create a new storage class define it below
-      ## If left undefined no storage class will be defined along with PVC
-      ##
+      # storageClassName:
       # storageClass:
-        # type: pd-ssd
-        # fsType: xfs
-        # provisioner: kubernetes.io/gce-pd
+        # ...
+
+    ## use a single common volume for both journal and ledgers
+    useSingleCommonVolume: false
+    common:
+      name: common
+      size: 60Gi
+      local_storage: true
+      # storageClassName:
+      # storageClass: ## this is common too
+        # ...
+
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
   ##
