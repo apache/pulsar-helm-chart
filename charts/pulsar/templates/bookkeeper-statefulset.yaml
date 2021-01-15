@@ -44,6 +44,9 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.bookkeeper.ports.http }}"
+        {{- if .Values.bookkeeper.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/bookkeeper-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{- with .Values.bookkeeper.annotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}
@@ -98,6 +101,9 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
+    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+    {{- end}}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
@@ -112,6 +118,10 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end}}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       containers:
@@ -155,6 +165,10 @@ spec:
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           exec bin/pulsar bookie;
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end}}
         ports:
         - name: bookie
           containerPort: {{ .Values.bookkeeper.ports.bookie }}

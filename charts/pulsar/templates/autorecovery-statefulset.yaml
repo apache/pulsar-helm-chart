@@ -45,6 +45,9 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.autorecovery.ports.http }}"
+        {{- if .Values.autorecovery.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/autorecovery-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{- with .Values.autorecovery.annotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}
@@ -101,6 +104,9 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
+    {{- if and .Values.rbac.enabled  .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+    {{- end}}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
@@ -124,6 +130,10 @@ spec:
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end}}
         command: ["sh", "-c"]
         args:
         - >

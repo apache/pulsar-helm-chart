@@ -68,6 +68,17 @@ volumes:
   # the local provisioner should be installed prior to enable local persistent volume
   local_storage: false
 
+## RBAC
+##
+## Configure settings related to RBAC such as limiting broker access to single
+## namespece or enabling PSP
+
+rbac:
+  enabled: false
+  psp: false
+  limit_to_namespace: false
+
+
 ## AntiAffinity
 ##
 ## Flag to enable and disable `AntiAffinity` for all components.
@@ -138,27 +149,27 @@ extra:
 images:
   zookeeper:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
     pullPolicy: IfNotPresent
   bookie:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
     pullPolicy: IfNotPresent
   autorecovery:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
     pullPolicy: IfNotPresent
   broker:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
     pullPolicy: IfNotPresent
   proxy:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
     pullPolicy: IfNotPresent
   functions:
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
@@ -273,6 +284,8 @@ zookeeper:
     enabled: false
     interval: 10s
     scrapeTimeout: 10s
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   ports:
     http: 8000
     client: 2181
@@ -385,6 +398,8 @@ bookkeeper:
     enabled: false
     interval: 10s
     scrapeTimeout: 10s
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   ports:
     http: 8000
     bookie: 3181
@@ -507,6 +522,8 @@ autorecovery:
   # so the metrics are correctly rendered in grafana dashboard
   component: recovery
   replicaCount: 1
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   ports:
     http: 8000
   # nodeSelector:
@@ -542,7 +559,7 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.6.2
+    tag: 2.7.0
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
@@ -568,6 +585,8 @@ broker:
     enabled: false
     interval: 10s
     scrapeTimeout: 10s
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   ports:
     http: 8080
     https: 8443
@@ -664,6 +683,8 @@ proxy:
     enabled: false
     interval: 10s
     scrapeTimeout: 10s
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -798,6 +819,8 @@ toolset:
   component: toolset
   useProxy: true
   replicaCount: 1
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
@@ -831,6 +854,8 @@ prometheus:
   rbac:
     enabled: true
   replicaCount: 1
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
@@ -871,6 +896,8 @@ prometheus:
 grafana:
   component: grafana
   replicaCount: 1
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
@@ -922,6 +949,8 @@ grafana:
 pulsar_manager:
   component: pulsar-manager
   replicaCount: 1
+  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
+  restartPodsOnConfigMapChange: false
   # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
   annotations: {}
@@ -963,6 +992,8 @@ pulsar_manager:
     hostname: ""
     path: "/"
 
+  ## If set use existing secret with specified name to set pulsar admin credentials.
+  existingSecretName:
   admin:
     user: pulsar
     password: pulsar

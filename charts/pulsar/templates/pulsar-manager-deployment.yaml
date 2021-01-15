@@ -38,6 +38,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.pulsar_manager.component }}
       annotations:
+      {{- if .Values.pulsar_manager.restartPodsOnConfigMapChange }}
+      checksum/config: {{ include (print $.Template.BasePath "/pulsar-manager-configmap.yaml") . | sha256sum }}
+      {{- end }}
 {{ toYaml .Values.pulsar_manager.annotations | indent 8 }}
     spec:
     {{- if .Values.pulsar_manager.nodeSelector }}
@@ -72,12 +75,20 @@ spec:
             valueFrom:
               secretKeyRef:
                 key: PULSAR_MANAGER_ADMIN_USER
+                {{- if .Values.pulsar_manager.existingSecretName }}
+                name: "{{ .Values.pulsar_manager.existingSecretName }}"
+                {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
+                {{- end }}
           - name: PASSWORD
             valueFrom:
               secretKeyRef:
                 key: PULSAR_MANAGER_ADMIN_PASSWORD
+                {{- if .Values.pulsar_manager.existingSecretName }}
+                name: "{{ .Values.pulsar_manager.existingSecretName }}"
+                {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
+                {{- end }}
       volumes:
         - name: pulsar-manager-data
           emptyDir: {}
