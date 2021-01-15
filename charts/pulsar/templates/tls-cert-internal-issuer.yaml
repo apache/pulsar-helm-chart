@@ -23,7 +23,7 @@ apiVersion: cert-manager.io/v1alpha2
 kind: Issuer
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   selfSigned: {}
 ---
@@ -32,10 +32,10 @@ apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
   name: "{{ template "pulsar.fullname" . }}-ca"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   secretName: "{{ .Release.Name }}-ca-tls"
-  commonName: "{{ .Values.namespace }}.svc.{{ .Values.clusterDomain }}"
+  commonName: "{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
   usages:
     - server auth
     - client auth
@@ -54,7 +54,7 @@ apiVersion: cert-manager.io/v1alpha2
 kind: Issuer
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
-  namespace: {{ .Values.namespace }}
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   ca:
     secretName: "{{ .Release.Name }}-ca-tls"

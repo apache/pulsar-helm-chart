@@ -17,13 +17,14 @@
 # under the License.
 #
 
-
 ###
 ### K8S Settings
 ###
 
-## Namespace to deploy pulsar
-namespace: pulsar
+### Namespace to deploy pulsar
+# The namespace to use to deploy the pulsar components, if left empty
+# will default to .Release.Namespace (aka helm --namespace).
+namespace: ""
 namespaceCreate: false
 
 ## clusterDomain as defined for your k8s cluster
