@@ -55,6 +55,6 @@ roleRef:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
 subjects:
 - kind: ServiceAccount
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-acct"
   namespace: {{ .Values.namespace }}
 {{- end }}
