@@ -177,6 +177,11 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        env:
+        - name: PULSAR_PREFIX_bookieId
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         volumeMounts:
         {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
           - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
