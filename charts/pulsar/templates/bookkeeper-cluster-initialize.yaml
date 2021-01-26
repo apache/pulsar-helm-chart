@@ -29,6 +29,9 @@ metadata:
 spec:
   template:
     spec:
+    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+    {{- end }}
       initContainers:
       - name: wait-zookeeper-ready
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
@@ -66,6 +69,10 @@ spec:
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;
             fi
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
