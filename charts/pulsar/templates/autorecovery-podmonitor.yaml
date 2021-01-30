@@ -17,25 +17,25 @@
 # under the License.
 #
 
-# deploy zookeeper PodMonitor only when `$.Values.zookeeper.podMonitor.enabled` is true
-{{- if $.Values.zookeeper.podMonitor.enabled }}
+# deploy broker PodMonitor only when `$.Values.broker.podMonitor.enabled` is true
+{{- if $.Values.autorecovery.podMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: {{ template "pulsar.name" . }}-zookeeper
+  name: {{ template "pulsar.name" . }}-recovery
   labels:
     app: {{ template "pulsar.name" . }}
     chart: {{ template "pulsar.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  jobLabel: zookeeper
+  jobLabel: recovery
   podMetricsEndpoints:
     - port: http
       path: /metrics
       scheme: http
-      interval: {{ $.Values.zookeeper.podMonitor.interval }}
-      scrapeTimeout: {{ $.Values.zookeeper.podMonitor.scrapeTimeout }}
+      interval: {{ $.Values.autorecovery.podMonitor.interval }}
+      scrapeTimeout: {{ $.Values.autorecovery.podMonitor.scrapeTimeout }}
       relabelings:
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
@@ -50,5 +50,5 @@ spec:
           targetLabel: kubernetes_pod_name
   selector:
     matchLabels:
-      component: zookeeper
+      component: {{ .Values.autorecovery.component }}
 {{- end }}
