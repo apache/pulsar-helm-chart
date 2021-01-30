@@ -19,7 +19,26 @@
 
 {{- if .Values.components.bookkeeper }}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence }}
-{{- if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage)) .Values.bookkeeper.volumes.journal.storageClass }}
+{{- if not .Values.volumes.local_storage }}
+
+{{- if .Values.bookkeeper.volumes.useSingleCommonVolume}}
+{{- if and (not .Values.bookkeeper.volumes.common.local_storage) .Values.bookkeeper.volumes.common.storageClass }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+provisioner: {{ .Values.bookkeeper.volumes.common.storageClass.provisioner }}
+parameters:
+  type: {{ .Values.bookkeeper.volumes.common.storageClass.type }}
+  fsType: {{ .Values.bookkeeper.volumes.common.storageClass.fsType }}
+{{- end }}
+{{- else }}
+
+{{- if and (not .Values.bookkeeper.volumes.journal.local_storage) .Values.bookkeeper.volumes.journal.storageClass }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -34,8 +53,7 @@ parameters:
   fsType: {{ .Values.bookkeeper.volumes.journal.storageClass.fsType }}
 {{- end }}
 ---
-
-{{- if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage)) .Values.bookkeeper.volumes.ledgers.storageClass }}
+{{- if and (not .Values.bookkeeper.volumes.ledgers.local_storage) .Values.bookkeeper.volumes.ledgers.storageClass }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -49,6 +67,8 @@ parameters:
   type: {{ .Values.bookkeeper.volumes.ledgers.storageClass.type }}
   fsType: {{ .Values.bookkeeper.volumes.ledgers.storageClass.fsType }}
 {{- end }}
+{{- end }}
 
+{{- end }}
 {{- end }}
 {{- end }}
