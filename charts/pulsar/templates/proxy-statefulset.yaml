@@ -101,6 +101,9 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
+    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+    {{- end}}
       initContainers:
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
@@ -189,6 +192,10 @@ spec:
         - name: pulsarssl
           containerPort: {{ .Values.proxy.ports.pulsarssl }}
         {{- end }}
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"

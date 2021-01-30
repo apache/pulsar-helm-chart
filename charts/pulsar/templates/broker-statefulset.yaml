@@ -120,6 +120,10 @@ spec:
             {{- end }}
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
       # This init container will wait for bookkeeper to be ready before
@@ -147,6 +151,10 @@ spec:
         envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       containers:
@@ -228,6 +236,10 @@ spec:
           {{- end }}
           {{- end }}
           {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
+      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+      {{- end }}
       volumes:
       {{- if .Values.auth.authentication.enabled }}
       {{- if eq .Values.auth.authentication.provider "jwt" }}

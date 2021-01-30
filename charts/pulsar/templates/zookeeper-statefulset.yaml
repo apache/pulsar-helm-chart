@@ -98,6 +98,9 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}
+    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+    {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         image: "{{ .Values.images.zookeeper.repository }}:{{ .Values.images.zookeeper.tag }}"
@@ -136,6 +139,10 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         {{- if .Values.zookeeper.probe.readiness.enabled }}
+        {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        securityContext:
+          readOnlyRootFilesystem: false
+        {{- end}}
         readinessProbe:
           exec:
             command:
