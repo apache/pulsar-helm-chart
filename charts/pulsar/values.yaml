@@ -214,6 +214,9 @@ tls:
   bookie:
     enabled: false
     cert_name: tls-bookie
+  bookkeeper:
+    enabled: false
+    cert_name: tls-bookie
   # settings for generating certs for zookeeper
   zookeeper:
     enabled: false
