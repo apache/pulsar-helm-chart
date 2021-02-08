@@ -48,7 +48,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources:
-  - configmap
+  - configmaps
   verbs: ["get", "list", "watch"]
 - apiGroups: ["", "extensions", "apps"]
   resources:

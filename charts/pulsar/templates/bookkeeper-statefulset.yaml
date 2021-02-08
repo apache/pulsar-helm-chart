@@ -178,10 +178,15 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
+        {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
+          - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
+            mountPath: /pulsar/data/bookkeeper
+        {{- else }}
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
           mountPath: /pulsar/data/bookkeeper/journal
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
           mountPath: /pulsar/data/bookkeeper/ledgers
+        {{- end}}
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence) }}
@@ -193,6 +198,22 @@ spec:
       {{- include "pulsar.bookkeeper.certs.volumes" . | nindent 6 }}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence}}
   volumeClaimTemplates:
+  {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
+    - metadata:
+        name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.bookkeeper.volumes.common.size }}
+        {{- if .Values.bookkeeper.volumes.common.storageClassName }}
+        storageClassName: "{{ .Values.bookkeeper.volumes.common.storageClassName }}"
+        {{- else if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.common.local_storage)) .Values.bookkeeper.volumes.common.storageClass }}
+        storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
+        {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.common.local_storage }}
+        storageClassName: "local-storage"
+        {{- end }}
+  {{- else }}
   - metadata:
       name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
     spec:
@@ -221,5 +242,6 @@ spec:
     {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.ledgers.local_storage }}
       storageClassName: "local-storage"
     {{- end }}
+  {{- end }}
 {{- end }}
 {{- end }}

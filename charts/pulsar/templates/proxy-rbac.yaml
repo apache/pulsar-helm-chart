@@ -21,13 +21,13 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 rules:
   - apiGroups:
       - policy
     resourceNames:
-      - "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+      - "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
     resources:
       - podsecuritypolicies
     verbs:
@@ -37,29 +37,29 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
 subjects:
 - kind: ServiceAccount
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 ---
 
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 spec:
   readOnlyRootFilesystem: false

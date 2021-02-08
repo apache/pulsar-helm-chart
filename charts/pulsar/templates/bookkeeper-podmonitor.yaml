@@ -36,6 +36,18 @@ spec:
       scheme: http
       interval: {{ $.Values.bookkeeper.podMonitor.interval }}
       scrapeTimeout: {{ $.Values.bookkeeper.podMonitor.scrapeTimeout }}
+      relabelings:
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - sourceLabels: [__meta_kubernetes_namespace]
+          action: replace
+          targetLabel: kubernetes_namespace
+        - sourceLabels: [__meta_kubernetes_pod_label_component]
+          action: replace
+          targetLabel: job
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          action: replace
+          targetLabel: kubernetes_pod_name
   selector:
     matchLabels:
       component: bookie
