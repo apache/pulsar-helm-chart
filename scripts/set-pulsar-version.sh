@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,15 +18,21 @@
 # under the License.
 #
 
-apiVersion: v1
-appVersion: "2.7.1"
-description: Apache Pulsar Helm chart for Kubernetes
-name: pulsar
-version: 2.7.1
-home: https://pulsar.apache.org
-sources:
-- https://github.com/apache/pulsar
-icon: http://pulsar.apache.org/img/pulsar.svg
-maintainers:
-- name: The Apache Pulsar Team
-  email: dev@pulsar.apache.org
+set -e
+
+# this script is used for setting default pulsar image version in the charts/pulsar/values.yaml
+# usage:
+#   set-pulsar-version.sh ${old_version} ${new_version}
+# example: update the pulsar version from 2.7.0 to 2.7.1
+#   set-pulsar-version.sh 2.7.0 2.7.1
+
+OLD_VERSION=${1}
+NEW_VERSION=${2}
+
+if [[ "" == ${OLD_VERSION} || "" == ${NEW_VERSION} ]]; then
+  echo "You need to provide the old_version and new_version"
+  exit 1
+fi
+
+sed -i ""  "s/${OLD_VERSION}/${NEW_VERSION}/g" charts/pulsar/values.yaml
+sed -i ""  "s/${OLD_VERSION}/${NEW_VERSION}/g" charts/pulsar/Chart.yaml
