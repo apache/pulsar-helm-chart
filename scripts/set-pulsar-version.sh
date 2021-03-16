@@ -35,3 +35,4 @@ if [[ "" == ${OLD_VERSION} || "" == ${NEW_VERSION} ]]; then
 fi
 
 sed -i ""  "s/${OLD_VERSION}/${NEW_VERSION}/g" charts/pulsar/values.yaml
+sed -i ""  "s/${OLD_VERSION}/${NEW_VERSION}/g" charts/pulsar/Chart.yaml
