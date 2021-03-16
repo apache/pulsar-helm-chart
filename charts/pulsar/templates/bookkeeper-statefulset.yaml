@@ -178,10 +178,12 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         env:
+        {{- if .Values.bookkeeper.usePodNameAsBookiedId }}
         - name: PULSAR_PREFIX_bookieId
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        {{- end}}
         volumeMounts:
         {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
           - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
