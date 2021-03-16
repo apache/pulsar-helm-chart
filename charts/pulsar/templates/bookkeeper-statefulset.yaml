@@ -178,7 +178,7 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         env:
-        {{- if .Values.bookkeeper.usePodNameAsBookiedId }}
+        {{- if .Values.bookkeeper.usePodNameAsBookieId }}
         - name: PULSAR_PREFIX_bookieId
           valueFrom:
             fieldRef:

@@ -394,7 +394,7 @@ bookkeeper:
     type: RollingUpdate
   podManagementPolicy: Parallel
   # Use Pod Name as bookieId insteand of using hostname:port
-  usePodNameAsBookiedId: false
+  usePodNameAsBookieId: false
   # If using Prometheus-Operator enable this PodMonitor to discover bookie scrape targets
   # Prometheus-Operator does not add scrape targets based on k8s annotations
   podMonitor:
