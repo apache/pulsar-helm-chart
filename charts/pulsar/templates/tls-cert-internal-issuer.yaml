@@ -19,7 +19,7 @@
 
 {{- if .Values.certs.internal_issuer.enabled }}
 {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}"
@@ -28,7 +28,7 @@ spec:
   selfSigned: {}
 ---
 
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Certificate
 metadata:
   name: "{{ template "pulsar.fullname" . }}-ca"
@@ -50,7 +50,7 @@ spec:
     group: cert-manager.io
 ---
 
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
