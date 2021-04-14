@@ -454,7 +454,6 @@ bookkeeper:
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
       useMultiVolumes: false
-      # If using multiVolumes, remember to update the `journalDirectories` conf.
       multiVolumes:
         - name: journal0
           size: 10Gi
@@ -472,7 +471,6 @@ bookkeeper:
       # storageClass:
         # ...
       useMultiVolumes: false
-      # If using multiVolumes, remember to update the `ledgerDirectories` conf.
       multiVolumes:
         - name: ledgers0
           size: 10Gi
