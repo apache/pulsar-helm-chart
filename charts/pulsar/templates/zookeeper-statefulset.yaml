@@ -43,9 +43,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.zookeeper.component }}
       annotations:
-      {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
-      checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
-      {{- end }}
+        {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{ toYaml .Values.zookeeper.annotations | indent 8 }}
     spec:
     {{- if .Values.zookeeper.nodeSelector }}
