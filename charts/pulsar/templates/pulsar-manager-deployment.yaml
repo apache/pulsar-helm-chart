@@ -38,9 +38,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.pulsar_manager.component }}
       annotations:
-      {{- if .Values.pulsar_manager.restartPodsOnConfigMapChange }}
-      checksum/config: {{ include (print $.Template.BasePath "/pulsar-manager-configmap.yaml") . | sha256sum }}
-      {{- end }}
+        {{- if .Values.pulsar_manager.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/pulsar-manager-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{ toYaml .Values.pulsar_manager.annotations | indent 8 }}
     spec:
     {{- if .Values.pulsar_manager.nodeSelector }}
