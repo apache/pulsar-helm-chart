@@ -50,5 +50,6 @@ spec:
           targetLabel: kubernetes_pod_name
   selector:
     matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
       component: zookeeper
 {{- end }}

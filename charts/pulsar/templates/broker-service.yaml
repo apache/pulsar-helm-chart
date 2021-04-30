@@ -45,7 +45,6 @@ spec:
   {{- end }}
   clusterIP: None
   selector:
-    app: {{ template "pulsar.name" . }}
-    release: {{ .Release.Name }}
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
 {{- end }}
