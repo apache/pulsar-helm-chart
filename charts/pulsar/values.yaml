@@ -872,6 +872,7 @@ prometheus:
   tolerations: []
   gracePeriod: 5
   port: 9090
+  enableAdminApi: false
   resources:
     requests:
       memory: 256Mi
