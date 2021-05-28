@@ -287,6 +287,11 @@ zookeeper:
     scrapeTimeout: 10s
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
+  # Starting in 2.8.0, the Apache Pulsar docker image defaults to run as the pulsar user, see README for
+  # instructions on upgrading a bookie to run as a rootless container.
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
   ports:
     http: 8000
     client: 2181
@@ -401,6 +406,11 @@ bookkeeper:
     scrapeTimeout: 10s
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
+  # Starting in 2.8.0, the Apache Pulsar docker image defaults to run as the pulsar user, see README for
+  # instructions on upgrading a bookie to run as a rootless container.
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
   ports:
     http: 8000
     bookie: 3181
@@ -678,6 +688,11 @@ broker:
 ##
 functions:
   component: functions-worker
+  # Starting in 2.8.0, the Apache Pulsar docker image defaults to run as the pulsar user, see README for
+  # instructions on upgrading a bookie to run as a rootless container.
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
@@ -752,6 +767,7 @@ proxy:
   ##
   ports:
     http: 80
+    httpTarget: 8080
     https: 443
     pulsar: 6650
     pulsarssl: 6651
