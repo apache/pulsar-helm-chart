@@ -76,6 +76,10 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
+    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+    {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
         image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"

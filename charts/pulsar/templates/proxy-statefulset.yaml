@@ -137,6 +137,7 @@ spec:
               sleep 10;
               brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
             done;
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
         image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"

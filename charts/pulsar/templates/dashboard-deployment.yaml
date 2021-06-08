@@ -51,6 +51,7 @@ spec:
 {{ toYaml .Values.dashboard.tolerations | indent 8 }}
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.dashboard.gracePeriod }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
         image: "{{ .Values.dashboard.image.repository }}:{{ .Values.dashboard.image.tag }}"

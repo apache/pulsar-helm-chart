@@ -52,6 +52,7 @@ spec:
 {{ toYaml .Values.pulsar_manager.tolerations | indent 8 }}
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.pulsar_manager.gracePeriod }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
           image: "{{ .Values.images.pulsar_manager.repository }}:{{ .Values.images.pulsar_manager.tag }}"

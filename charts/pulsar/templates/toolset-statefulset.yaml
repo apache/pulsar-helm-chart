@@ -59,6 +59,7 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
     {{- end}}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
         image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"

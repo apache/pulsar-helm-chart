@@ -124,6 +124,7 @@ spec:
       {{- end}}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"

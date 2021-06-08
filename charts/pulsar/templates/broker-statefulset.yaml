@@ -157,6 +157,7 @@ spec:
       {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"

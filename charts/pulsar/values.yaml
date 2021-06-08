@@ -147,6 +147,8 @@ extra:
 ##
 ## Control what images to use for each component
 images:
+  imagePullSecrets:
+  - name: dockerhub
   zookeeper:
     repository: apachepulsar/pulsar-all
     tag: 2.7.2

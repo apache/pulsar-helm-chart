@@ -48,6 +48,7 @@ spec:
               sleep 3;
             done;
             {{- end}}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"

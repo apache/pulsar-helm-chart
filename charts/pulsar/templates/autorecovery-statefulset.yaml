@@ -122,6 +122,7 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"

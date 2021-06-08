@@ -101,6 +101,7 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
     {{- end }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         image: "{{ .Values.images.zookeeper.repository }}:{{ .Values.images.zookeeper.tag }}"

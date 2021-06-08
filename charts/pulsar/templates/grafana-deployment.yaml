@@ -54,6 +54,7 @@ spec:
 {{ toYaml .Values.grafana.tolerations | indent 8 }}
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.grafana.gracePeriod }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }} 
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
         image: "{{ .Values.images.grafana.repository }}:{{ .Values.images.grafana.tag }}"

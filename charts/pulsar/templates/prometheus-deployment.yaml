@@ -55,6 +55,7 @@ spec:
       serviceAccount: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.prometheus.gracePeriod }}
+      {{ include "pulsar.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
         image: "{{ .Values.images.prometheus.repository }}:{{ .Values.images.prometheus.tag }}"
