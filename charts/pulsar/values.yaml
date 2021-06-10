@@ -334,6 +334,15 @@ zookeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    anti_affinity_topology:
+     host:
+      enabled: true
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 100
+     zone:
+      enabled: false
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 60
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8000"
@@ -461,6 +470,15 @@ bookkeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    anti_affinity_topology:
+     host:
+      enabled: true
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 100
+     zone:
+      enabled: false
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 60
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -590,6 +608,15 @@ autorecovery:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    anti_affinity_topology:
+     host:
+      enabled: true
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 100
+     zone:
+      enabled: false
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 60 
   annotations: {}
   # tolerations: []
   gracePeriod: 30
@@ -675,6 +702,15 @@ broker:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: preferredDuringSchedulingIgnoredDuringExecution
+    anti_affinity_topology:
+     host:
+      enabled: true
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 100
+     zone:
+      enabled: false
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 60
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -784,6 +820,15 @@ proxy:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    anti_affinity_topology:
+     host:
+      enabled: true
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 100
+     zone:
+      enabled: false
+      # weight applies only if type: preferredDuringSchedulingIgnoredDuringExecution
+      weight: 60
   annotations: {}
   tolerations: []
   gracePeriod: 30

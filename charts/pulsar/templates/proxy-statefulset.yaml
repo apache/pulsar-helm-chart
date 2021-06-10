@@ -64,6 +64,7 @@ spec:
         podAntiAffinity:
         {{ if eq .Values.proxy.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.proxy.affinity.type }}:
+          {{- if .Values.proxy.affinity.anti_affinity_topology.host.enabled}}
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -79,9 +80,28 @@ spec:
                 values:
                 - {{ .Values.proxy.component }}
             topologyKey: "kubernetes.io/hostname"
+          {{- end }}
+          {{- if .Values.proxy.affinity.anti_affinity_topology.zone.enabled}}
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.proxy.component }}
+            topologyKey: "topology.kubernetes.io/zone"
+          {{- end }}
         {{ else }}
           {{ .Values.proxy.affinity.type }}:
-            - weight: 100
+            {{- if .Values.proxy.affinity.anti_affinity_topology.host.enabled}}
+            - weight: {{ .Values.proxy.affinity.anti_affinity_topology.host.weight }}
               podAffinityTerm:
                 labelSelector:
                   matchExpressions:
@@ -98,6 +118,26 @@ spec:
                       values:
                       - {{ .Values.proxy.component }}
                 topologyKey: "kubernetes.io/hostname"
+          {{- end }}
+            {{- if .Values.proxy.affinity.anti_affinity_topology.zone.enabled}}
+            - weight: {{ .Values.proxy.affinity.anti_affinity_topology.zone.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.proxy.component }}
+                topologyKey: "topology.kubernetes.io/zone"
+            {{- end }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}

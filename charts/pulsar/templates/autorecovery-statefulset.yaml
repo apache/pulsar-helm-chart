@@ -67,6 +67,7 @@ spec:
         podAntiAffinity:
           {{ if eq .Values.autorecovery.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.autorecovery.affinity.type }}:
+          {{- if .Values.autorecovery.affinity.anti_affinity_topology.host.enabled}}
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -82,9 +83,28 @@ spec:
                 values:
                 - {{ .Values.autorecovery.component }}
             topologyKey: "kubernetes.io/hostname"
+          {{- end }}
+          {{- if .Values.autorecovery.affinity.anti_affinity_topology.zone.enabled}}
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.autorecovery.component }}
+            topologyKey: "topology.kubernetes.io/zone"
+          {{- end }}
         {{ else }}
           {{ .Values.autorecovery.affinity.type }}:
-            - weight: 100
+            {{- if .Values.autorecovery.affinity.anti_affinity_topology.host.enabled}}
+            - weight: {{ .Values.autorecovery.affinity.anti_affinity_topology.host.weight }}
               podAffinityTerm:
                 labelSelector:
                   matchExpressions:
@@ -101,6 +121,26 @@ spec:
                       values:
                       - {{ .Values.autorecovery.component }}
                 topologyKey: "kubernetes.io/hostname"
+            {{- end }}
+            {{- if .Values.autorecovery.affinity.anti_affinity_topology.zone.enabled}}
+            - weight: {{ .Values.autorecovery.affinity.anti_affinity_topology.zone.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.autorecovery.component }}
+                topologyKey: "topology.kubernetes.io/zone"
+            {{- end }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
