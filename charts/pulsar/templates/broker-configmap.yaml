@@ -99,7 +99,7 @@ data:
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
   brokerServicePortTls: "{{ .Values.broker.ports.pulsarssl }}"
   webServicePortTls: "{{ .Values.broker.ports.https }}"
-  brokerClientTlsEnabled: "{{ .Values.broker.configData.brokerClientTlsEnabled }}"
+  brokerClientTlsEnabled: "{{ default false .Values.broker.configData.brokerClientTlsEnabled }}"
   # TLS Settings
   tlsCertificateFilePath: "/pulsar/certs/broker/tls.crt"
   tlsKeyFilePath: "/pulsar/certs/broker/tls.key"
