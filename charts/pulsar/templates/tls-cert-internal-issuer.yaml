@@ -36,6 +36,8 @@ metadata:
 spec:
   secretName: "{{ .Release.Name }}-ca-tls"
   commonName: "{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
+  duration: "{{ .Values.certs.internal_issuer.duration }}"
+  renewBefore: "{{ .Values.certs.internal_issuer.renewBefore }}"
   usages:
     - server auth
     - client auth
