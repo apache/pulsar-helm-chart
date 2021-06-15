@@ -115,7 +115,7 @@ We provide some instructions to guide you through the preparation: http://pulsar
     git clone https://github.com/apache/pulsar-helm-chart
     ```
     ```bash
-    cd pulsar-helm-chart/
+    cd pulsar-helm-chart
     ```
 
 2. Run `prepare_helm_release.sh` to create required kubernetes resources for installing this Helm chart.
