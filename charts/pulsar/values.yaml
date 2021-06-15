@@ -495,7 +495,6 @@ bookkeeper:
       -XX:+PerfDisableSharedMem
       -XX:+PrintGCDetails
       -verbosegc
-      -Xlog:gc:/var/log/bookie-gc.log
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
