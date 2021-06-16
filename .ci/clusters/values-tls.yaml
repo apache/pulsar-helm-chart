@@ -85,7 +85,7 @@ certs:
     enabled: false
 
 images:
-  zookeeper:
+  bookie:
     repository: apachepulsar/pulsar-all
     tag: 2.7.2
     pullPolicy: IfNotPresent

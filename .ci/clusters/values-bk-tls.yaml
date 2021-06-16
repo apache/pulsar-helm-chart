@@ -77,3 +77,9 @@ tls:
 certs:
   internal_issuer:
     enabled: false
+
+images:
+  bookie:
+    repository: apachepulsar/pulsar-all
+    tag: 2.7.2
+    pullPolicy: IfNotPresent
