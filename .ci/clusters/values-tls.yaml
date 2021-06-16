@@ -37,6 +37,10 @@ components:
 
 zookeeper:
   replicaCount: 1
+  configData:
+    PULSAR_EXTRA_OPTS: >
+      -Dzookeeper.ssl.hostnameVerification=false
+      -Dzookeeper.ssl.quorum.hostnameVerification=false
 
 bookkeeper:
   replicaCount: 3
@@ -79,3 +83,9 @@ tls:
 certs:
   internal_issuer:
     enabled: false
+
+images:
+  zookeeper:
+    repository: apachepulsar/pulsar-all
+    tag: 2.7.2
+    pullPolicy: IfNotPresent
