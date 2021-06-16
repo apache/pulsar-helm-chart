@@ -60,6 +60,7 @@ broker:
     managedLedgerDefaultEnsembleSize: "1"
     managedLedgerDefaultWriteQuorum: "1"
     managedLedgerDefaultAckQuorum: "1"
+    functionsWorkerEnabled: false
 
 proxy:
   replicaCount: 1
