@@ -59,6 +59,10 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
         image: "{{ .Values.images.prometheus.repository }}:{{ .Values.images.prometheus.tag }}"
         imagePullPolicy: {{ .Values.images.prometheus.pullPolicy }}
+        {{- if .Values.prometheus.enableAdminApi }}
+        args:
+          - --web.enable-admin-api
+        {{- end }}
       {{- if .Values.prometheus.resources }}
         resources:
 {{ toYaml .Values.prometheus.resources | indent 10 }}
