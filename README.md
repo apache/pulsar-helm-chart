@@ -121,7 +121,7 @@ We provide some instructions to guide you through the preparation: http://pulsar
 2. Run `prepare_helm_release.sh` to create required kubernetes resources for installing this Helm chart.
     - A k8s namespace for installing the Pulsar release (if `-c` is specified)
     - Create the JWT secret keys and tokens for three superusers: `broker-admin`, `proxy-admin`, and `admin`.
-      By default, it generates asymmeric pubic/private key pair. You can choose to generate symmeric secret key
+      By default, it generates asymmetric pubic/private key pair. You can choose to generate symmetric secret key
       by specifying `--symmetric` in the following command.
         - `proxy-admin` role is used for proxies to communicate to brokers.
         - `broker-admin` role is used for inter-broker communications.
