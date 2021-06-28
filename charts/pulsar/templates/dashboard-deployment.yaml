@@ -30,8 +30,7 @@ spec:
   replicas: {{ .Values.dashboard.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "pulsar.name" . }}
-      release: {{ .Release.Name }}
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
       component: {{ .Values.dashboard.component }}
   template:
     metadata:
