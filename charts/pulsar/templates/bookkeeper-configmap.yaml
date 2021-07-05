@@ -35,9 +35,26 @@ data:
   {{- end }}
   # Do not retain journal files as it increase the disk utilization
   journalMaxBackups: "0"
+  {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
+  {{- $journalDirs := list -}}
+  {{ range .Values.bookkeeper.volumes.journal.multiVolumes }}
+  {{- $journalDirs = append $journalDirs .mountPath -}}
+  {{- end }}
+  journalDirectories: {{ $journalDirs | join "," | quote }}
+  PULSAR_PREFIX_journalDirectories: {{ $journalDirs | join "," | quote }}
+  {{- else }}
   journalDirectories: "/pulsar/data/bookkeeper/journal"
   PULSAR_PREFIX_journalDirectories: "/pulsar/data/bookkeeper/journal"
+  {{- end }}
+  {{- if .Values.bookkeeper.volumes.ledgers.useMultiVolumes }}
+  {{- $ledgerDirs := list -}}
+  {{ range .Values.bookkeeper.volumes.ledgers.multiVolumes }}
+  {{- $ledgerDirs = append $ledgerDirs .mountPath -}}
+  {{- end }}
+  ledgerDirectories: {{ $ledgerDirs | join "," | quote }}
+  {{- else }}
   ledgerDirectories: "/pulsar/data/bookkeeper/ledgers"
+  {{- end }}
   # TLS config
   {{- include "pulsar.bookkeeper.config.tls" . | nindent 2 }}
 {{ toYaml .Values.bookkeeper.configData | indent 2 }}
