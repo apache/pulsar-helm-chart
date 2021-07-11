@@ -64,6 +64,7 @@ spec:
         podAntiAffinity:
           {{ if eq .Values.bookkeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.bookkeeper.affinity.type }}:
+          {{- if .Values.bookkeeper.affinity.anti_affinity_topology.host.enabled}}
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -79,9 +80,28 @@ spec:
                 values:
                 - {{ .Values.bookkeeper.component }}
             topologyKey: "kubernetes.io/hostname"
+          {{- end }}
+          {{- if .Values.bookkeeper.affinity.anti_affinity_topology.zone.enabled}}
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.bookkeeper.component }}
+            topologyKey: "topology.kubernetes.io/zone"
+          {{- end }}
         {{ else }}
           {{ .Values.bookkeeper.affinity.type }}:
-            - weight: 100
+            {{- if .Values.bookkeeper.affinity.anti_affinity_topology.host.enabled}}
+            - weight: {{ .Values.bookkeeper.affinity.anti_affinity_topology.host.weight }}
               podAffinityTerm:
                 labelSelector:
                   matchExpressions:
@@ -98,6 +118,26 @@ spec:
                       values:
                       - {{ .Values.bookkeeper.component }}
                 topologyKey: "kubernetes.io/hostname"
+            {{- end }}
+            {{- if .Values.bookkeeper.affinity.anti_affinity_topology.zone.enabled}}
+            - weight: {{ .Values.bookkeeper.affinity.anti_affinity_topology.zone.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.bookkeeper.component }}
+                topologyKey: "topology.kubernetes.io/zone"
+            {{- end }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}

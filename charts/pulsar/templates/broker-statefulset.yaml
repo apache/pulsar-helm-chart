@@ -65,6 +65,7 @@ spec:
         podAntiAffinity:
           {{ if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.broker.affinity.type }}:
+          {{- if .Values.broker.affinity.anti_affinity_topology.host.enabled}}
           - labelSelector:
               matchExpressions:
               - key: "app"
@@ -80,9 +81,28 @@ spec:
                 values:
                 - {{ .Values.broker.component }}
             topologyKey: "kubernetes.io/hostname"
+          {{- end }}
+          {{- if .Values.broker.affinity.anti_affinity_topology.zone.enabled}}
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.broker.component }}
+            topologyKey: "topology.kubernetes.io/zone"
+          {{- end }}
         {{ else }}
           {{ .Values.broker.affinity.type }}:
-            - weight: 100
+            {{- if .Values.broker.affinity.anti_affinity_topology.host.enabled}}
+            - weight: {{ .Values.broker.affinity.anti_affinity_topology.host.weight }}
               podAffinityTerm:
                 labelSelector:
                   matchExpressions:
@@ -99,6 +119,26 @@ spec:
                       values:
                       - {{ .Values.broker.component }}
                 topologyKey: "kubernetes.io/hostname"
+            {{- end }}
+            {{- if .Values.broker.affinity.anti_affinity_topology.zone.enabled}}
+            - weight: {{ .Values.broker.affinity.anti_affinity_topology.zone.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.broker.component }}
+                topologyKey: "topology.kubernetes.io/zone"
+            {{- end }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
