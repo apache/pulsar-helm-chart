@@ -56,6 +56,7 @@ It includes support for:
         - [ ] Mutal TLS
         - [ ] Kerberos
     - [x] Authorization
+    - [x] Run component containers as a non-root user
 - [x] Storage
     - [x] Non-persistence storage
     - [x] Persistence Volume
@@ -183,6 +184,28 @@ helm upgrade -f pulsar.yaml \
 ```
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/en/helm-upgrade/) guide.
+
+### Upgrading to use the rootless container image
+
+The Apache Pulsar Docker image for version 2.8.0 runs as user `10000`, by default. In order to prevent breaking
+changes during upgrade, this helm chart overrides this default user for the Bookkeeper and ZooKeeper
+components by running them as the root user. These components each need write access to `/pulsar/data` (by default)
+in order to function properly.
+
+You can upgrade an existing cluster to run these components with the non-root user by changing the ownership of all
+relevant directories and files before upgrading to 2.8.0. You will also need to modify the Helm values for each component.
+
+If already have a running pulsar cluster with ZK and BK running as the root user, you can change the ownership of these
+files while your components are running. Assuming you have the default directories configured for these components, the
+following scripts should be sufficient for ensuring a seamless upgrade:
+
+1. Zookeeper: `$ chown -r 10000:10001 /pulsar/data/zookeeper`
+1. Bookkeeper: `$ chown -r 10000:10001 /pulsar/data`
+
+Note that if you are running on `OpenShift`, you'll want to use the same directories, but instead run the following:
+
+1. Zookeeper: `$ chmod -R g=u /pulsar/data/zookeeper`
+1. Bookkeeper: `$ chmod -R g=u /pulsar/data`
 
 ## Uninstall
 

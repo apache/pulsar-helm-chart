@@ -101,6 +101,10 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
+    {{- if .Values.bookkeeper.securityContext }}
+      securityContext:
+{{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
+    {{- end }}
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end}}

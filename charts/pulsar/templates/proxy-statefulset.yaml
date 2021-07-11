@@ -43,7 +43,7 @@ spec:
         component: {{ .Values.proxy.component }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.proxy.ports.http }}"
+        prometheus.io/port: "{{ .Values.proxy.ports.httpTarget }}"
         {{- if .Values.proxy.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/proxy-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -145,7 +145,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.httpTarget }}
           initialDelaySeconds: {{ .Values.proxy.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.liveness.periodSeconds }}
           failureThreshold: {{ .Values.proxy.probe.liveness.failureThreshold }}
@@ -154,7 +154,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.httpTarget }}
           initialDelaySeconds: {{ .Values.proxy.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.readiness.periodSeconds }}
           failureThreshold: {{ .Values.proxy.probe.readiness.failureThreshold }}
@@ -163,7 +163,7 @@ spec:
         startupProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.httpTarget }}
           initialDelaySeconds: {{ .Values.proxy.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.startup.periodSeconds }}
           failureThreshold: {{ .Values.proxy.probe.startup.failureThreshold }}
@@ -181,7 +181,7 @@ spec:
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
-          containerPort: {{ .Values.proxy.ports.http }}
+          containerPort: {{ .Values.proxy.ports.httpTarget }}
         {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
         - name: pulsar
           containerPort: {{ .Values.proxy.ports.pulsar }}

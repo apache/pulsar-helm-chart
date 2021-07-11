@@ -36,6 +36,7 @@ spec:
     {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
     - name: http
       port: {{ .Values.proxy.ports.http }}
+      targetPort: {{ .Values.proxy.ports.httpTarget }}
       protocol: TCP
     - name: pulsar
       port: {{ .Values.proxy.ports.pulsar }}

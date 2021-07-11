@@ -31,7 +31,7 @@ data:
   httpNumThreads: "8"
   statusFilePath: "{{ template "pulsar.home" . }}/status"
   # prometheus needs to access /metrics endpoint
-  webServicePort: "{{ .Values.proxy.ports.http }}"
+  webServicePort: "{{ .Values.proxy.ports.httpTarget }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
   servicePort: "{{ .Values.proxy.ports.pulsar }}"
   brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
