@@ -84,3 +84,16 @@ Create the match labels.
 app: {{ template "pulsar.name" . }}
 release: {{ .Release.Name }}
 {{- end }}
+
+
+{{/*
+Create ImagePullSecrets
+*/}}
+{{- define "imagePullSecrets" -}}
+{{- if .Values.images.imagePullSecrets -}}
+imagePullSecrets:
+{{- range .Values.images.imagePullSecrets }}
+- name: {{ . }}
+{{- end }}
+{{- end -}}
+{{- end }}

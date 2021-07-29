@@ -225,8 +225,6 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         volumeMounts:
-          - mountPath: "/tmp/config"
-            name: logging
           {{- if .Values.auth.authentication.enabled }}
           {{- if eq .Values.auth.authentication.provider "jwt" }}
           - mountPath: "/pulsar/keys"
@@ -243,12 +241,6 @@ spec:
           readOnlyRootFilesystem: false
       {{- end }}
       volumes:
-      - name: logging
-        configMap:
-          name: logging
-          items:
-            - key: logfile
-              path: logging.yaml
       {{- if .Values.auth.authentication.enabled }}
       {{- if eq .Values.auth.authentication.provider "jwt" }}
       - name: token-keys
@@ -276,4 +268,5 @@ spec:
       {{- end}}
       {{- end}}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
+      {{- include "imagePullSecrets" . | nindent 6}}
 {{- end }}
