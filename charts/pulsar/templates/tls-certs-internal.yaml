@@ -133,7 +133,6 @@ spec:
 {{- end }}
     -  "*.{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-
   # Issuer references are always required.
   issuerRef:
     name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
