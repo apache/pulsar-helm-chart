@@ -85,7 +85,6 @@ app: {{ template "pulsar.name" . }}
 release: {{ .Release.Name }}
 {{- end }}
 
-
 {{/*
 Create ImagePullSecrets
 */}}
