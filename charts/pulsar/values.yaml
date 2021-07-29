@@ -214,9 +214,6 @@ tls:
   bookie:
     enabled: false
     cert_name: tls-bookie
-  bookkeeper:
-    enabled: false
-    cert_name: tls-bookie
   # settings for generating certs for zookeeper
   zookeeper:
     enabled: false
@@ -501,8 +498,12 @@ bookkeeper:
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
       -XX:+PrintGCDetails
+      -XX:+PrintGCTimeStamps
+      -XX:+PrintGCApplicationStoppedTime
+      -XX:+PrintHeapAtGC
       -verbosegc
       -Xloggc:/var/log/bookie-gc.log
+      -XX:G1LogLevel=finest
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
