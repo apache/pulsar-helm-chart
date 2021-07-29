@@ -38,9 +38,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.prometheus.component }}
       annotations:
-      {{- if .Values.prometheus.restartPodsOnConfigMapChange }}
-      checksum/config: {{ include (print $.Template.BasePath "/prometheus-configmap.yaml") . | sha256sum }}
-      {{- end }}
+        {{- if .Values.prometheus.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/prometheus-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{ toYaml .Values.prometheus.annotations | indent 8 }}
     spec:
     {{- if .Values.prometheus.nodeSelector }}
@@ -59,6 +59,10 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
         image: "{{ .Values.images.prometheus.repository }}:{{ .Values.images.prometheus.tag }}"
         imagePullPolicy: {{ .Values.images.prometheus.pullPolicy }}
+        {{- if .Values.prometheus.enableAdminApi }}
+        args:
+          - --web.enable-admin-api
+        {{- end }}
       {{- if .Values.prometheus.resources }}
         resources:
 {{ toYaml .Values.prometheus.resources | indent 10 }}

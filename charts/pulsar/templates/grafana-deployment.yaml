@@ -38,9 +38,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.grafana.component }}
       annotations:
-      {{- if .Values.grafana.restartPodsOnConfigMapChange }}
-      checksum/config: {{ include (print $.Template.BasePath "/grafana-configmap.yaml") . | sha256sum }}
-      {{- end }}
+        {{- if .Values.grafana.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/grafana-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{- with .Values.grafana.annotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}

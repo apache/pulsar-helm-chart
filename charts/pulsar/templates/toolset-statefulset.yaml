@@ -42,9 +42,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.toolset.component }}
       annotations:
-      {{- if .Values.toolset.restartPodsOnConfigMapChange }}
-      checksum/config: {{ include (print $.Template.BasePath "/toolset-configmap.yaml") . | sha256sum }}
-      {{- end }}
+        {{- if .Values.toolset.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/toolset-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{ toYaml .Values.toolset.annotations | indent 8 }}
     spec:
     {{- if .Values.toolset.nodeSelector }}

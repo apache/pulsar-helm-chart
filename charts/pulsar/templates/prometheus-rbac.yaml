@@ -19,7 +19,7 @@
 
 {{- if or .Values.monitoring.prometheus .Values.extra.monitoring }}
 {{- if or .Values.prometheus.rbac.enabled .Values.prometheus_rbac }}
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
@@ -43,7 +43,7 @@ metadata:
   namespace: {{ template "pulsar.namespace" . }}
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}"
