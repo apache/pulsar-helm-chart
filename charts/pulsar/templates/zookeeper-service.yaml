@@ -31,6 +31,9 @@ metadata:
 {{ toYaml .Values.zookeeper.service.annotations | indent 4 }}
 spec:
   ports:
+    # prometheus needs to access /metrics endpoint
+    - name: http
+      port: {{ .Values.zookeeper.ports.http }}
     - name: follower
       port: {{ .Values.zookeeper.ports.follower }}
     - name: leader-election
