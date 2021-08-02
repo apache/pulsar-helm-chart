@@ -93,5 +93,5 @@ spec:
         persistentVolumeClaim:
           claimName: "{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}-{{ .Values.prometheus.volumes.data.name }}"
     {{- end }}
-    {{- include "imagePullSecrets" . | nindent 6}}
+    {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}

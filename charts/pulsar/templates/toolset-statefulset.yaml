@@ -115,5 +115,5 @@ spec:
               path: ca.crt
       {{- end}}
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
-      {{- include "imagePullSecrets" . | nindent 6}}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}

@@ -88,7 +88,7 @@ release: {{ .Release.Name }}
 {{/*
 Create ImagePullSecrets
 */}}
-{{- define "imagePullSecrets" -}}
+{{- define "pulsar.imagePullSecrets" -}}
 {{- if .Values.images.imagePullSecrets -}}
 imagePullSecrets:
 {{- range .Values.images.imagePullSecrets }}
