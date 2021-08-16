@@ -390,6 +390,8 @@ zookeeper:
       -XX:+DoEscapeAnalysis
       -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
+  ## Add a custom command to the start up process of the zookeeper pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Zookeeper service
   ## templates/zookeeper-service.yaml
   ##
@@ -551,6 +553,8 @@ bookkeeper:
     dbStorage_readAheadCacheMaxSizeMb: "32"
     dbStorage_rocksDB_writeBufferSizeMB: "8"
     dbStorage_rocksDB_blockCacheSize: "8388608"
+  ## Add a custom command to the start up process of the bookie pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Bookkeeper Service
   ## templates/bookkeeper-service.yaml
   ##
@@ -719,6 +723,8 @@ broker:
     managedLedgerDefaultEnsembleSize: "2"
     managedLedgerDefaultWriteQuorum: "2"
     managedLedgerDefaultAckQuorum: "2"
+  ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Broker service
   ## templates/broker-service.yaml
   ##
@@ -825,6 +831,8 @@ proxy:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
+  ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Proxy service
   ## templates/proxy-service.yaml
   ##
@@ -939,6 +947,8 @@ toolset:
       -Xms64M
       -Xmx128M
       -XX:MaxDirectMemorySize=128M
+  ## Add a custom command to the start up process of the toolset pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
 
 #############################################################
 ### Monitoring Stack : Prometheus / Grafana
