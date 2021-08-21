@@ -89,6 +89,7 @@ spec:
                 {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
+        {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       volumes:
         - name: pulsar-manager-data
           emptyDir: {}
