@@ -222,6 +222,7 @@ spec:
             readOnly: true
           {{- end}}
       {{- end}}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       {{- if or .Values.auth.authentication.enabled (and .Values.tls.enabled .Values.tls.proxy.enabled) }}
       volumes:
         {{- if .Values.auth.authentication.enabled }}

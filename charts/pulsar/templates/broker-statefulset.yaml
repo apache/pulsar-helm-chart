@@ -268,4 +268,5 @@ spec:
       {{- end}}
       {{- end}}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
