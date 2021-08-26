@@ -25,6 +25,7 @@ cd ${CHART_HOME}
 
 namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
+caSuffix=${caSuffix:-ca-tls}
 clientComponents=${clientComponents:-"toolset"}
 serverComponents=${serverComponents:-"bookie,broker,proxy,recovery,zookeeper"}
 
@@ -35,6 +36,7 @@ Options:
        -h,--help                        prints the usage message
        -n,--namespace                   the k8s namespace to install the pulsar helm chart. Defaut to ${namespace}.
        -k,--release                     the pulsar helm release name. Default to ${release}.
+       -ca,--ca-suffix                  the suffix used to name the CA certificate. Default to ${caSuffix}.
        -c,--client-components           the client components of pulsar cluster. a comma separated list of components. Default to ${clientComponents}.
        -s,--server-components           the server components of pulsar cluster. a comma separated list of components. Default to ${serverComponents}.
 Usage:
@@ -54,6 +56,11 @@ case $key in
     ;;
     -k|--release)
     release="$2"
+    shift
+    shift
+    ;;
+    -ca|--ca-suffix)
+    caSuffix="$2"
     shift
     shift
     ;;
@@ -80,7 +87,7 @@ esac
 done
 
 function delete_ca() {
-    local tls_ca_secret="${release}-ca-tls"
+    local tls_ca_secret="${release}-${caSuffix}"
     kubectl delete secret ${tls_ca_secret} -n ${namespace}
 }
 

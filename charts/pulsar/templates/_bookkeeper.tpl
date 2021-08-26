@@ -56,7 +56,7 @@ Define bookie tls certs volumes
       path: tls.key
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-ca-tls"
+    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
     items:
     - key: ca.crt
       path: ca.crt

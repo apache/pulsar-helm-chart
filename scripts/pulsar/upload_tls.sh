@@ -25,6 +25,7 @@ cd ${CHART_HOME}
 
 namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
+caSuffix=${caSuffix:-ca-tls}
 tlsdir=${tlsdir:-"${HOME}/.config/pulsar/security_tool/gen/ca"}
 clientComponents=${clientComponents:-""}
 serverComponents=${serverComponents:-"bookie,broker,proxy,recovery,zookeeper,toolset"}
@@ -37,6 +38,7 @@ Options:
        -h,--help                        prints the usage message
        -n,--namespace                   the k8s namespace to install the pulsar helm chart. Defaut to ${namespace}.
        -k,--release                     the pulsar helm release name. Default to ${release}.
+       -ca,--ca-suffix                  the suffix used to name the CA certificate. Default to ${caSuffix}.
        -d,--dir                         the dir for storing tls certs. Default to ${tlsdir}.
        -c,--client-components           the client components of pulsar cluster. a comma separated list of components. Default to ${clientComponents}.
        -s,--server-components           the server components of pulsar cluster. a comma separated list of components. Default to ${serverComponents}.
@@ -58,6 +60,11 @@ case $key in
     ;;
     -k|--release)
     release="$2"
+    shift
+    shift
+    ;;
+    -ca|--ca-suffix)
+    caSuffix="$2"
     shift
     shift
     ;;
@@ -95,7 +102,7 @@ done
 ca_cert_file=${tlsdir}/certs/ca.cert.pem
 
 function upload_ca() {
-    local tls_ca_secret="${release}-ca-tls"
+    local tls_ca_secret="${release}-${caSuffix}"
     kubectl create secret generic ${tls_ca_secret} -n ${namespace} --from-file="ca.crt=${ca_cert_file}" ${local:+ -o yaml --dry-run=client}
 }
 

@@ -191,6 +191,7 @@ images:
 ## brokers and proxies.
 tls:
   enabled: false
+  ca_suffix: ca-tls
   # common settings for generating certs
   common:
     # 90d
