@@ -330,6 +330,19 @@ zookeeper:
     requests:
       memory: 256Mi
       cpu: 0.1
+  # extraVolumes and extraVolumeMounts allows you to mount other volumes
+  # Example Use Case: mount ssl certificates
+  # extraVolumes:
+  #   - name: ca-certs
+  #     secret:
+  #       defaultMode: 420
+  #       secretName: ca-certs
+  # extraVolumeMounts:
+  #   - name: ca-certs
+  #     mountPath: /certs
+  #     readOnly: true
+  extraVolumes: []
+  extraVolumeMounts: []
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -439,6 +452,19 @@ bookkeeper:
     requests:
       memory: 512Mi
       cpu: 0.2
+  # extraVolumes and extraVolumeMounts allows you to mount other volumes
+  # Example Use Case: mount ssl certificates
+  # extraVolumes:
+  #   - name: ca-certs
+  #     secret:
+  #       defaultMode: 420
+  #       secretName: ca-certs
+  # extraVolumeMounts:
+  #   - name: ca-certs
+  #     mountPath: /certs
+  #     readOnly: true
+  extraVolumes: []
+  extraVolumeMounts: []
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -637,6 +663,19 @@ broker:
     requests:
       memory: 512Mi
       cpu: 0.2
+  # extraVolumes and extraVolumeMounts allows you to mount other volumes
+  # Example Use Case: mount ssl certificates
+  # extraVolumes:
+  #   - name: ca-certs
+  #     secret:
+  #       defaultMode: 420
+  #       secretName: ca-certs
+  # extraVolumeMounts:
+  #   - name: ca-certs
+  #     mountPath: /certs
+  #     readOnly: true
+  extraVolumes: []
+  extraVolumeMounts: []
   ## Broker configmap
   ## templates/broker-configmap.yaml
   ##
@@ -730,6 +769,19 @@ proxy:
     requests:
       memory: 128Mi
       cpu: 0.2
+  # extraVolumes and extraVolumeMounts allows you to mount other volumes
+  # Example Use Case: mount ssl certificates
+  # extraVolumes:
+  #   - name: ca-certs
+  #     secret:
+  #       defaultMode: 420
+  #       secretName: ca-certs
+  # extraVolumeMounts:
+  #   - name: ca-certs
+  #     mountPath: /certs
+  #     readOnly: true
+  extraVolumes: []
+  extraVolumeMounts: []
   ## Proxy configmap
   ## templates/proxy-configmap.yaml
   ##
@@ -844,6 +896,19 @@ toolset:
     requests:
       memory: 256Mi
       cpu: 0.1
+  # extraVolumes and extraVolumeMounts allows you to mount other volumes
+  # Example Use Case: mount ssl certificates
+  # extraVolumes:
+  #   - name: ca-certs
+  #     secret:
+  #       defaultMode: 420
+  #       secretName: ca-certs
+  # extraVolumeMounts:
+  #   - name: ca-certs
+  #     mountPath: /certs
+  #     readOnly: true
+  extraVolumes: []
+  extraVolumeMounts: []
   ## Bastion configmap
   ## templates/bastion-configmap.yaml
   ##

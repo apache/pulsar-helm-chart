@@ -94,6 +94,9 @@ spec:
           name: proxy-ca
           readOnly: true
         {{- end}}
+        {{- if .Values.toolset.extraVolumeMounts }}
+{{ toYaml .Values.toolset.extraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- if .Values.auth.authentication.enabled }}
@@ -114,6 +117,9 @@ spec:
             - key: ca.crt
               path: ca.crt
       {{- end}}
+      {{- if .Values.toolset.extraVolumes }}
+{{ toYaml .Values.toolset.extraVolumes | indent 6 }}
+      {{- end }}
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
