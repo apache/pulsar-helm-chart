@@ -199,7 +199,7 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
-        {{- if or .Values.auth.authentication.enabled (and .Values.tls.enabled (or .Values.tls.proxy.enabled .Values.tls.broker.enabled)) }}
+        {{- if or .Values.proxy.extraVolumeMounts .Values.auth.authentication.enabled (and .Values.tls.enabled (or .Values.tls.proxy.enabled .Values.tls.broker.enabled)) }}
         volumeMounts:
           {{- if .Values.auth.authentication.enabled }}
           {{- if eq .Values.auth.authentication.provider "jwt" }}
@@ -221,9 +221,16 @@ spec:
             name: ca
             readOnly: true
           {{- end}}
+          {{- if .Values.proxy.extraVolumeMounts }}
+{{ toYaml .Values.proxy.extraVolumeMounts | indent 10 }}
+          {{- end }}
       {{- end}}
-      {{- if or .Values.auth.authentication.enabled (and .Values.tls.enabled .Values.tls.proxy.enabled) }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+      {{- if or .Values.proxy.extraVolumes .Values.auth.authentication.enabled (and .Values.tls.enabled .Values.tls.proxy.enabled) }}
       volumes:
+        {{- if .Values.proxy.extraVolumes }}
+{{ toYaml .Values.proxy.extraVolumes | indent 8 }}
+        {{- end }}
         {{- if .Values.auth.authentication.enabled }}
         {{- if eq .Values.auth.authentication.provider "jwt" }}
         - name: token-keys
@@ -253,7 +260,7 @@ spec:
         {{- if .Values.tls.proxy.enabled }}
         - name: ca
           secret:
-            secretName: "{{ .Release.Name }}-ca-tls"
+            secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
             items:
               - key: ca.crt
                 path: ca.crt

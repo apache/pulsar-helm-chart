@@ -43,9 +43,9 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.zookeeper.component }}
       annotations:
-      {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
-      checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
-      {{- end }}
+        {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
+        {{- end }}
 {{ toYaml .Values.zookeeper.annotations | indent 8 }}
     spec:
     {{- if .Values.zookeeper.nodeSelector }}
@@ -183,10 +183,16 @@ spec:
           mountPath: "/pulsar/keytool/keytool.sh"
           subPath: keytool.sh
         {{- end }}
+        {{- if .Values.zookeeper.extraVolumeMounts }}
+{{ toYaml .Values.zookeeper.extraVolumeMounts | indent 8 }}
+        {{- end }}
       volumes:
       {{- if not (and (and .Values.volumes.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence) }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
         emptyDir: {}
+      {{- end }}
+      {{- if .Values.zookeeper.extraVolumes }}
+{{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
       {{- end }}
       {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
       - name: zookeeper-certs
@@ -199,7 +205,7 @@ spec:
               path: tls.key
       - name: ca
         secret:
-          secretName: "{{ .Release.Name }}-ca-tls"
+          secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
           items:
             - key: ca.crt
               path: ca.crt

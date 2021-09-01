@@ -204,6 +204,8 @@ spec:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
           mountPath: /pulsar/data/bookkeeper/ledgers
         {{- end }}
+        {{- if .Values.bookkeeper.extraVolumeMounts }}
+{{ toYaml .Values.bookkeeper.extraVolumeMounts | indent 8 }}
         {{- end }}
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       volumes:
@@ -214,6 +216,10 @@ spec:
         emptyDir: {}
       {{- end }}
       {{- include "pulsar.bookkeeper.certs.volumes" . | nindent 6 }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+      {{- if .Values.bookkeeper.extraVolumes }}
+{{ toYaml .Values.bookkeeper.extraVolumes | indent 6 }}
+      {{- end }}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence}}
   volumeClaimTemplates:
   {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}

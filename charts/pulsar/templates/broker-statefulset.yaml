@@ -235,12 +235,18 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
+          {{- if .Values.broker.extraVolumeMounts }}
+{{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
+          {{- end }}
           {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
       volumes:
+      {{- if .Values.broker.extraVolumes }}
+{{ toYaml .Values.broker.extraVolumes | indent 6 }}
+      {{- end }}
       {{- if .Values.auth.authentication.enabled }}
       {{- if eq .Values.auth.authentication.provider "jwt" }}
       - name: token-keys
@@ -268,4 +274,5 @@ spec:
       {{- end}}
       {{- end}}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
