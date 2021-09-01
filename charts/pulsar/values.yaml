@@ -988,6 +988,12 @@ grafana:
     requests:
       memory: 250Mi
       cpu: 0.1
+  volumes:
+    # use a persistent volume or emptyDir
+    persistence: true
+    data:
+      name: data
+      size: 10Gi
   ## Grafana service
   ## templates/grafana-service.yaml
   ##

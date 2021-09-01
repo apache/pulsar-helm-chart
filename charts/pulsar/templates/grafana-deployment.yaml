@@ -65,6 +65,9 @@ spec:
         ports:
         - name: server
           containerPort: {{ .Values.grafana.service.targetPort }}
+        volumeMounts:
+          - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
+            mountPath: /var/lib/grafana/data
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
@@ -88,4 +91,20 @@ spec:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-secret"
               key: GRAFANA_ADMIN_PASSWORD
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+      volumes:
+        {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.grafana.volumes.persistence) }}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
+        emptyDir: {}
+        {{- end }}
+        {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.grafana.volumes.persistence }}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
+        persistentVolumeClaim:
+          claimName: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
+        {{- end }}
+      securityContext:
+        # From Grafana 7.3 on, the Grafana Docker image runs with the root group (id 0) instead of the grafana group (id 472)
+        # see https://grafana.com/docs/grafana/latest/installation/docker/#migrate-to-v73-or-later
+        fsGroup: 0
+        runAsNonRoot: true
+        runAsUser: 472
 {{- end }}
