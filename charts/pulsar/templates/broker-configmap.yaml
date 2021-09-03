@@ -65,11 +65,11 @@ data:
   PF_functionRuntimeFactoryConfigs_expectedMetricsCollectionInterval: "30"
   {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
   PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
-  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}/"
+  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tcp-pulsar }}/"
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
   PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
-  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
+  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tls-pulsarssl }}/"
   {{- end }}
   PF_functionRuntimeFactoryConfigs_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
   PF_functionRuntimeFactoryConfigs_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
@@ -81,11 +81,11 @@ data:
   PF_kubernetesContainerFactory_expectedMetricsCollectionInterval: "30"
   {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
   PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
-  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}/"
+  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tcp-pulsar }}/"
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
   PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
-  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
+  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tls-pulsarssl }}/"
   {{- end }}
   PF_kubernetesContainerFactory_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
   PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
@@ -94,10 +94,10 @@ data:
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.broker.ports.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
-  brokerServicePort: "{{ .Values.broker.ports.pulsar }}"
+  brokerServicePort: "{{ .Values.broker.ports.tcp-pulsar }}"
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
-  brokerServicePortTls: "{{ .Values.broker.ports.pulsarssl }}"
+  brokerServicePortTls: "{{ .Values.broker.ports.tls-pulsarssl }}"
   webServicePortTls: "{{ .Values.broker.ports.https }}"
   # TLS Settings
   tlsCertificateFilePath: "/pulsar/certs/broker/tls.crt"

@@ -37,16 +37,16 @@ spec:
     - name: http
       port: {{ .Values.proxy.ports.http }}
       protocol: TCP
-    - name: pulsar
-      port: {{ .Values.proxy.ports.pulsar }}
+    - name: tcp-pulsar
+      port: {{ .Values.proxy.ports.tcp-pulsar }}
       protocol: TCP
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
       port: {{ .Values.proxy.ports.https }}
       protocol: TCP
-    - name: pulsarssl
-      port: {{ .Values.proxy.ports.pulsarssl }}
+    - name: tls-pulsarssl
+      port: {{ .Values.proxy.ports.tls-pulsarssl }}
       protocol: TCP
     {{- end }}
   selector:

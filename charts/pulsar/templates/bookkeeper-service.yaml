@@ -33,7 +33,7 @@ metadata:
 spec:
   ports:
   - name: bookie
-    port: {{ .Values.bookkeeper.ports.bookie }}
+    port: {{ .Values.bookkeeper.ports.tcp-bookie }}
   - name: http
     port: {{ .Values.bookkeeper.ports.http }}
   clusterIP: None

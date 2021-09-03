@@ -120,15 +120,15 @@ spec:
         # prometheus needs to access /metrics endpoint
         - name: http
           containerPort: {{ .Values.zookeeper.ports.http }}
-        - name: client
-          containerPort: {{ .Values.zookeeper.ports.client }}
-        - name: follower
-          containerPort: {{ .Values.zookeeper.ports.follower }}
-        - name: leader-election
-          containerPort: {{ .Values.zookeeper.ports.leaderElection }}
+        - name: tcp-client
+          containerPort: {{ .Values.zookeeper.ports.tcp-client }}
+        - name: tcp-follower
+          containerPort: {{ .Values.zookeeper.ports.tcp-follower }}
+        - name: tcp-leader-election
+          containerPort: {{ .Values.zookeeper.ports.tcp-leaderElection }}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-        - name: client-tls
-          containerPort: {{ .Values.zookeeper.ports.clientTls }}
+        - name: tls-client-tls
+          containerPort: {{ .Values.zookeeper.ports.tls-clientTls }}
         {{- end }}
         env:
         - name: ZOOKEEPER_SERVERS

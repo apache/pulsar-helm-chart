@@ -170,8 +170,8 @@ spec:
           readOnlyRootFilesystem: false
       {{- end}}
         ports:
-        - name: bookie
-          containerPort: {{ .Values.bookkeeper.ports.bookie }}
+        - name: tcp-bookie
+          containerPort: {{ .Values.bookkeeper.ports.tcp-bookie }}
         - name: http
           containerPort: {{ .Values.bookkeeper.ports.http }}
         envFrom:

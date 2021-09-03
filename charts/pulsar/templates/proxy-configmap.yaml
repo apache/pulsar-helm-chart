@@ -33,27 +33,27 @@ data:
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.proxy.ports.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
-  servicePort: "{{ .Values.proxy.ports.pulsar }}"
-  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
+  servicePort: "{{ .Values.proxy.ports.tcp-pulsar }}"
+  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tcp-pulsar }}
   brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
   tlsEnabledInProxy: "true"
-  servicePortTls: "{{ .Values.proxy.ports.pulsarssl }}"
+  servicePortTls: "{{ .Values.proxy.ports.tls-pulsarssl }}"
   webServicePortTls: "{{ .Values.proxy.ports.https }}"
   tlsCertificateFilePath: "/pulsar/certs/proxy/tls.crt"
   tlsKeyFilePath: "/pulsar/certs/proxy/tls.key"
   tlsTrustCertsFilePath: "/pulsar/certs/ca/ca.crt"
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
   # if broker enables TLS, configure proxy to talk to broker using TLS
-  brokerServiceURLTLS: pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}
+  brokerServiceURLTLS: pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tls-pulsarssl }}
   brokerWebServiceURLTLS: https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}
   tlsEnabledWithBroker: "true"
   tlsCertRefreshCheckDurationSec: "300"
   brokerClientTrustCertsFilePath: "/pulsar/certs/ca/ca.crt"
   {{- end }}
   {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
-  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
+  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.tcp-pulsar }}
   brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
   {{- end }}
   {{- end }}

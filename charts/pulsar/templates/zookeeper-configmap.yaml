@@ -33,8 +33,8 @@ data:
   serverCnxnFactory: org.apache.zookeeper.server.NettyServerCnxnFactory
   # enable zookeeper tls
   {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-  secureClientPort: "{{ .Values.zookeeper.ports.clientTls }}"
-  PULSAR_PREFIX_secureClientPort: "{{ .Values.zookeeper.ports.clientTls }}"
+  secureClientPort: "{{ .Values.zookeeper.ports.tls-clientTls }}"
+  PULSAR_PREFIX_secureClientPort: "{{ .Values.zookeeper.ports.tls-clientTls }}"
   {{- end }}
 {{ toYaml .Values.zookeeper.configData | indent 2 }}
 {{- end }}

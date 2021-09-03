@@ -183,14 +183,14 @@ spec:
         - name: http
           containerPort: {{ .Values.proxy.ports.http }}
         {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
-        - name: pulsar
-          containerPort: {{ .Values.proxy.ports.pulsar }}
+        - name: tcp-pulsar
+          containerPort: {{ .Values.proxy.ports.tcp-pulsar }}
         {{- end }}
         {{- if and (.Values.tls.enabled) (.Values.tls.proxy.enabled) }}
         - name: https
           containerPort: {{ .Values.proxy.ports.https }}
-        - name: pulsarssl
-          containerPort: {{ .Values.proxy.ports.pulsarssl }}
+        - name: tls-pulsarssl
+          containerPort: {{ .Values.proxy.ports.tls-pulsarssl }}
         {{- end }}
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:

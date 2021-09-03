@@ -34,14 +34,14 @@ spec:
   - name: http
     port: {{ .Values.broker.ports.http }}
   {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
-  - name: pulsar
-    port: {{ .Values.broker.ports.pulsar }}
+  - name: tcp-pulsar
+    port: {{ .Values.broker.ports.tcp-pulsar }}
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
   - name: https
     port: {{ .Values.broker.ports.https }}
-  - name: pulsarssl
-    port: {{ .Values.broker.ports.pulsarssl }}
+  - name: tls-pulsarssl
+    port: {{ .Values.broker.ports.tls-pulsarssl }}
   {{- end }}
   clusterIP: None
   selector:

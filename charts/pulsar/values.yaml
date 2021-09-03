@@ -294,10 +294,10 @@ zookeeper:
   restartPodsOnConfigMapChange: false
   ports:
     http: 8000
-    client: 2181
-    clientTls: 2281
-    follower: 2888
-    leaderElection: 3888
+    tcp-client: 2181
+    tls-clientTls: 2281
+    tcp-follower: 2888
+    tcp-leaderElection: 3888
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -421,7 +421,7 @@ bookkeeper:
   restartPodsOnConfigMapChange: false
   ports:
     http: 8000
-    bookie: 3181
+    tcp-bookie: 3181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -631,8 +631,8 @@ broker:
   ports:
     http: 8080
     https: 8443
-    pulsar: 6650
-    pulsarssl: 6651
+    tcp-pulsar: 6650
+    tls-pulsarssl: 6651
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -810,8 +810,8 @@ proxy:
   ports:
     http: 80
     https: 443
-    pulsar: 6650
-    pulsarssl: 6651
+    tcp-pulsar: 6650
+    tls-pulsarssl: 6651
   service:
     annotations: {}
     type: LoadBalancer
