@@ -37,6 +37,10 @@ components:
 
 zookeeper:
   replicaCount: 1
+  configData:
+    PULSAR_EXTRA_OPTS: >
+      -Dzookeeper.ssl.hostnameVerification=false
+      -Dzookeeper.ssl.quorum.hostnameVerification=false
 
 bookkeeper:
   replicaCount: 3
