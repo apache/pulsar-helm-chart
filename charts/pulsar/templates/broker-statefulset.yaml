@@ -212,13 +212,13 @@ spec:
         - name: http
           containerPort: {{ .Values.broker.ports.http }}
         {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
-        - name: pulsar
+        - name: "{{ .Values.tcpPrefix }}pulsar"
           containerPort: {{ .Values.broker.ports.pulsar }}
         {{- end }}
         {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
         - name: https
           containerPort: {{ .Values.broker.ports.https }}
-        - name: pulsarssl
+        - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
         envFrom:

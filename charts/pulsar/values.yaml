@@ -48,6 +48,15 @@ initialize: false
 ## be stored under the provided path
 metadataPrefix: ""
 
+## Port name prefix
+##
+## Used for Istio support which depends on a standard naming of ports
+## See https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+## Prefixes are disabled by default
+
+tcpPrefix: ""  # For Istio this will be "tcp-"
+tlsPrefix: ""  # For Istio this will be "tls-"
+
 ## Persistence
 ##
 ## If persistence is enabled, components that have state will
