@@ -86,7 +86,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-          - >
+          - |
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
