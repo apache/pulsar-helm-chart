@@ -38,6 +38,10 @@ data:
   journalDirectories: "/pulsar/data/bookkeeper/journal"
   PULSAR_PREFIX_journalDirectories: "/pulsar/data/bookkeeper/journal"
   ledgerDirectories: "/pulsar/data/bookkeeper/ledgers"
+  # Stateful function config
+  {{- if .Values.functions.useBookieAsStateStore }}
+  extraServerComponents: "org.apache.bookkeeper.stream.server.StreamStorageLifecycleComponent"
+  {{- end }}
   # TLS config
   {{- include "pulsar.bookkeeper.config.tls" . | nindent 2 }}
 {{ toYaml .Values.bookkeeper.configData | indent 2 }}

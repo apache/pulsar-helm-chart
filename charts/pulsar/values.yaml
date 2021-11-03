@@ -431,6 +431,7 @@ bookkeeper:
   ports:
     http: 8000
     bookie: 3181
+    statestore: 4181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -731,6 +732,7 @@ broker:
 ##
 functions:
   component: functions-worker
+  useBookieAsStateStore: true
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
