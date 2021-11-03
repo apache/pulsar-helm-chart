@@ -189,7 +189,13 @@ spec:
       volumes:
       {{- if not (and (and .Values.volumes.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence) }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
+        {{- if and (not (and (and .Values.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence)) (and .Values.volumes.mount_local_disk.hostPath .Values.zookeeper.volumes.mount_local_disk.hostPath) }}
+        hostPath:
+          path: {{.Values.zookeeper.volumes.mount_local_disk.path}}/{{ template "pulsar.namespace" .}}/zookeeper
+          type: DirectoryOrCreate
+        {{- else }}
         emptyDir: {}
+        {{- end}}
       {{- end }}
       {{- if .Values.zookeeper.extraVolumes }}
 {{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
