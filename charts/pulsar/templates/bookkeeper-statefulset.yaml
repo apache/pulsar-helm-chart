@@ -194,17 +194,17 @@ spec:
       volumes:
       {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence) }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
-        {{- if and(not and(and(.Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence) and(.Values.volumes.mount_local_disk.hostPath .Values.bookkeeper.volumes.mount_local_disk.hostPath))}}
+        {{- if and (not (and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence)) (and .Values.volumes.mount_local_disk.hostPath .Values.bookkeeper.volumes.mount_local_disk.hostPath)}}
         hostPath:
-          path: "{{.Values.bookkeeper.volumes.mount_local_disk.journalPath}}/{{ template "pulsar.namespace"}}/bookie/journal"
+          path: {{.Values.bookkeeper.volumes.mount_local_disk.journalPath}}/{{ template "pulsar.namespace" .}}/bookie/journal
           type: DirectoryOrCreate
         {{- else }}
         emptyDir: {}
         {{- end}}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
-        {{- if and(not and(and(.Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence) and(.Values.volumes.mount_local_disk.hostPath .Values.bookkeeper.volumes.mount_local_disk.hostPath))}}
+        {{- if and (not (and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence)) (and .Values.volumes.mount_local_disk.hostPath .Values.bookkeeper.volumes.mount_local_disk.hostPath)}}
         hostPath:
-          path: "{{.Values.bookkeeper.volumes.mount_local_disk.ledgersPath}}/{{ template "pulsar.namespace"}}/bookie/ledgers"
+          path: {{.Values.bookkeeper.volumes.mount_local_disk.ledgersPath}}/{{ template "pulsar.namespace" .}}/bookie/ledgers
           type: DirectoryOrCreate
         {{- else }}
         emptyDir: {}
