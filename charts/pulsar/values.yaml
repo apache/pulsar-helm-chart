@@ -63,6 +63,9 @@ tlsPrefix: ""  # For Istio this will be "tls-"
 ## be deployed with PersistentVolumeClaims, otherwise, for test
 ## purposes, they will be deployed with emptyDir
 ##
+## If you want to mount storage to a local disk, set `persistence`
+## `volumes.persistence` and `volumes.hostPath.emptyDir` to false
+##
 ## This is a global setting that is applied to all components.
 ## If you need to disable persistence for a component,
 ## you can set the `volume.persistence` setting to `false` for
@@ -76,6 +79,10 @@ volumes:
   # configure the components to use local persistent volume
   # the local provisioner should be installed prior to enable local persistent volume
   local_storage: false
+  # If you want to mount to a local disk, set `hostPath` to true
+  # If `hostPath` is disabled, volumes is emptyDir.
+  mount_local_disk:
+    hostPath: false
 
 ## RBAC
 ##
@@ -354,8 +361,14 @@ zookeeper:
   extraVolumes: []
   extraVolumeMounts: []
   volumes:
-    # use a persistent volume or emptyDir
+    # use a persistent volume or hostPath(eg: emptyDir, hostPath)
+    # If you want to set hostPath, set `persistence` to false
     persistence: true
+    # If you want to mount to a local disk, set `hostPath` to true and set the mount path
+    # If `hostPath` is disabled, volumes is emptyDir.
+    mount_local_disk:
+      hostPath: true
+      path: "/data/pulsar"
     data:
       name: data
       size: 20Gi
@@ -476,8 +489,15 @@ bookkeeper:
   extraVolumes: []
   extraVolumeMounts: []
   volumes:
-    # use a persistent volume or emptyDir
+    # use a persistent volume or hostPath(eg: emptyDir, hostPath)
+    # If you want to set hostPath, set `persistence` to false
     persistence: true
+    # If you want to mount to a local disk, set `hostPath` to true and set the mount path
+    # If `hostPath` is disabled, volumes is emptyDir.
+    mount_local_disk:
+      hostPath: true
+      journalPath: "/data/pulsar"
+      ledgersPath: "/data/pulsar"
     journal:
       name: journal
       size: 10Gi
