@@ -1057,7 +1057,7 @@ pulsar_manager:
     URL: jdbc:postgresql://127.0.0.1:5432/pulsar_manager
     LOG_LEVEL: DEBUG
     ## If you enabled authentication support
-    ## JWT_TOKEN: <token>
+    ## BACKEND_JWT_TOKEN: <token>
     ## SECRET_KEY: data:base64,<secret key>
   ## Pulsar manager service
   ## templates/pulsar-manager-service.yaml

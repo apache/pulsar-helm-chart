@@ -65,6 +65,12 @@ spec:
           volumeMounts:
           - name: pulsar-manager-data
             mountPath: /data
+          - name: token-keys
+            mountPath: /pulsar-manager/keys
+            readOnly: true
+          - name: broker-token
+            mountPath: /pulsar-manager/tokens
+            readOnly: true
           envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
@@ -93,5 +99,19 @@ spec:
       volumes:
         - name: pulsar-manager-data
           emptyDir: {}
+        - name: token-keys
+          secret:
+            secretName: "{{ template "pulsar.fullname" .}}-token-asymmetric-key"
+            items:
+              - key: PUBLICKEY
+                path: token/public.key
+              - key: PRIVATEKEY
+                path: token/private.key
+        - name: broker-token
+          secret:
+            secretName: "{{ template "pulsar.fullname" .}}-token-admin"
+            items:
+              - key: TOKEN
+                path: broker/token
 
 {{- end }}

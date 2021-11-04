@@ -27,5 +27,10 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_manager.component }}
 data:
+  {{- if and (and .Values.auth.authorization.enabled .Values.auth.authentication.enabled) (eq .Values.auth.authentication.provider "jwt")}}
+  JWT_BROKER_TOKEN_MODE: PRIVATE
+  JWT_BROKER_PRIVATE_KEY: "file:///pulsar-manager/keys/token/private.key"
+  JWT_BROKER_PUBLIC_KEY: "file:///pulsar-manager/keys/token/public.key"
+  {{- end}}
 {{ toYaml .Values.pulsar_manager.configData | indent 2 }}
 {{- end }}
