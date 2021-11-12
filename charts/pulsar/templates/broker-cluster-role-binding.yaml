@@ -22,17 +22,24 @@
 apiVersion: rbac.authorization.k8s.io/v1
 {{- if .Values.rbac.limit_to_namespace }}
 kind: RoleBinding
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-rolebinding"
 {{- else}}
 kind: ClusterRoleBinding
-{{- end}}
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-clusterrolebinding"
+{{- end}}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
+{{- if .Values.rbac.limit_to_namespace }}
+  kind: Role
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-role"
+{{- else}}
   kind: ClusterRole
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-clusterrole"
+{{- end}}
 subjects:
 - kind: ServiceAccount
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-acct"
@@ -40,9 +47,15 @@ subjects:
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.limit_to_namespace }}
+kind: Role
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-role"
+{{- else}}
 kind: ClusterRole
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-clusterrole"
+{{- end}}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
 rules:
