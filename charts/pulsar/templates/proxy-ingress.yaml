@@ -18,7 +18,11 @@
 #
 
 {{- if .Values.proxy.ingress.enabled }}
+{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
 apiVersion: extensions/v1beta1
+{{- else }}
+apiVersion: networking.k8s.io/v1
+{{- end }}
 kind: Ingress
 metadata:
   labels:
@@ -43,6 +47,7 @@ spec:
     - http:
         paths:
           - path: {{ .Values.proxy.ingress.path }}
+            {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
             backend:
               serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
               {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
@@ -50,6 +55,18 @@ spec:
               {{- else }}
               servicePort: {{ .Values.proxy.ports.http }}
               {{- end }}
+            {{- else }}
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+                port:
+                  {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
+                  number: {{ .Values.proxy.ports.https }}
+                  {{- else }}
+                  number: {{ .Values.proxy.ports.http }}
+                  {{- end }}
+            {{- end }}
       {{- if .Values.proxy.ingress.hostname }}
       host: {{ .Values.proxy.ingress.hostname }}
       {{- end }}
