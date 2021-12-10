@@ -139,7 +139,7 @@ spec:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
-          exec bin/bookkeeper autorecovery
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/bookkeeper autorecovery
         ports:
         - name: http
           containerPort: {{ .Values.autorecovery.ports.http }}
