@@ -167,7 +167,7 @@ spec:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
-          exec bin/pulsar bookie;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
