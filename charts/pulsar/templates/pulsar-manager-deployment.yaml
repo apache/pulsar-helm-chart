@@ -69,6 +69,8 @@ spec:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
           env:
+          - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+            value: "true"          
           - name: PULSAR_CLUSTER
             value: {{ template "pulsar.fullname" . }}
           - name: USERNAME

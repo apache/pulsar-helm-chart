@@ -78,6 +78,9 @@ spec:
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
+        env:
+        - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+          value: "true"
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"

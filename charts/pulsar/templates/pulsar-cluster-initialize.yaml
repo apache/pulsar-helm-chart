@@ -71,6 +71,9 @@ spec:
           until bin/bookkeeper shell whatisinstanceid; do
             sleep 3;
           done;
+        env:
+        - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+          value: "true"
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"

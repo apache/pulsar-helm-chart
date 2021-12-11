@@ -65,4 +65,6 @@ spec:
         env:
         - name: SERVICE_URL
           value: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:8080/
+        - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+          value: "true"
 {{- end }}

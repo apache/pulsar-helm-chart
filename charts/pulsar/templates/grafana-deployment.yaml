@@ -69,6 +69,8 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
         env:
+        - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+          value: "true"        
         # for supporting apachepulsar/pulsar-grafana
         - name: PROMETHEUS_URL
           value: http://{{ template "pulsar.fullname" . }}-{{ .Values.prometheus.component }}:9090/

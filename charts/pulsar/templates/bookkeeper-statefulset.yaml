@@ -115,6 +115,9 @@ spec:
         # only reformat bookie if bookkeeper is running without persistence
         - >
           {{- include "pulsar.bookkeeper.init.verify_cluster_id" . | nindent 10 }}
+        env:
+        - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+          value: "true"
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
@@ -177,6 +180,9 @@ spec:
           containerPort: {{ .Values.bookkeeper.ports.bookie }}
         - name: http
           containerPort: {{ .Values.bookkeeper.ports.http }}
+        env:
+        - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+          value: "true"
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
