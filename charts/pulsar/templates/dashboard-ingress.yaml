@@ -24,7 +24,7 @@ kind: Ingress
 metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-  component: {{ .Values.dashboard.component }}
+    component: {{ .Values.dashboard.component }}
   annotations:
 {{- with .Values.dashboard.ingress.annotations }}
 {{ toYaml . | indent 4 }}
