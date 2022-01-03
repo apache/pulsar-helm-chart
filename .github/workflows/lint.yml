@@ -24,10 +24,12 @@ on:
       - '*'
     paths:
       - 'charts/pulsar/**'
-      - '.ci/ct.sh'
+      - '.ci/**'
+      - 'hack/**'
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v2
