@@ -564,16 +564,11 @@ bookkeeper:
       -XX:ConcGCThreads=4
       -XX:G1NewSizePercent=50
       -XX:+DisableExplicitGC
-      -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
       -XX:+PrintGCDetails
-      -XX:+PrintGCTimeStamps
-      -XX:+PrintGCApplicationStoppedTime
-      -XX:+PrintHeapAtGC
       -verbosegc
-      -Xloggc:/var/log/bookie-gc.log
-      -XX:G1LogLevel=finest
+      -Xlog:gc*:/var/log/bookie-gc.log:time,uptime,level,tags:filecount=10,filesize=20M
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
@@ -747,7 +742,6 @@ broker:
       -XX:ConcGCThreads=4
       -XX:G1NewSizePercent=50
       -XX:+DisableExplicitGC
-      -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
     managedLedgerDefaultEnsembleSize: "2"
@@ -858,7 +852,6 @@ proxy:
       -XX:ConcGCThreads=4
       -XX:G1NewSizePercent=50
       -XX:+DisableExplicitGC
-      -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
   ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
