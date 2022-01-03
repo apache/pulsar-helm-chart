@@ -16,3 +16,6 @@ charts/**/*.lock
 
 PRIVATEKEY
 PUBLICKEY
+.vagrant/
+pulsarctl-amd64-linux.tar.gz
+pulsarctl-amd64-linux/

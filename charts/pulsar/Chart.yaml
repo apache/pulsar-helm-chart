@@ -17,7 +17,7 @@
 # under the License.
 #
 
-apiVersion: v1
+apiVersion: v2
 appVersion: "2.7.4"
 description: Apache Pulsar Helm chart for Kubernetes
 name: pulsar
