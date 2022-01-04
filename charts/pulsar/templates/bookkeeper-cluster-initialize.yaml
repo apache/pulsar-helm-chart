@@ -69,8 +69,8 @@ spec:
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;
             fi
-            {{- if .Values.istio.enabled }}
-            priorResult=$(echo $?); curl -fsI -X POST http://localhost:15020/quitquitquit && exit $priorResult
+            {{- if .Values.extraInitCommand }}
+              {{ .Values.extraInitCommand }}
             {{- end }}
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
