@@ -81,7 +81,7 @@ function release::publish_charts() {
     if [[ "x${PUBLISH_CHARTS}" == "xtrue" ]]; then
       git push --set-upstream origin asf-site
     else
-      git push --dry-run --set-upstream origin asf-site
+      echo "Skipping publishing charts"
     fi
 }
 
