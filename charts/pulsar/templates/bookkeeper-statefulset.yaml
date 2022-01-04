@@ -135,6 +135,7 @@ spec:
             port: {{ .Values.bookkeeper.ports.http }}
           initialDelaySeconds: {{ .Values.bookkeeper.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.bookkeeper.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.bookkeeper.probe.liveness.timeoutSeconds }}
           failureThreshold: {{ .Values.bookkeeper.probe.liveness.failureThreshold }}
         {{- end }}
         {{- if .Values.bookkeeper.probe.readiness.enabled }}
@@ -144,6 +145,7 @@ spec:
             port: {{ .Values.bookkeeper.ports.http }}
           initialDelaySeconds: {{ .Values.bookkeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.bookkeeper.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.bookkeeper.probe.readiness.timeoutSeconds }}
           failureThreshold: {{ .Values.bookkeeper.probe.readiness.failureThreshold }}
         {{- end }}
         {{- if .Values.bookkeeper.probe.startup.enabled }}
@@ -153,6 +155,7 @@ spec:
             port: {{ .Values.bookkeeper.ports.http }}
           initialDelaySeconds: {{ .Values.bookkeeper.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.bookkeeper.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.bookkeeper.probe.startup.timeoutSeconds }}
           failureThreshold: {{ .Values.bookkeeper.probe.startup.failureThreshold }}
         {{- end }}
       {{- if .Values.bookkeeper.resources }}
@@ -164,7 +167,7 @@ spec:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
-          exec bin/pulsar bookie;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false

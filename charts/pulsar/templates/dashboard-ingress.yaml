@@ -19,12 +19,16 @@
 
 {{- if .Values.extra.dashboard }}
 {{- if .Values.dashboard.ingress.enabled }}
+{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
+{{- else }}
+apiVersion: networking.k8s.io/v1
+{{- end }}
 kind: Ingress
 metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-  component: {{ .Values.dashboard.component }}
+    component: {{ .Values.dashboard.component }}
   annotations:
 {{- with .Values.dashboard.ingress.annotations }}
 {{ toYaml . | indent 4 }}
@@ -45,8 +49,17 @@ spec:
       http:
         paths:
           - path: {{ .Values.dashboard.ingress.path }}
+            {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
             backend:
               serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
               servicePort: {{ .Values.dashboard.ingress.port }}
+            {{- else }}
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
+                port:
+                  number: {{ .Values.dashboard.ingress.port }}
+            {{- end }}
 {{- end }}
 {{- end }}

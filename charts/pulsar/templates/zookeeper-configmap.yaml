@@ -29,12 +29,15 @@ metadata:
     component: {{ .Values.zookeeper.component }}
 data:
   dataDir: /pulsar/data/zookeeper
+  {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+  # enable zookeeper tls
   PULSAR_PREFIX_serverCnxnFactory: org.apache.zookeeper.server.NettyServerCnxnFactory
   serverCnxnFactory: org.apache.zookeeper.server.NettyServerCnxnFactory
-  # enable zookeeper tls
-  {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
   secureClientPort: "{{ .Values.zookeeper.ports.clientTls }}"
   PULSAR_PREFIX_secureClientPort: "{{ .Values.zookeeper.ports.clientTls }}"
+  {{- else }}
+  PULSAR_PREFIX_serverCnxnFactory: org.apache.zookeeper.server.NIOServerCnxnFactory
+  serverCnxnFactory: org.apache.zookeeper.server.NIOServerCnxnFactory
   {{- end }}
 {{ toYaml .Values.zookeeper.configData | indent 2 }}
 {{- end }}

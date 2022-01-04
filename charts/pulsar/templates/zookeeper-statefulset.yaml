@@ -115,7 +115,7 @@ spec:
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
-          exec bin/pulsar zookeeper;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar zookeeper;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
@@ -149,6 +149,7 @@ spec:
             - bin/pulsar-zookeeper-ruok.sh
           initialDelaySeconds: {{ .Values.zookeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.probe.readiness.timeoutSeconds }}
           failureThreshold: {{ .Values.zookeeper.probe.readiness.failureThreshold }}
         {{- end }}
         {{- if .Values.zookeeper.probe.liveness.enabled }}
@@ -158,6 +159,7 @@ spec:
             - bin/pulsar-zookeeper-ruok.sh
           initialDelaySeconds: {{ .Values.zookeeper.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.probe.liveness.timeoutSeconds }}
           failureThreshold: {{ .Values.zookeeper.probe.liveness.failureThreshold }}
         {{- end }}
         {{- if .Values.zookeeper.probe.startup.enabled }}
@@ -167,6 +169,7 @@ spec:
             - bin/pulsar-zookeeper-ruok.sh
           initialDelaySeconds: {{ .Values.zookeeper.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.probe.startup.timeoutSeconds }}
           failureThreshold: {{ .Values.zookeeper.probe.startup.failureThreshold }}
         {{- end }}
         volumeMounts:

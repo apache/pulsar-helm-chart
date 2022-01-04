@@ -168,6 +168,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.liveness.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.liveness.failureThreshold }}
         {{- end }}
         {{- if .Values.broker.probe.readiness.enabled }}
@@ -177,6 +178,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.readiness.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.readiness.failureThreshold }}
         {{- end }}
         {{- if .Values.broker.probe.startup.enabled }}
@@ -186,6 +188,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.startup.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.startup.failureThreshold }}
         {{- end }}
       {{- if .Values.broker.resources }}
@@ -206,7 +209,7 @@ spec:
             bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
           cat conf/pulsar_env.sh;
-          exec bin/pulsar broker;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar broker;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http

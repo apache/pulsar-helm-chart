@@ -17,27 +17,12 @@
 # under the License.
 #
 
-name: Precommit Style Check
-on:
-  pull_request:
-    branches:
-      - '*'
-jobs:
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-    - name: Set up Go 1.12
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.12
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
-    - name: Check license
-      run: |
-        go test license_test.go
+# contains pattern definitions used in workflows "changes" step
+# pattern syntax: https://github.com/micromatch/picomatch
+all:
+  - '**'
+docs:
+  - 'examples/**'
+  - '.asf.yaml'
+  - '*.md'
+  - '**/*.md'
