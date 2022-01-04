@@ -19,7 +19,7 @@
 
 {{- if or .Values.monitoring.grafana .Values.extra.monitoring }}
 {{- if .Values.grafana.ingress.enabled }}
-{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
+{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
 {{- else }}
 apiVersion: networking.k8s.io/v1
@@ -46,7 +46,7 @@ spec:
     - http:
         paths:
         - path: {{ .Values.grafana.ingress.path }}
-          {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
+          {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
           backend:
             serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
             servicePort: {{ .Values.grafana.ingress.port }}

@@ -19,7 +19,7 @@
 
 {{- if .Values.extra.dashboard }}
 {{- if .Values.dashboard.ingress.enabled }}
-{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
+{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
 {{- else }}
 apiVersion: networking.k8s.io/v1
@@ -49,7 +49,7 @@ spec:
       http:
         paths:
           - path: {{ .Values.dashboard.ingress.path }}
-            {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
+            {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
             backend:
               serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
               servicePort: {{ .Values.dashboard.ingress.port }}
