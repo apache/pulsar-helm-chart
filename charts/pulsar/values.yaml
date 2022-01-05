@@ -627,6 +627,9 @@ pulsar_metadata:
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
 
+# Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
+extraInitCommand: ""
+
 ## Pulsar: Broker cluster
 ## templates/broker-statefulset.yaml
 ##
