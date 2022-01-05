@@ -94,11 +94,8 @@ helm repo add apache https://pulsar.apache.org/charts
 
 To use the helm chart:
 
-> NOTE: Please specify `--set initialize=true` when installing a release at the first time. `initialize=true` will start initialize jobs
->       to initialize the cluster metadata for both bookkeeper and pulsar clusters.
-
 ```bash
-helm install --set initialize=true <release-name> apache/pulsar
+helm install <release-name> apache/pulsar
 ```
 
 ## Kubernetes cluster preparation
