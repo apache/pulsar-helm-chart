@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if .Release.IsInstall }}
+{{- if or .Release.IsInstall .Values.initialize }}
 {{- if .Values.components.bookkeeper }}
 apiVersion: batch/v1
 kind: Job
