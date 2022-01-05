@@ -34,6 +34,9 @@ clusterDomain: cluster.local
 ### Global Settings
 ###
 
+## Set to true on install
+initialize: false
+
 ## Set cluster name
 # clusterName:
 
