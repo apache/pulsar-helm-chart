@@ -178,6 +178,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.proxy.additionalCommand }}
+          {{ .Values.proxy.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/proxy.conf &&
           echo "OK" > status &&
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar proxy

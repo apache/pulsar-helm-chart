@@ -165,6 +165,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.bookkeeper.additionalCommand }}
+          {{ .Values.bookkeeper.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
