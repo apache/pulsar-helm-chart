@@ -96,7 +96,7 @@ function ci::install_cert_manager() {
 function ci::print_pod_logs() {
     echo "Logs for all pulsar containers:"
     for pod in $(${KUBECTL} get pods -n ${NAMESPACE} -l app=pulsar -o=name); do
-      ${KUBECTL} logs -n ${NAMESPACE} "$pod" --all-containers=true --ignore-errors=true --prefix=true --tail=100 || true
+      ${KUBECTL} logs -n ${NAMESPACE} "$pod" --all-containers=true --prefix=true --tail=100 || true
     done;
 }
 
