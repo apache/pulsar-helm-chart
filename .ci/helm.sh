@@ -28,6 +28,7 @@ KUBECTL=${OUTPUT_BIN}/kubectl
 NAMESPACE=pulsar
 CLUSTER=pulsar-ci
 CLUSTER_ID=$(uuidgen)
+export PATH="$OUTPUT_BIN:$PATH"
 
 # brew package 'coreutils' is required on MacOSX
 # coreutils includes the 'timeout' command
@@ -61,21 +62,6 @@ function ci::delete_cluster() {
     echo "Deleting a kind cluster ..."
     kind delete cluster --name=pulsar-ci-${CLUSTER_ID}
     echo "Successfully delete a kind cluster."
-}
-
-function ci::install_storage_provisioner() {
-    echo "Installing the local storage provisioner ..."
-    ${HELM} repo add streamnative https://charts.streamnative.io
-    ${HELM} repo update
-    ${HELM} install local-storage-provisioner streamnative/local-storage-provisioner
-    WC=$(${KUBECTL} get pods --field-selector=status.phase=Running | grep local-storage-provisioner | wc -l)
-    while [[ ${WC} -lt 1 ]]; do
-      echo ${WC};
-      sleep 15
-      ${KUBECTL} get pods --field-selector=status.phase=Running
-      WC=$(${KUBECTL} get pods --field-selector=status.phase=Running | grep local-storage-provisioner | wc -l)
-    done
-    echo "Successfully installed the local storage provisioner."
 }
 
 function ci::install_cert_manager() {
