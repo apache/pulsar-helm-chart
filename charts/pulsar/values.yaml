@@ -40,6 +40,11 @@ initialize: false
 ## Set cluster name
 # clusterName:
 
+## add custom labels to components of cluster
+# labels:
+#   environment: dev
+#   customer: apache
+
 ## Pulsar Metadata Prefix
 ##
 ## By default, pulsar stores all the metadata at root path.
@@ -390,6 +395,8 @@ zookeeper:
       -XX:+DoEscapeAnalysis
       -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
+  ## Add a custom command to the start up process of the zookeeper pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Zookeeper service
   ## templates/zookeeper-service.yaml
   ##
@@ -551,6 +558,8 @@ bookkeeper:
     dbStorage_readAheadCacheMaxSizeMb: "32"
     dbStorage_rocksDB_writeBufferSizeMB: "8"
     dbStorage_rocksDB_blockCacheSize: "8388608"
+  ## Add a custom command to the start up process of the bookie pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Bookkeeper Service
   ## templates/bookkeeper-service.yaml
   ##
@@ -626,6 +635,9 @@ pulsar_metadata:
   # to use this, you should explicit set components.zookeeper to false
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
+
+# Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
+extraInitCommand: ""
 
 ## Pulsar: Broker cluster
 ## templates/broker-statefulset.yaml
@@ -719,6 +731,8 @@ broker:
     managedLedgerDefaultEnsembleSize: "2"
     managedLedgerDefaultWriteQuorum: "2"
     managedLedgerDefaultAckQuorum: "2"
+  ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Broker service
   ## templates/broker-service.yaml
   ##
@@ -825,6 +839,8 @@ proxy:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
+  ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
   ## Proxy service
   ## templates/proxy-service.yaml
   ##
@@ -939,6 +955,8 @@ toolset:
       -Xms64M
       -Xmx128M
       -XX:MaxDirectMemorySize=128M
+  ## Add a custom command to the start up process of the toolset pods (e.g. update-ca-certificates, jvm commands, etc)
+  additionalCommand:
 
 #############################################################
 ### Monitoring Stack : Prometheus / Grafana
