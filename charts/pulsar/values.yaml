@@ -152,33 +152,43 @@ extra:
   # Configure Kubernetes runtime for Functions
   functionsAsPods: false
 
+# default image tag for pulsar images
+# uses chart's appVersion when unspecified
+defaultPulsarImageTag:
+
 ## Images
 ##
 ## Control what images to use for each component
 images:
   zookeeper:
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   bookie:
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   autorecovery:
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   broker:
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   proxy:
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   functions:
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
   prometheus:
     repository: prom/prometheus
     tag: v2.17.2
@@ -619,7 +629,8 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.7.4
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
