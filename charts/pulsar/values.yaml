@@ -994,6 +994,18 @@ grafana:
     data:
       name: data
       size: 10Gi
+      local_storage: true
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class
+      #
+      ## Instead if you want to create a new storage class define it below
+      ## If left undefined no storage class will be defined along with PVC
+      ##
+      # storageClass:
+      # type: pd-standard
+      # fsType: xfs
+      # provisioner: kubernetes.io/gce-pd
   ## Grafana service
   ## templates/grafana-service.yaml
   ##

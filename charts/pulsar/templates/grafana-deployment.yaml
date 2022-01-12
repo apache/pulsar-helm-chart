@@ -92,14 +92,13 @@ spec:
               key: GRAFANA_ADMIN_PASSWORD
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       volumes:
-        {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.grafana.volumes.persistence) }}
-      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
-        emptyDir: {}
-        {{- end }}
         {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.grafana.volumes.persistence }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
         persistentVolumeClaim:
           claimName: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
+        {{- else }}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}-{{ .Values.grafana.volumes.data.name }}"
+        emptyDir: {}
         {{- end }}
       securityContext:
         # From Grafana 7.3 on, the Grafana Docker image runs with the root group (id 0) instead of the grafana group (id 472)
