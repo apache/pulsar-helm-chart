@@ -34,7 +34,7 @@ source ${CHARTS_HOME}/hack/common.sh
 source ${CHARTS_HOME}/.ci/git.sh
 
 # allow overwriting cr binary
-CR="docker run -v ${CHARTS_HOME}:/cr quay.io/helmpack/chart-releaser:v${CR_VERSION} cr"
+CR="docker run -v ${CHARTS_HOME}:/cr quay.io/helmpack/chart-releaser:v${CR_VERSION}"
 
 function release::ensure_dir() {
     local dir=$1

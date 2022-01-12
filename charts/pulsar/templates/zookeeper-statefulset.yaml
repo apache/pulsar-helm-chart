@@ -112,6 +112,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.zookeeper.additionalCommand }}
+          {{ .Values.zookeeper.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
