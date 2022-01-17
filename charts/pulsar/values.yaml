@@ -266,7 +266,7 @@ auth:
 ## for components within a Pulsar cluster
 certs:
   internal_issuer:
-    apiVersion: cert-manager.io/v1alpha2
+    apiVersion: cert-manager.io/v1
     enabled: false
     component: internal-cert-issuer
     type: selfsigning
