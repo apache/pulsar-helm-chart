@@ -612,6 +612,7 @@ autorecovery:
   configData:
     BOOKIE_MEM: >
       -Xms64m -Xmx64m
+    PULSAR_PREFIX_useV2WireProtocol: "true"
 
 ## Pulsar Zookeeper metadata. The metadata will be deployed as
 ## soon as the last zookeeper node is reachable. The deployment
