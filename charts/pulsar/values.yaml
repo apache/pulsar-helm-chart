@@ -405,6 +405,69 @@ zookeeper:
     usePolicy: true
     maxUnavailable: 1
 
+## Tiered Storage
+##
+storageOffload: {}
+  ## General
+  ## =======
+  # bucket: <bucket>
+  # region: <region>
+  # maxBlockSizeInBytes: "64000000" 
+  # readBufferSizeInBytes: "1000000"
+  ## The following are default values for the cluster. They can be changed
+  ## on each namespace.
+  # managedLedgerOffloadDeletionLagMs: "14400000"
+  # managedLedgerOffloadAutoTriggerSizeThresholdBytes: "-1" # disabled
+
+  # For AWS S3
+  # ======
+  # You must create an IAM account with access to the bucket and 
+  # generate keys for that account.
+  #
+  # driver: aws-s3
+  # accessKey: <access-key>
+  # accessSecret: <secret-key> # pragma: allowlist secret
+
+  # For S3 Compatible
+  # =================
+  # Need to create access and secret key for S3 compatible service
+  #
+  # driver: aws-s3
+  # accessKey: <access-key>
+  # accessSecret: <secret-key> # pragma: allowlist secret 
+  # serviceEndpoint: host:port
+ 
+  # For Aure Blob
+  # =================
+  # Need to create an Azure storage account and a blob containter (bucket) 
+  # To retrieve key, see https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage?tabs=azure-portal#code-try-1
+  #
+  # driver: azureblob
+  # storageAccount: <account name>
+  # storageAccountKey: <account key>
+  
+
+  ## For Google Cloud Storage
+  ## ====================
+  ## You must create a service account that has access to the objects in GCP buckets
+  ## and upload its key as a JSON file to a secret.
+  ## 
+  ## 1. Go to https://console.cloud.google.com/iam-admin/serviceaccounts
+  ## 2. Select your project.
+  ## 3. Create a new service account.
+  ## 4. Give the service account permission to access the bucket. For example, 
+  ##    the "Storage Object Admin" role.
+  ## 5. Create a key for the service account and save it as a JSON file.
+  ## 6. Save the JSON file in a secret:
+  ##       kubectl create secret generic pulsar-gcp-sa-secret \
+  ##          --from-file=kafkaesque-223201-f12856532197.json \
+  ##          --namespace pulsar
+  ## 
+  # driver: google-cloud-storage
+  # gcsServiceAccountSecret: pulsar-gcp-sa-secret # pragma: allowlist secret
+  # gcsServiceAccountJsonFile: kafkaesque-223201-f12856532197.json
+
+
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
 ##

@@ -279,6 +279,13 @@ spec:
               path: broker/token
       {{- end}}
       {{- end}}
+      {{- if .Values.storageOffload.driver }}
+      {{- if eq .Values.storageOffload.driver "google-cloud-storage" }}
+      - name: gcp-service-account
+        secret:
+          secretName: {{ .Values.storageOffload.gcsServiceAccountSecret }}
+      {{- end }}
+      {{- end }}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
