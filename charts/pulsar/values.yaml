@@ -318,19 +318,19 @@ zookeeper:
     liveness:
       enabled: true
       failureThreshold: 10
-      initialDelaySeconds: 10
+      initialDelaySeconds: 20
       periodSeconds: 30
       timeoutSeconds: 5
     readiness:
       enabled: true
       failureThreshold: 10
-      initialDelaySeconds: 10
+      initialDelaySeconds: 20
       periodSeconds: 30
       timeoutSeconds: 5
     startup:
       enabled: false
       failureThreshold: 30
-      initialDelaySeconds: 10
+      initialDelaySeconds: 20
       periodSeconds: 30
       timeoutSeconds: 5
   affinity:
