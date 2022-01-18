@@ -297,7 +297,7 @@ zookeeper:
   replicaCount: 3
   updateStrategy:
     type: RollingUpdate
-  podManagementPolicy: OrderedReady
+  podManagementPolicy: Parallel
   # If using Prometheus-Operator enable this PodMonitor to discover zookeeper scrape targets
   # Prometheus-Operator does not add scrape targets based on k8s annotations
   podMonitor:
