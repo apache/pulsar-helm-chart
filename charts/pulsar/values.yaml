@@ -40,6 +40,11 @@ initialize: false
 ## Set cluster name
 # clusterName:
 
+## add custom labels to components of cluster
+# labels:
+#   environment: dev
+#   customer: apache
+
 ## Pulsar Metadata Prefix
 ##
 ## By default, pulsar stores all the metadata at root path.
