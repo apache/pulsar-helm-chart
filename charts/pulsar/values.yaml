@@ -460,12 +460,12 @@ storageOffload: {}
   ## 5. Create a key for the service account and save it as a JSON file.
   ## 6. Save the JSON file in a secret:
   ##       kubectl create secret generic pulsar-gcp-sa-secret \
-  ##          --from-file=kafkaesque-223201-f12856532197.json \
+  ##          --from-file=google-service-account-key.json \
   ##          --namespace pulsar
   ## 
   # driver: google-cloud-storage
   # gcsServiceAccountSecret: pulsar-gcp-sa-secret # pragma: allowlist secret
-  # gcsServiceAccountJsonFile: kafkaesque-223201-f12856532197.json
+  # gcsServiceAccountJsonFile: google-service-account-key.json
 
 
 ## Pulsar: Bookkeeper cluster

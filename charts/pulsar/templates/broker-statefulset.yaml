@@ -241,6 +241,13 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
+          {{- if .Values.storageOffload.driver }}
+          {{- if eq .Values.storageOffload.driver "google-cloud-storage" }}
+          - name: gcp-service-account
+            readOnly: true
+            mountPath: /pulsar/gcp-service-account
+          {{- end }}
+          {{- end }}
           {{- if .Values.broker.extraVolumeMounts }}
 {{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
           {{- end }}
