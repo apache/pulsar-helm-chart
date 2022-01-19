@@ -52,11 +52,9 @@ data:
   AWS_ACCESS_KEY_ID: "{{ .Values.storageOffload.accessKey }}" 
   AWS_SECRET_ACCESS_KEY: "{{ .Values.storageOffload.accessSecret }}"
   {{- if .Values.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
-  # Post 2.6.0 value
   PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
   {{- end }} 
   {{- if .Values.storageOffload.managedLedgerOffloadDeletionLagMs }}
-  # Post 2.6.0 value
   PULSAR_PREFIX_managedLedgerOffloadDeletionLagInMillis: "{{ .Values.storageOffload.managedLedgerOffloadDeletionLagMs }}" 
   {{- end }}
   {{- if .Values.storageOffload.maxBlockSizeInBytes }}
@@ -72,11 +70,9 @@ data:
   gcsManagedLedgerOffloadRegion: "{{ .Values.storageOffload.region }}"
   gcsManagedLedgerOffloadServiceAccountKeyFile: "/pulsar/gcp-service-account/{{ .Values.storageOffload.gcsServiceAccountJsonFile }}"
   {{- if .Values.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
-  # Post 2.6.0 value
   PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
   {{- end }} 
   {{- if .Values.storageOffload.managedLedgerOffloadDeletionLagMs }}
-  # Post 2.6.0 value
   PULSAR_PREFIX_managedLedgerOffloadDeletionLagInMillis: "{{ .Values.storageOffload.managedLedgerOffloadDeletionLagMs }}" 
   {{- end }}
   {{- if .Values.storageOffload.maxBlockSizeInBytes }}
@@ -92,11 +88,9 @@ data:
   AZURE_STORAGE_ACCOUNT: "{{ .Values.storageOffload.storageAccount }}"
   AZURE_STORAGE_ACCESS_KEY: "{{ .Values.storageOffload.storageAccountKey }}"
   {{- if .Values.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
-  # Post 2.6.0 value
   PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
   {{- end }} 
   {{- if .Values.storageOffload.managedLedgerOffloadDeletionLagMs }}
-  # Post 2.6.0 value
   PULSAR_PREFIX_managedLedgerOffloadDeletionLagInMillis: "{{ .Values.storageOffload.managedLedgerOffloadDeletionLagMs }}" 
   {{- end }}
   {{- if .Values.storageOffload.maxBlockSizeInBytes }}
