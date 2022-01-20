@@ -40,6 +40,11 @@ initialize: false
 ## Set cluster name
 # clusterName:
 
+## add custom labels to components of cluster
+# labels:
+#   environment: dev
+#   customer: apache
+
 ## Pulsar Metadata Prefix
 ##
 ## By default, pulsar stores all the metadata at root path.
@@ -292,7 +297,7 @@ zookeeper:
   replicaCount: 3
   updateStrategy:
     type: RollingUpdate
-  podManagementPolicy: OrderedReady
+  podManagementPolicy: Parallel
   # If using Prometheus-Operator enable this PodMonitor to discover zookeeper scrape targets
   # Prometheus-Operator does not add scrape targets based on k8s annotations
   podMonitor:
@@ -313,19 +318,19 @@ zookeeper:
     liveness:
       enabled: true
       failureThreshold: 10
-      initialDelaySeconds: 10
+      initialDelaySeconds: 20
       periodSeconds: 30
       timeoutSeconds: 5
     readiness:
       enabled: true
       failureThreshold: 10
-      initialDelaySeconds: 10
+      initialDelaySeconds: 20
       periodSeconds: 30
       timeoutSeconds: 5
     startup:
       enabled: false
       failureThreshold: 30
-      initialDelaySeconds: 10
+      initialDelaySeconds: 20
       periodSeconds: 30
       timeoutSeconds: 5
   affinity:
@@ -608,6 +613,7 @@ autorecovery:
   configData:
     BOOKIE_MEM: >
       -Xms64m -Xmx64m
+    PULSAR_PREFIX_useV2WireProtocol: "true"
 
 ## Pulsar Zookeeper metadata. The metadata will be deployed as
 ## soon as the last zookeeper node is reachable. The deployment
