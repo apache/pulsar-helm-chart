@@ -81,8 +81,8 @@ function ci::install_cert_manager() {
 
 function ci::print_pod_logs() {
     echo "Logs for all pulsar containers:"
-    for pod in $(${KUBECTL} get pods -n ${NAMESPACE} -l app=pulsar -o=name); do
-      ${KUBECTL} logs -n ${NAMESPACE} "$pod" --all-containers=true --ignore-errors=true --prefix=true --tail=100 || true
+    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --tail=100 || true
     done;
 }
 
@@ -108,7 +108,7 @@ function ci::install_pulsar_chart() {
       ((counter++))
       echo ${WC};
       sleep 15
-      ${KUBECTL} get pods -n ${NAMESPACE}
+      ${KUBECTL} get pods,jobs -n ${NAMESPACE}
       ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
       if [[ $((counter % 20)) -eq 0 ]]; then
         ci::print_pod_logs
@@ -133,7 +133,7 @@ function ci::install_pulsar_chart() {
       ((counter++))
       echo ${WC};
       sleep 15
-      ${KUBECTL} get pods -n ${NAMESPACE}
+      ${KUBECTL} get pods,jobs -n ${NAMESPACE}
       ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
       if [[ $((counter % 8)) -eq 0 ]]; then
         ci::print_pod_logs
