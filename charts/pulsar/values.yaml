@@ -190,11 +190,11 @@ images:
     pullPolicy: IfNotPresent
   grafana:
     repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.10
+    tag: 0.0.16
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
-    tag: v0.1.0
+    tag: v0.2.0
     pullPolicy: IfNotPresent
     hasCommand: false
 
