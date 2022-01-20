@@ -241,8 +241,8 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
-          {{- if .Values.storageOffload.driver }}
-          {{- if eq .Values.storageOffload.driver "google-cloud-storage" }}
+          {{- if .Values.broker.storageOffload.driver }}
+          {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
           - name: gcp-service-account
             readOnly: true
             mountPath: /pulsar/gcp-service-account
@@ -286,11 +286,11 @@ spec:
               path: broker/token
       {{- end}}
       {{- end}}
-      {{- if .Values.storageOffload.driver }}
-      {{- if eq .Values.storageOffload.driver "google-cloud-storage" }}
+      {{- if .Values.broker.storageOffload.driver }}
+      {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
       - name: gcp-service-account
         secret:
-          secretName: {{ .Values.storageOffload.gcsServiceAccountSecret }}
+          secretName: {{ .Values.broker.storageOffload.gcsServiceAccountSecret }}
       {{- end }}
       {{- end }}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
