@@ -506,6 +506,16 @@ bookkeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      useMultiVolumes: false
+      multiVolumes:
+        - name: journal0
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/journal0
+        - name: journal1
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/journal1
     ledgers:
       name: ledgers
       size: 50Gi
@@ -513,6 +523,16 @@ bookkeeper:
       # storageClassName:
       # storageClass:
         # ...
+      useMultiVolumes: false
+      multiVolumes:
+        - name: ledgers0
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/ledgers0
+        - name: ledgers1
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/ledgers1
 
     ## use a single common volume for both journal and ledgers
     useSingleCommonVolume: false
