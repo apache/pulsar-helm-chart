@@ -990,7 +990,7 @@ grafana:
       cpu: 0.1
   volumes:
     # use a persistent volume or emptyDir
-    persistence: true
+    persistence: false
     data:
       name: data
       size: 100Mi
