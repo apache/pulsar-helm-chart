@@ -773,8 +773,14 @@ broker:
     # driver: aws-s3
     # bucket: <bucket>
     # region: <region>
-    # accessKey: <access-key>
-    # accessSecret: <secret-key> # pragma: allowlist secret
+    ## Secret that stores AWS credentials, using the following command:
+    ## ```
+    ## kubectl -n pulsar create secret generic \
+    ##   --from-literal=AWS_ACCESS_KEY_ID=<AWS ACCESS KEY> \
+    ##   --from-literal=AWS_SECRET_ACCESS_KEY=<AWS SECRET KEY> \
+    ##   <secret name>
+    ## ```
+    # secret: <secret name> # [k8s secret name that stores AWS credentials]
 
     ## For S3 Compatible
     ## =================
@@ -783,9 +789,15 @@ broker:
     # driver: aws-s3
     # bucket: <bucket>
     # region: <region>
-    # accessKey: <access-key>
-    # accessSecret: <secret-key> # pragma: allowlist secret 
     # serviceEndpoint: host:port
+    ## Secret that stores AWS credentials, using the following command:
+    ## ```
+    ## kubectl -n pulsar create secret generic \
+    ##   --from-literal=AWS_ACCESS_KEY_ID=<AWS ACCESS KEY> \
+    ##   --from-literal=AWS_SECRET_ACCESS_KEY=<AWS SECRET KEY> \
+    ##   <aws secret name>
+    ## ```
+    # secret: <aws secret name> # [k8s secret name that stores AWS credentials]
   
     ## For Azure Blob
     ## =================
@@ -795,8 +807,14 @@ broker:
     # driver: azureblob
     # bucket: <bucket>
     # region: <region>
-    # storageAccount: <account name>
-    # storageAccountKey: <account key>
+    ## Secret that stores AZURE credentials, using the following command:
+    ## ```
+    ## kubectl -n pulsar create secret generic \
+    ##   --from-literal=AZURE_STORAGE_ACCOUNT=<AZURE STORAGE ACCOUNT> \
+    ##   --from-literal=AZURE_STORAGE_ACCESS_KEY=<AZURE STORAGE ACCESS KEY> \
+    ##   <azure secret name>
+    ## ```
+    # secret: <azure secret name> # [k8s secret name that stores AZURE credentials]
 
     ## For Google Cloud Storage
     ## ====================

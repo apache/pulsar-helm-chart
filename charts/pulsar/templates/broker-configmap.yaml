@@ -49,8 +49,6 @@ data:
   managedLedgerOffloadDriver: "{{ .Values.broker.storageOffload.driver }}" 
   s3ManagedLedgerOffloadBucket: "{{ .Values.broker.storageOffload.bucket }}" 
   s3ManagedLedgerOffloadRegion: "{{ .Values.broker.storageOffload.region }}" 
-  AWS_ACCESS_KEY_ID: "{{ .Values.broker.storageOffload.accessKey }}" 
-  AWS_SECRET_ACCESS_KEY: "{{ .Values.broker.storageOffload.accessSecret }}"
   {{- if .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
   PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
   {{- end }} 
@@ -85,8 +83,6 @@ data:
   {{- if eq .Values.broker.storageOffload.driver "azureblob" }}
   managedLedgerOffloadDriver: "{{ .Values.broker.storageOffload.driver }}" 
   managedLedgerOffloadBucket: "{{ .Values.broker.storageOffload.bucket }}"
-  AZURE_STORAGE_ACCOUNT: "{{ .Values.broker.storageOffload.storageAccount }}"
-  AZURE_STORAGE_ACCESS_KEY: "{{ .Values.broker.storageOffload.storageAccountKey }}"
   {{- if .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
   PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
   {{- end }} 

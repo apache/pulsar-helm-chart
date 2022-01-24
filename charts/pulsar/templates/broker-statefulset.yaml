@@ -256,6 +256,31 @@ spec:
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
+      env:
+        {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3") }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AWS_SECRET_ACCESS_KEY
+        {{- end }}
+        {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "azureblob") }}
+        - name: AZURE_STORAGE_ACCOUNT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AZURE_STORAGE_ACCOUNT
+        - name: AZURE_STORAGE_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AZURE_STORAGE_ACCESS_KEY
+        {{- end }}
       volumes:
       {{- if .Values.broker.extraVolumes }}
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
