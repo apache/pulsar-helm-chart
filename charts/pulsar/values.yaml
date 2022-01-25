@@ -190,11 +190,11 @@ images:
     pullPolicy: IfNotPresent
   grafana:
     repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.10
+    tag: 0.0.16
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
-    tag: v0.1.0
+    tag: v0.2.0
     pullPolicy: IfNotPresent
     hasCommand: false
 
@@ -271,7 +271,7 @@ auth:
 ## for components within a Pulsar cluster
 certs:
   internal_issuer:
-    apiVersion: cert-manager.io/v1alpha2
+    apiVersion: cert-manager.io/v1
     enabled: false
     component: internal-cert-issuer
     type: selfsigning
@@ -507,6 +507,16 @@ bookkeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      useMultiVolumes: false
+      multiVolumes:
+        - name: journal0
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/journal0
+        - name: journal1
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/journal1
     ledgers:
       name: ledgers
       size: 50Gi
@@ -514,6 +524,16 @@ bookkeeper:
       # storageClassName:
       # storageClass:
         # ...
+      useMultiVolumes: false
+      multiVolumes:
+        - name: ledgers0
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/ledgers0
+        - name: ledgers1
+          size: 10Gi
+          # storageClassName: existent-storage-class
+          mountPath: /pulsar/data/bookkeeper/ledgers1
 
     ## use a single common volume for both journal and ledgers
     useSingleCommonVolume: false
