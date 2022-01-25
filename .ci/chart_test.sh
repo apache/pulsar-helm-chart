@@ -32,9 +32,6 @@ source ${PULSAR_HOME}/.ci/helm.sh
 # create cluster
 ci::create_cluster
 
-# install storage provisioner
-ci::install_storage_provisioner
-
 extra_opts=""
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.initialize }}
+{{- if or .Release.IsInstall .Values.initialize }}
 {{- if .Values.components.broker }}
 apiVersion: batch/v1
 kind: Job
@@ -86,7 +86,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-          - >
+          - |
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
@@ -100,11 +100,14 @@ spec:
               --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
               --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
               --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \
-              --broker-service-url-tls pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsarssl }}/ || true;
+              --broker-service-url-tls pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsarssl }}/ ;
+            {{- if .Values.extraInitCommand }}
+              {{ .Values.extraInitCommand }}
+            {{- end }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
-      restartPolicy: Never
+      restartPolicy: OnFailure
 {{- end }}
 {{- end }}

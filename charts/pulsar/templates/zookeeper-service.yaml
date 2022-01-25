@@ -34,14 +34,14 @@ spec:
     # prometheus needs to access /metrics endpoint
     - name: http
       port: {{ .Values.zookeeper.ports.http }}
-    - name: follower
+    - name: "{{ .Values.tcpPrefix }}follower"
       port: {{ .Values.zookeeper.ports.follower }}
-    - name: leader-election
+    - name: "{{ .Values.tcpPrefix }}leader-election"
       port: {{ .Values.zookeeper.ports.leaderElection }}
-    - name: client
+    - name: "{{ .Values.tcpPrefix }}client"
       port: {{ .Values.zookeeper.ports.client }}
     {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-    - name: client-tls
+    - name: "{{ .Values.tlsPrefix }}client-tls"
       port: {{ .Values.zookeeper.ports.clientTls }}
     {{- end }}
   clusterIP: None

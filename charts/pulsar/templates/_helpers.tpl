@@ -66,6 +66,9 @@ chart: {{ template "pulsar.chart" . }}
 release: {{ .Release.Name }}
 heritage: {{ .Release.Service }}
 cluster: {{ template "pulsar.cluster.name" . }}
+{{- if .Values.labels }}
+{{ .Values.labels | toYaml | trim }}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -75,6 +78,9 @@ Create the template labels.
 app: {{ template "pulsar.name" . }}
 release: {{ .Release.Name }}
 cluster: {{ template "pulsar.cluster.name" . }}
+{{- if .Values.labels }}
+{{ .Values.labels | toYaml | trim }}
+{{- end }}
 {{- end }}
 
 {{/*

@@ -17,11 +17,11 @@
 # under the License.
 #
 
-apiVersion: v1
-appVersion: "2.7.2"
+apiVersion: v2
+appVersion: "2.7.4"
 description: Apache Pulsar Helm chart for Kubernetes
 name: pulsar
-version: 2.7.2
+version: 2.7.10
 home: https://pulsar.apache.org
 sources:
 - https://github.com/apache/pulsar

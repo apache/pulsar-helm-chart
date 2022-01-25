@@ -70,6 +70,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.toolset.additionalCommand }}
+          {{ .Values.toolset.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/client.conf;
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
