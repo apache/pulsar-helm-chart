@@ -188,27 +188,28 @@ spec:
           - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
             mountPath: /pulsar/data/bookkeeper
         {{- else }}
-        {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
-          {{- $fullname := include "pulsar.fullname" . -}}
-          {{- $bkComponent := .Values.bookkeeper.component -}}
-          {{ range .Values.bookkeeper.volumes.journal.multiVolumes }}
+          {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
+            {{- $fullname := include "pulsar.fullname" . -}}
+            {{- $bkComponent := .Values.bookkeeper.component -}}
+            {{ range .Values.bookkeeper.volumes.journal.multiVolumes }}
         - name: "{{ $fullname }}-{{ $bkComponent }}-{{ .name }}"
           mountPath: {{ .mountPath }}
-          {{- end }}
-        {{- else }}
+            {{- end }}
+          {{- else }}
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
           mountPath: /pulsar/data/bookkeeper/journal
-        {{- end}}
-        {{- if .Values.bookkeeper.volumes.ledgers.useMultiVolumes }}
-          {{- $fullname := include "pulsar.fullname" . -}}
-          {{- $bkComponent := .Values.bookkeeper.component -}}
-          {{ range .Values.bookkeeper.volumes.ledgers.multiVolumes }}
+          {{- end}}
+          {{- if .Values.bookkeeper.volumes.ledgers.useMultiVolumes }}
+            {{- $fullname := include "pulsar.fullname" . -}}
+            {{- $bkComponent := .Values.bookkeeper.component -}}
+            {{ range .Values.bookkeeper.volumes.ledgers.multiVolumes }}
         - name: "{{ $fullname }}-{{ $bkComponent }}-{{ .name }}"
           mountPath: {{ .mountPath }}
-          {{- end }}
-        {{- else }}
+            {{- end }}
+          {{- else }}
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
           mountPath: /pulsar/data/bookkeeper/ledgers
+          {{- end }}
         {{- end }}
         {{- if .Values.bookkeeper.extraVolumeMounts }}
 {{ toYaml .Values.bookkeeper.extraVolumeMounts | indent 8 }}
