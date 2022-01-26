@@ -125,7 +125,7 @@ components:
   # toolset
   toolset: true
   # pulsar manager
-  pulsar_manager: true
+  pulsar_manager: false
 
 ## Monitoring Components
 ##
@@ -1104,9 +1104,7 @@ pulsar_manager:
   configData:
     REDIRECT_HOST: "http://127.0.0.1"
     REDIRECT_PORT: "9527"
-    DRIVER_CLASS_NAME: org.postgresql.Driver
-    URL: jdbc:postgresql://127.0.0.1:5432/pulsar_manager
-    LOG_LEVEL: DEBUG
+    LOGGING_LEVEL_ROOT: INFO
     ## If you enabled authentication support
     ## JWT_TOKEN: <token>
     ## SECRET_KEY: data:base64,<secret key>
@@ -1135,6 +1133,10 @@ pulsar_manager:
 
   ## If set use existing secret with specified name to set pulsar admin credentials.
   existingSecretName:
+  userManagement:
+    # when enabled, will use the pulsar manager database for user management
+    enabled: false
+  # the admin user and password will only be used when pulsar_manager.userManagement.enabled=false
   admin:
     user: pulsar
     password: pulsar

@@ -71,7 +71,10 @@ spec:
           env:
           - name: PULSAR_CLUSTER
             value: {{ template "pulsar.fullname" . }}
-          - name: USERNAME
+          {{- if not .Values.pulsar_manager.userManagement.enabled }}
+          - name: USER_MANAGEMENT_ENABLE
+            value: false
+          - name: PULSAR_MANAGER_ACCOUNT
             valueFrom:
               secretKeyRef:
                 key: PULSAR_MANAGER_ADMIN_USER
@@ -80,7 +83,7 @@ spec:
                 {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
-          - name: PASSWORD
+          - name: PULSAR_MANAGER_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: PULSAR_MANAGER_ADMIN_PASSWORD
@@ -89,6 +92,7 @@ spec:
                 {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
+          {{- end }}
           - name: PULSAR_MANAGER_OPTS
             value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
