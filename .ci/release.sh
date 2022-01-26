@@ -18,8 +18,9 @@
 # under the License.
 #
 
-BINDIR=`dirname "$0"`
-CHARTS_HOME=`cd ${BINDIR}/..;pwd`
+
+BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+CHARTS_HOME="$(cd "${BINDIR}/.." && pwd)"
 CHARTS_PKGS=${CHARTS_HOME}/.chart-packages
 CHARTS_INDEX=${CHARTS_HOME}/.chart-index
 CHARTS_REPO=${CHARTS_REPO:-"https://pulsar.apache.org/charts/"}
