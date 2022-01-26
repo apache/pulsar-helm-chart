@@ -91,12 +91,12 @@ function ci::collect_k8s_logs() {
     echo "Collecting k8s logs to ${K8S_LOGS_DIR}"
     for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
       filebase="${k8sobject//\//_}"
-      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${filebase}.$$.log.txt"
-      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${filebase}.previous.$$.log.txt"
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${filebase}.$$.log.txt" || true
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${filebase}.previous.$$.log.txt" || true
     done;
-    ${KUBECTL} get events --sort-by=.lastTimestamp -A > events.$$.log.txt
-    ${KUBECTL} get events --sort-by=.lastTimestamp -A -o yaml > events.$$.log.yaml
-    ${KUBECTL} get -n ${NAMESPACE} all -o yaml > k8s_resources.$$.yaml
+    ${KUBECTL} get events --sort-by=.lastTimestamp -A > events.$$.log.txt || true
+    ${KUBECTL} get events --sort-by=.lastTimestamp -A -o yaml > events.$$.log.yaml || true
+    ${KUBECTL} get -n ${NAMESPACE} all -o yaml > k8s_resources.$$.yaml || true
 }
 
 function ci::install_pulsar_chart() {

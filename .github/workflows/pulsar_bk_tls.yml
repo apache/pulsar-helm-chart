@@ -55,6 +55,7 @@ jobs:
         shell: bash
         run: |
           source .ci/helm.sh
+          set +e
           ci::collect_k8s_logs
 
       - name: Upload k8s logs on failure
