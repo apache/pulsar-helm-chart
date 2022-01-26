@@ -125,7 +125,7 @@ components:
   # toolset
   toolset: true
   # pulsar manager
-  pulsar_manager: true
+  pulsar_manager: false
 
 ## Monitoring Components
 ##
