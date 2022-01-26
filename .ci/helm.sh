@@ -90,8 +90,9 @@ function ci::collect_k8s_logs() {
     mkdir -p "${K8S_LOGS_DIR}" && cd "${K8S_LOGS_DIR}"
     echo "Collecting k8s logs to ${K8S_LOGS_DIR}"
     for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
-      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${k8sobject}.$$.log.txt"
-      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${k8sobject}.previous.$$.log.txt"
+      filebase="${k8sobject//\//_}"
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${filebase}.$$.log.txt"
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${filebase}.previous.$$.log.txt"
     done;
     ${KUBECTL} get events --sort-by=.lastTimestamp -A > events.$$.log.txt
     ${KUBECTL} get events --sort-by=.lastTimestamp -A -o yaml > events.$$.log.yaml
