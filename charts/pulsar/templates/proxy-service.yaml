@@ -50,7 +50,6 @@ spec:
       protocol: TCP
     {{- end }}
   selector:
-    app: {{ template "pulsar.name" . }}
-    release: {{ .Release.Name }}
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.proxy.component }}
 {{- end }}
