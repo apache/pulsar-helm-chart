@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -19,7 +20,7 @@
 
 set -e
 
-BINDIR=`dirname "$0"`
-CI_HOME=`cd ${BINDIR};pwd`
+BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+CI_HOME="${BINDIR}"
 
 ${CI_HOME}/ct.sh -c lint

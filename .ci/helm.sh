@@ -17,9 +17,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-BINDIR=`dirname "$0"`
-PULSAR_HOME=`cd ${BINDIR}/..;pwd`
+BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PULSAR_HOME="$(cd "${BINDIR}/.." && pwd)"
 CHARTS_HOME=${PULSAR_HOME}
 OUTPUT_BIN=${CHARTS_HOME}/output/bin
 KIND_BIN=$OUTPUT_BIN/kind
@@ -28,6 +27,7 @@ KUBECTL=${OUTPUT_BIN}/kubectl
 NAMESPACE=pulsar
 CLUSTER=pulsar-ci
 CLUSTER_ID=$(uuidgen)
+K8S_LOGS_DIR="${K8S_LOGS_DIR:-/tmp/k8s-logs}"
 export PATH="$OUTPUT_BIN:$PATH"
 
 # brew package 'coreutils' is required on MacOSX
@@ -84,6 +84,18 @@ function ci::print_pod_logs() {
     for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --tail=100 || true
     done;
+}
+
+function ci::collect_k8s_logs() {
+    mkdir -p "${K8S_LOGS_DIR}" && cd "${K8S_LOGS_DIR}"
+    echo "Collecting k8s logs to ${K8S_LOGS_DIR}"
+    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${k8sobject}.$$.log.txt"
+      ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${k8sobject}.previous.$$.log.txt"
+    done;
+    ${KUBECTL} get events --sort-by=.lastTimestamp -A > events.$$.log.txt
+    ${KUBECTL} get events --sort-by=.lastTimestamp -A -o yaml > events.$$.log.yaml
+    ${KUBECTL} get -n ${NAMESPACE} all -o yaml > k8s_resources.$$.yaml
 }
 
 function ci::install_pulsar_chart() {
