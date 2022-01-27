@@ -33,14 +33,15 @@ spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end }}
       initContainers:
+      {{- if and .Values.bookkeeper.metadata.waitZookeeperTimeout (not (eq (.Values.bookkeeper.metadata.waitZookeeperTimeout | toString) "0")) }}
       - name: wait-zookeeper-ready
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.bookkeeper.metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
-            until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else }}
@@ -48,6 +49,7 @@ spec:
               sleep 3;
             done;
             {{- end}}
+      {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
@@ -56,12 +58,12 @@ spec:
         resources:
 {{ toYaml .Values.bookkeeper.metadata.resources | indent 10 }}
       {{- end }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.bookkeeper.metadata.initTimeout | default 60 }}", "sh", "-c"]
         args:
           - >
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
-            if bin/bookkeeper shell whatisinstanceid; then
+            if timeout 15 bin/bookkeeper shell whatisinstanceid; then
                 echo "bookkeeper cluster already initialized";
             else
                 {{- if not (eq .Values.metadataPrefix "") }}
@@ -83,6 +85,6 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
-      restartPolicy: Never
+      restartPolicy: OnFailure
 {{- end }}
 {{- end }}
