@@ -320,19 +320,19 @@ zookeeper:
       failureThreshold: 10
       initialDelaySeconds: 20
       periodSeconds: 30
-      timeoutSeconds: 5
+      timeoutSeconds: 30
     readiness:
       enabled: true
       failureThreshold: 10
       initialDelaySeconds: 20
       periodSeconds: 30
-      timeoutSeconds: 5
+      timeoutSeconds: 30
     startup:
       enabled: false
       failureThreshold: 30
       initialDelaySeconds: 20
       periodSeconds: 30
-      timeoutSeconds: 5
+      timeoutSeconds: 30
   affinity:
     anti_affinity: true
     # Set the anti affinity type. Valid values:
