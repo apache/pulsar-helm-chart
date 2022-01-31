@@ -101,7 +101,7 @@ function ci::collect_k8s_logs() {
 
 function ci::install_pulsar_chart() {
     local value_file=$1
-    local extra_opts=$2
+    local extra_opts="$2 $3 $4 $5 $6"
 
     echo "Installing the pulsar chart"
     ${KUBECTL} create namespace ${NAMESPACE}
@@ -211,4 +211,31 @@ function ci::test_pulsar_function() {
     # ci::wait_function_running
     # ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client produce -m "hello pulsar function!" pulsar-ci/test/test_input
     # ci::wait_message_processed
+}
+
+function ci::test_pulsar_manager() {
+    # Get a CSRF token
+    local manager_base_url="http://${CLUSTER}-pulsar-manager:9527/pulsar-manager"
+    local toolset_exec="${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 --"
+    local csrf_token=$(${toolset_exec} curl ${manager_base_url}/csrf-token)
+    local tls=${1:-"false"}
+
+    # Attempt login
+    ${toolset_exec} curl -i --dump-header /tmp/headers -H "X-XSRF-TOKEN: ${csrf_token}" -b "XSRF-TOKEN=${csrf_token}" -H 'Content-Type: application/json' -X POST ${manager_base_url}/login -d "{\"username\":\"pulsar\",\"password\":\"pulsar\"}"
+
+    local admin_token=$(${toolset_exec} grep "token:" /tmp/headers | cut -d' ' -f 2 | sed 's/\r//')
+    local jsessionid=$(${toolset_exec} grep -o -E "JSESSIONID=[A-F0-9]+" /tmp/headers | sed 's/\r//')
+
+    if [[ "x${tls}" == "xtrue" ]]; then
+      local broker_base_url="https://${CLUSTER}-broker:8443"
+    else
+      local broker_base_url="http://${CLUSTER}-broker:8080"
+    fi
+    
+    echo "Configuring Manager with pulsar cluster for url ${broker_base_url}"
+    
+    # Create the Pulsar cluster, then try to access its contents. This will require that the manager query the broker (using the JWT if configured to do so).    
+    ${toolset_exec} curl -b "${jsessionid}; XSRF-TOKEN=${csrf_token}; ${csrf_token}=${csrf_token}; Admin-Token=${admin_token}; tenant=pulsar; username=pulsar" -H "X-XSRF-TOKEN: ${csrf_token}" -H "token: ${admin_token}" -H "username: pulsar" -H "tenant: pulsar" -H "environment: undefined" -H "Content-Type: application/json" -X PUT ${manager_base_url}/environments/environment -d "{\"name\":\"pulsar\",\"broker\":\"${broker_base_url}\"}"
+
+    ${toolset_exec} curl -b "${jsessionid}; XSRF-TOKEN=${csrf_token}; ${csrf_token}=${csrf_token}; Admin-Token=${admin_token}; tenant=pulsar; username=pulsar; Admin-Environment=pulsar" -H "X-XSRF-TOKEN: ${csrf_token}" -H "token: ${admin_token}" -H "username: pulsar" -H "tenant: pulsar" -H "environment: pulsar" ${manager_base_url}/admin/v2/tenants | grep -o '"tenant":"public"'
 }

@@ -28,10 +28,10 @@ monitoring:
 affinity:
   anti_affinity: false
 
-# disable auto recovery and pulsar manager
+# disable auto recovery. enable pulsar manager for unauthenticated connectivity testing
 components:
   autorecovery: false
-  pulsar_manager: false
+  pulsar_manager: true
 
 zookeeper:
   replicaCount: 1

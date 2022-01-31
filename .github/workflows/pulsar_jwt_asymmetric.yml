@@ -17,7 +17,7 @@
 # under the License.
 #
 
-name: Precommit - Pulsar Helm Chart (JWT Secret Key Installation)
+name: Precommit - Pulsar Helm Chart (JWT Public/Private Key + Manager Installation)
 on:
   pull_request:
     branches:
@@ -49,6 +49,8 @@ jobs:
           .ci/chart_test.sh .ci/clusters/values-jwt-asymmetric.yaml
         env:
           SYMMETRIC: "false"
+          EXTRA_SUPERUSERS: "manager-admin"
+          MANAGER: "true"
         # Only build a kind cluster if there are chart changes to test.
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
 

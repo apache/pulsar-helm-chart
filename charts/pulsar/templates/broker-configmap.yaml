@@ -110,7 +110,7 @@ data:
   authenticationEnabled: "true"
   {{- if .Values.auth.authorization.enabled }}
   authorizationEnabled: "true"
-  superUserRoles: {{ .Values.auth.superUsers | values | join "," }}
+  superUserRoles: {{ .Values.auth.superUsers | values | compact | join "," }}
   {{- end }}
   {{- if eq .Values.auth.authentication.provider "jwt" }}
   # token authentication configuration

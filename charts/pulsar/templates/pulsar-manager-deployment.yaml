@@ -65,13 +65,60 @@ spec:
           volumeMounts:
           - name: pulsar-manager-data
             mountPath: /data
+        {{- if .Values.auth.authentication.enabled }}
+        {{- if eq .Values.auth.authentication.provider "jwt" }}
+          - name: pulsar-manager-keys
+            mountPath: /pulsar-manager/keys
+        {{- end }}
+        {{- end }}
           envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
           env:
           - name: PULSAR_CLUSTER
             value: {{ template "pulsar.fullname" . }}
-          - name: USERNAME
+          - name: PULSAR_MANAGER_OPTS
+            value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
+        {{- if .Values.auth.authentication.enabled }}
+        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.superUsers.manager }}
+          - name: JWT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: TOKEN
+                name: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.manager }}"
+        {{- end }}
+        {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+          - name: SECRET_KEY
+            value: file:///pulsar-manager/keys/token/secret.key
+        {{- else }}
+          - name: PRIVATE_KEY
+            value: file:///pulsar-manager/keys/token/private.key
+          - name: PUBLIC_KEY
+            value: file:///pulsar-manager/keys/token/public.key
+        {{- end }}        
+        {{- end }}
+        {{- end }}          
+        {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+      {{- if .Values.pulsar_manager.autoCreateAdminAccount }}
+        - args:
+          - |
+            until curl http://localhost:7750/pulsar-manager; do
+              sleep 3;
+            done;
+            CSRF_TOKEN=$(curl http://localhost:7750/pulsar-manager/csrf-token);
+            curl \
+              -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+              -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN;" \
+              -H 'Content-Type: application/json' \
+              -X PUT http://localhost:7750/pulsar-manager/users/superuser \
+              -d "{\"name\": \"$SUPERUSER_NAME\", \"password\": \"$SUPERUSER_PASSWORD\", \"description\": \"superuser\", \"email\": \"superuser@nowhere.org\"}";
+            sleep 1000000000000;
+          command:
+          - sh
+          - -c
+          env:
+          - name: SUPERUSER_NAME
             valueFrom:
               secretKeyRef:
                 key: PULSAR_MANAGER_ADMIN_USER
@@ -80,7 +127,7 @@ spec:
                 {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
-          - name: PASSWORD
+          - name: SUPERUSER_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: PULSAR_MANAGER_ADMIN_PASSWORD
@@ -89,11 +136,33 @@ spec:
                 {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
-          - name: PULSAR_MANAGER_OPTS
-            value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
-        {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+          image: curlimages/curl:7.81.0
+          imagePullPolicy: IfNotPresent
+          name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-superuser-init"
+      {{- end }}          
       volumes:
         - name: pulsar-manager-data
           emptyDir: {}
-
+      {{- if .Values.auth.authentication.enabled }}
+      {{- if eq .Values.auth.authentication.provider "jwt" }}
+        - name: pulsar-manager-keys
+          secret:
+            defaultMode: 420
+          {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            secretName: "{{ .Release.Name }}-token-symmetric-key"
+          {{- else }}
+            secretName: "{{ .Release.Name }}-token-asymmetric-key"          
+          {{- end }}
+            items:
+          {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            - key: SECRETKEY
+              path: token/secret.key
+          {{- else }}
+            - key: PRIVATEKEY
+              path: token/private.key
+            - key: PUBLICKEY
+              path: token/public.key
+          {{- end }}
+      {{- end }}
+      {{- end }}
 {{- end }}

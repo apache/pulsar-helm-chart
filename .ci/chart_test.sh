@@ -27,6 +27,7 @@ VALUES_FILE=$1
 TLS=${TLS:-"false"}
 SYMMETRIC=${SYMMETRIC:-"false"}
 FUNCTION=${FUNCTION:-"false"}
+MANAGER=${MANAGER:-"false"}
 
 source ${PULSAR_HOME}/.ci/helm.sh
 
@@ -38,6 +39,10 @@ if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"
 fi
 
+if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
+    extra_opts="${extra_opts} --pulsar-superusers proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}"
+fi
+
 # install pulsar chart
 ci::install_pulsar_chart ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
 
@@ -47,6 +52,10 @@ ci::test_pulsar_producer
 if [[ "x${FUNCTION}" == "xtrue" ]]; then
     # install cert manager
     ci::test_pulsar_function
+fi
+
+if [[ "x${MANAGER}" == "xtrue" ]]; then
+    ci::test_pulsar_manager ${TLS}
 fi
 
 # delete the cluster

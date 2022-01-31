@@ -28,10 +28,10 @@ monitoring:
 affinity:
   anti_affinity: false
 
-# disable auto recovery and pulsar manager
+# disable auto recovery. enable pulsar manager for jwt connectivity testing
 components:
   autorecovery: false
-  pulsar_manager: false
+  pulsar_manager: true
 
 zookeeper:
   replicaCount: 1
@@ -79,3 +79,5 @@ auth:
     proxy: "proxy-admin"
     # pulsar-admin client to broker/proxy communication
     client: "admin"
+    # pulsar-manager to broker communication
+    manager: "manager-admin"
