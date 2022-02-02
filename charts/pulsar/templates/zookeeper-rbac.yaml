@@ -59,8 +59,11 @@ subjects:
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
+{{- if .Values.rbac.limit_to_namespace }}
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ template "pulsar.namespace" . }}"
+{{- else}}
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}" 
+{{- end}}
 spec:
   readOnlyRootFilesystem: false
   privileged: false
