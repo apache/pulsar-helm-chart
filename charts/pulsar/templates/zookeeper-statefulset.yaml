@@ -151,7 +151,9 @@ spec:
             command:
             - timeout
             - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
-            - bin/pulsar-zookeeper-ruok.sh
+            - bash
+            - -c
+            - 'echo ruok | nc -q 1 localhost 2181 | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.readiness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.readiness.timeoutSeconds }}
@@ -163,7 +165,9 @@ spec:
             command:
             - timeout
             - "{{ .Values.zookeeper.probe.liveness.timeoutSeconds }}"
-            - bin/pulsar-zookeeper-ruok.sh
+            - bash
+            - -c
+            - 'echo ruok | nc -q 1 localhost 2181 | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.liveness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.liveness.timeoutSeconds }}
@@ -175,7 +179,9 @@ spec:
             command:
             - timeout
             - "{{ .Values.zookeeper.probe.startup.timeoutSeconds }}"
-            - bin/pulsar-zookeeper-ruok.sh
+            - bash
+            - -c
+            - 'echo ruok | nc -q 1 localhost 2181 | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.startup.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.startup.timeoutSeconds }}
