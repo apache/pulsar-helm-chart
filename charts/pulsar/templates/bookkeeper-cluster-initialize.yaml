@@ -32,8 +32,9 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end }}
-      {{- if .Values.initialize_jobs.nodeSelector }}
-{{ toYaml .Values.initialize_jobs | indent 6 }}
+      nodeSelector:
+      {{- if .Values.pulsar_metadata.nodeSelector }}
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
       initContainers:
       - name: wait-zookeeper-ready

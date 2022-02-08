@@ -652,6 +652,9 @@ pulsar_metadata:
   # configurationStore:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
+  ## optional you can specify a nodeSelector for all init jobs (pulsar-init & bookkeeper-init)
+  # nodeSelector:
+    # cloud.google.com/gke-nodepool: default-pool
 
   ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false

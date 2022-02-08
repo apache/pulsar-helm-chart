@@ -30,8 +30,9 @@ metadata:
 spec:
   template:
     spec:
-    {{- if .Values.initialize_jobs.nodeSelector }}
-{{ toYaml .Values.initialize_jobs | indent 6 }}
+    {{- if .Values.pulsar_metadata.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
       initContainers:
       {{- if .Values.pulsar_metadata.configurationStore }}
