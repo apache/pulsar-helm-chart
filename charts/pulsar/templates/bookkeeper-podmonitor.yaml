@@ -37,8 +37,6 @@ spec:
       interval: {{ $.Values.bookkeeper.podMonitor.interval }}
       scrapeTimeout: {{ $.Values.bookkeeper.podMonitor.scrapeTimeout }}
       relabelings:
-        - action: labelmap
-          regex: __meta_kubernetes_pod_label_(.+)
         - sourceLabels: [__meta_kubernetes_namespace]
           action: replace
           targetLabel: kubernetes_namespace
