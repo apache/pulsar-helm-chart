@@ -27,8 +27,8 @@ CHARTS_REPO=${CHARTS_REPO:-"https://pulsar.apache.org/charts/"}
 OWNER=${OWNER:-apache}
 REPO=${REPO:-pulsar-helm-chart}
 PUBLISH_CHARTS=${PUBLISH_CHARTS:-"false"}
-PULSAR_SITE_REPO_SLUG=${PULSAR_SITE_REPO_SLUG:-"apache/pulsar-site"}
-PULSAR_SITE_BRANCH=${PULSAR_SITE_BRANCH:-"asf-site-next"}
+PULSAR_SITE_REPO_SLUG=${PULSAR_SITE_REPO_SLUG:-"apache/pulsar"}
+PULSAR_SITE_BRANCH=${PULSAR_SITE_BRANCH:-"asf-site"}
 
 # hack/common.sh need this variable to be set
 PULSAR_CHART_HOME=${CHARTS_HOME}
