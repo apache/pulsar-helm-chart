@@ -1139,3 +1139,8 @@ pulsar_manager:
   admin:
     user: pulsar
     password: pulsar
+
+job:
+  ttl:
+    enabled: false
+    secondsAfterFinished: 3600

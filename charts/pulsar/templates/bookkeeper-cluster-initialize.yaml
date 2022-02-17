@@ -27,6 +27,9 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: "{{ .Values.bookkeeper.component }}-init"
 spec:
+{{- if .Values.job.ttl.enabled }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished }}
+{{- end }}
   template:
     spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
