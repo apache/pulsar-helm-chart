@@ -72,7 +72,7 @@ function release::git_setup() {
 function release::publish_charts() {
     release::git_setup
     git clone https://${GITHUB_TOKEN}@github.com/apache/pulsar-site
-    cd pulsar
+    cd pulsar-site
     git checkout asf-site-next
     mkdir -p content/charts
     cp --force ${CHARTS_INDEX}/index.yaml content/charts/index.yaml
