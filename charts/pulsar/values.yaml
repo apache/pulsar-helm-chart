@@ -1140,6 +1140,9 @@ pulsar_manager:
     user: pulsar
     password: pulsar
 
+# These are jobs where job ttl configuration is used
+# pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml
+# pulsar-helm-chart/charts/pulsar/templates/bookkeeper-cluster-initialize.yaml
 job:
   ttl:
     enabled: false
