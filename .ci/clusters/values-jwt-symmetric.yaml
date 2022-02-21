@@ -23,8 +23,6 @@ monitoring:
   node_exporter: false
   alert_manager: false
 
-volumes:
-  local_storage: true
 
 # disabled AntiAffinity
 affinity:

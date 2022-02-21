@@ -25,14 +25,29 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.PULSARBOT_TOKEN }}
           fetch-depth: 0
 
-      - name: Install chart
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+
+      - name: Detect changed files
+        id:   changes
+        uses: apache/pulsar-test-infra/paths-filter@master
+        with:
+          filters: .github/changes-filter.yaml
+
+      - name: Check changed files
+        id: check_changes
+        run: echo "::set-output name=docs_only::${{ fromJSON(steps.changes.outputs.all_count) == fromJSON(steps.changes.outputs.docs_count) && fromJSON(steps.changes.outputs.docs_count) > 0 }}"
+
+      - name: Release chart
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.PULSARBOT_TOKEN }}
           PUBLISH_CHARTS: true

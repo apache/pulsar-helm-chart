@@ -72,9 +72,9 @@ It includes support for:
 
 In order to use this chart to deploy Apache Pulsar on Kubernetes, the followings are required.
 
-1. kubectl 1.14 or higher, compatible with your cluster ([+/- 1 minor release from your cluster](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin))
+1. kubectl 1.18 or higher, compatible with your cluster ([+/- 1 minor release from your cluster](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin))
 2. Helm v3 (3.0.2 or higher)
-3. A Kubernetes cluster, version 1.14 or higher.
+3. A Kubernetes cluster, version 1.18 or higher.
 
 ## Environment setup
 
@@ -94,16 +94,13 @@ helm repo add apache https://pulsar.apache.org/charts
 
 To use the helm chart:
 
-> NOTE: Please specify `--set initialize=true` when installing a release at the first time. `initialize=true` will start initialize jobs
->       to initialize the cluster metadata for both bookkeeper and pulsar clusters.
-
 ```bash
-helm install --set initialize=true <release-name> apache/pulsar
+helm install <release-name> apache/pulsar
 ```
 
 ## Kubernetes cluster preparation
 
-You need a Kubernetes cluster whose version is 1.14 or higher in order to use this chart, due to the usage of certain Kubernetes features.
+You need a Kubernetes cluster whose version is 1.18 or higher in order to use this chart, due to the usage of certain Kubernetes features.
 
 We provide some instructions to guide you through the preparation: http://pulsar.apache.org/docs/en/helm-prepare/
 
@@ -133,13 +130,10 @@ We provide some instructions to guide you through the preparation: http://pulsar
 
 3. Use the Pulsar Helm charts to install Apache Pulsar. 
 
-> NOTE: Please specify `--set initialize=true` when installing a release at the first time. `initialize=true` will start initialize jobs
->       to initialize the cluster metadata for both bookkeeper and pulsar clusters.
-
     This command installs and starts Apache Pulsar.
 
     ```bash 
-    $ helm install --set initialize=true <pulsar-release-name> apache/pulsar
+    $ helm install <pulsar-release-name> apache/pulsar
     ```
 
 5. Access the Pulsar cluster

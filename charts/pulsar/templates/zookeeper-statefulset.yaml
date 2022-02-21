@@ -112,10 +112,13 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.zookeeper.additionalCommand }}
+          {{ .Values.zookeeper.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
-          exec bin/pulsar zookeeper;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar zookeeper;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
@@ -138,6 +141,12 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+        {{- $zkConnectCommand := "" -}}
+        {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+        {{- $zkConnectCommand = print "openssl s_client -quiet -crlf -connect localhost:" .Values.zookeeper.ports.clientTls " -cert /pulsar/certs/zookeeper/tls.crt -key /pulsar/certs/zookeeper/tls.key" -}}
+        {{- else -}}
+        {{- $zkConnectCommand = print "nc -q 1 localhost " .Values.zookeeper.ports.client -}}
+        {{- end }}
         {{- if .Values.zookeeper.probe.readiness.enabled }}
         {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
@@ -146,27 +155,42 @@ spec:
         readinessProbe:
           exec:
             command:
-            - bin/pulsar-zookeeper-ruok.sh
+            - timeout
+            - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
+            - bash
+            - -c
+            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.probe.readiness.timeoutSeconds }}
           failureThreshold: {{ .Values.zookeeper.probe.readiness.failureThreshold }}
         {{- end }}
         {{- if .Values.zookeeper.probe.liveness.enabled }}
         livenessProbe:
           exec:
             command:
-            - bin/pulsar-zookeeper-ruok.sh
+            - timeout
+            - "{{ .Values.zookeeper.probe.liveness.timeoutSeconds }}"
+            - bash
+            - -c
+            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.probe.liveness.timeoutSeconds }}
           failureThreshold: {{ .Values.zookeeper.probe.liveness.failureThreshold }}
         {{- end }}
         {{- if .Values.zookeeper.probe.startup.enabled }}
         startupProbe:
           exec:
             command:
-            - bin/pulsar-zookeeper-ruok.sh
+            - timeout
+            - "{{ .Values.zookeeper.probe.startup.timeoutSeconds }}"
+            - bash
+            - -c
+            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.probe.startup.timeoutSeconds }}
           failureThreshold: {{ .Values.zookeeper.probe.startup.failureThreshold }}
         {{- end }}
         volumeMounts:
@@ -183,10 +207,16 @@ spec:
           mountPath: "/pulsar/keytool/keytool.sh"
           subPath: keytool.sh
         {{- end }}
+        {{- if .Values.zookeeper.extraVolumeMounts }}
+{{ toYaml .Values.zookeeper.extraVolumeMounts | indent 8 }}
+        {{- end }}
       volumes:
       {{- if not (and (and .Values.volumes.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence) }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
         emptyDir: {}
+      {{- end }}
+      {{- if .Values.zookeeper.extraVolumes }}
+{{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
       {{- end }}
       {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
       - name: zookeeper-certs
@@ -199,7 +229,7 @@ spec:
               path: tls.key
       - name: ca
         secret:
-          secretName: "{{ .Release.Name }}-ca-tls"
+          secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
           items:
             - key: ca.crt
               path: ca.crt

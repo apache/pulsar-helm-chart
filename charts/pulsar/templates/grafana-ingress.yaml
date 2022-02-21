@@ -19,7 +19,11 @@
 
 {{- if or .Values.monitoring.grafana .Values.extra.monitoring }}
 {{- if .Values.grafana.ingress.enabled }}
+{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
+{{- else }}
+apiVersion: networking.k8s.io/v1
+{{- end }}
 kind: Ingress
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
@@ -42,9 +46,18 @@ spec:
     - http:
         paths:
         - path: {{ .Values.grafana.ingress.path }}
+          {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
           backend:
             serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
             servicePort: {{ .Values.grafana.ingress.port }}
+          {{- else }}
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: "{{ template "pulsar.fullname" . }}-{{ .Values.grafana.component }}"
+              port:
+                number: {{ .Values.grafana.ingress.port }}
+          {{- end }}
       {{- if .Values.grafana.ingress.hostname }}
       host: {{ .Values.grafana.ingress.hostname }}
       {{- end }}

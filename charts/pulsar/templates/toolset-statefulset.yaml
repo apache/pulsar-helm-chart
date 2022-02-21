@@ -70,6 +70,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.toolset.additionalCommand }}
+          {{ .Values.toolset.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/client.conf;
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
@@ -94,6 +97,9 @@ spec:
           name: proxy-ca
           readOnly: true
         {{- end}}
+        {{- if .Values.toolset.extraVolumeMounts }}
+{{ toYaml .Values.toolset.extraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- if .Values.auth.authentication.enabled }}
@@ -109,11 +115,14 @@ spec:
       {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
       - name: proxy-ca
         secret:
-          secretName: "{{ .Release.Name }}-ca-tls"
+          secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
           items:
             - key: ca.crt
               path: ca.crt
       {{- end}}
+      {{- if .Values.toolset.extraVolumes }}
+{{ toYaml .Values.toolset.extraVolumes | indent 6 }}
+      {{- end }}
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}

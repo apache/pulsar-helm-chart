@@ -25,14 +25,15 @@ fi
 
 OUTPUT=${PULSAR_CHART_HOME}/output
 OUTPUT_BIN=${OUTPUT}/bin
-KUBECTL_VERSION=1.14.3
+KUBECTL_VERSION=1.18.20
 KUBECTL_BIN=$OUTPUT_BIN/kubectl
 HELM_BIN=$OUTPUT_BIN/helm
-HELM_VERSION=3.0.1
-KIND_VERSION=0.6.1
+HELM_VERSION=3.7.2
+KIND_VERSION=0.11.1
 KIND_BIN=$OUTPUT_BIN/kind
 CR_BIN=$OUTPUT_BIN/cr
-CR_VERSION=1.0.0-beta.1
+CR_VERSION=1.3.0
+export PATH="$OUTPUT_BIN:$PATH"
 
 test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
 
@@ -65,7 +66,7 @@ function hack::ensure_kubectl() {
     echo "Installing kubectl v$KUBECTL_VERSION..."
     tmpfile=$(mktemp)
     trap "test -f $tmpfile && rm $tmpfile" RETURN
-    curl --retry 10 -L -o $tmpfile https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl
+    curl --retry 10 -L -o $tmpfile https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl
     mv $tmpfile $KUBECTL_BIN
     chmod +x $KUBECTL_BIN
 }

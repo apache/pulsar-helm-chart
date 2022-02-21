@@ -22,24 +22,27 @@ on:
   pull_request:
     branches:
       - '*'
-    paths:
-      - 'charts/pulsar/**'
-      - 'hack/kind-cluster-build.sh'
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Check if this pull request only changes documentation
-        id:   docs
-        uses: apache/pulsar-test-infra/diff-only@master
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+
+      - name: Detect changed files
+        id:   changes
+        uses: apache/pulsar-test-infra/paths-filter@master
         with:
-          args: site2 .asf.yaml ct.yaml
+          filters: .github/changes-filter.yaml
+
+      - name: Check changed files
+        id: check_changes
+        run: echo "::set-output name=docs_only::${{ fromJSON(steps.changes.outputs.all_count) == fromJSON(steps.changes.outputs.docs_count) && fromJSON(steps.changes.outputs.docs_count) > 0 }}"
 
       - name: Run chart-testing (install)
         run: |
@@ -47,4 +50,21 @@ jobs:
         env:
           SYMMETRIC: "false"
         # Only build a kind cluster if there are chart changes to test.
-        if: steps.docs.outputs.changed_only == 'no'
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+
+      - name: Collect k8s logs on failure
+        if: ${{ cancelled() || failure() }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          source .ci/helm.sh
+          set +e
+          ci::collect_k8s_logs
+
+      - name: Upload k8s logs on failure
+        uses: actions/upload-artifact@v2
+        if: ${{ cancelled() || failure() }}
+        continue-on-error: true
+        with:
+          name: k8s-logs
+          path: /tmp/k8s-logs

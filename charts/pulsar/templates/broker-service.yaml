@@ -34,18 +34,17 @@ spec:
   - name: http
     port: {{ .Values.broker.ports.http }}
   {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
-  - name: pulsar
+  - name: "{{ .Values.tcpPrefix }}pulsar"
     port: {{ .Values.broker.ports.pulsar }}
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
   - name: https
     port: {{ .Values.broker.ports.https }}
-  - name: pulsarssl
+  - name: "{{ .Values.tlsPrefix }}pulsarssl"
     port: {{ .Values.broker.ports.pulsarssl }}
   {{- end }}
   clusterIP: None
   selector:
-    app: {{ template "pulsar.name" . }}
-    release: {{ .Release.Name }}
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
 {{- end }}

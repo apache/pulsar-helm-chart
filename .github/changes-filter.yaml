@@ -17,34 +17,12 @@
 # under the License.
 #
 
-images:
-  zookeeper:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  bookie:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  autorecovery:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  broker:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  functions:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  proxy:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-
-bookkeeper:
-  metadata:
-    image:
-      repository: apachepulsar/pulsar-all
-      tag: 2.6.0
-
-
-pulsar_metadata:
-  image:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+# contains pattern definitions used in workflows "changes" step
+# pattern syntax: https://github.com/micromatch/picomatch
+all:
+  - '**'
+docs:
+  - 'examples/**'
+  - '.asf.yaml'
+  - '*.md'
+  - '**/*.md'

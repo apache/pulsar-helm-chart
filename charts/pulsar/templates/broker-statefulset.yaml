@@ -168,6 +168,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.liveness.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.liveness.failureThreshold }}
         {{- end }}
         {{- if .Values.broker.probe.readiness.enabled }}
@@ -177,6 +178,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.readiness.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.readiness.failureThreshold }}
         {{- end }}
         {{- if .Values.broker.probe.startup.enabled }}
@@ -186,6 +188,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.startup.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.startup.failureThreshold }}
         {{- end }}
       {{- if .Values.broker.resources }}
@@ -195,6 +198,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.broker.additionalCommand }}
+          {{ .Values.broker.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/broker.conf;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > status;
@@ -206,19 +212,19 @@ spec:
             bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
           cat conf/pulsar_env.sh;
-          exec bin/pulsar broker;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar broker;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
           containerPort: {{ .Values.broker.ports.http }}
         {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
-        - name: pulsar
+        - name: "{{ .Values.tcpPrefix }}pulsar"
           containerPort: {{ .Values.broker.ports.pulsar }}
         {{- end }}
         {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
         - name: https
           containerPort: {{ .Values.broker.ports.https }}
-        - name: pulsarssl
+        - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
         envFrom:
@@ -235,12 +241,18 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
+          {{- if .Values.broker.extraVolumeMounts }}
+{{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
+          {{- end }}
           {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
       volumes:
+      {{- if .Values.broker.extraVolumes }}
+{{ toYaml .Values.broker.extraVolumes | indent 6 }}
+      {{- end }}
       {{- if .Values.auth.authentication.enabled }}
       {{- if eq .Values.auth.authentication.provider "jwt" }}
       - name: token-keys
