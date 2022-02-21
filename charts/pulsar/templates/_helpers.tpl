@@ -1,104 +1,99 @@
-{{/* vim: set filetype=mustache: */}}
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 
-{{/*
-pulsar home
-*/}}
-{{- define "pulsar.home" -}}
-{{- print "/pulsar" -}}
-{{- end -}}
+{{- if or .Values.components.pulsar_manager .Values.extra.pulsar_manager }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.pulsar_manager.component }}
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.pulsar_manager.component }}
+      annotations:
+        {{- if .Values.pulsar_manager.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/pulsar-manager-configmap.yaml") . | sha256sum }}
+        {{- end }}
+{{ toYaml .Values.pulsar_manager.annotations | indent 8 }}
+    spec:
+    {{- if .Values.pulsar_manager.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.pulsar_manager.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.pulsar_manager.tolerations }}
+      tolerations:
+{{ toYaml .Values.pulsar_manager.tolerations | indent 8 }}
+    {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.pulsar_manager.gracePeriod }}
+      containers:
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
+          image: "{{ .Values.images.pulsar_manager.repository }}:{{ .Values.images.pulsar_manager.tag }}"
+          imagePullPolicy: {{ .Values.images.pulsar_manager.pullPolicy }}
+        {{- if .Values.pulsar_manager.resources }}
+          resources:
+{{ toYaml .Values.pulsar_manager.resources | indent 12 }}
+        {{- end }}
+          ports:
+          - containerPort: {{ .Values.pulsar_manager.service.targetPort }}
+          volumeMounts:
+          - name: pulsar-manager-data
+            mountPath: /data
+          envFrom:
+          - configMapRef:
+              name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
+          env:
+          - name: PULSAR_CLUSTER
+            value: {{ template "pulsar.fullname" . }}
+          - name: USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: PULSAR_MANAGER_ADMIN_USER
+                {{- if .Values.pulsar_manager.existingSecretName }}
+                name: "{{ .Values.pulsar_manager.existingSecretName }}"
+                {{- else }}
+                name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
+                {{- end }}
+          - name: PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: PULSAR_MANAGER_ADMIN_PASSWORD
+                {{- if .Values.pulsar_manager.existingSecretName }}
+                name: "{{ .Values.pulsar_manager.existingSecretName }}"
+                {{- else }}
+                name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
+                {{- end }}
+          - name: PULSAR_MANAGER_OPTS
+            value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
+        {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+      volumes:
+        - name: pulsar-manager-data
+          emptyDir: {}
 
-{{/*
-Expand the name of the chart.
-*/}}
-{{- define "pulsar.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Expand the namespace of the chart.
-*/}}
-{{- define "pulsar.namespace" -}}
-{{- default .Release.Namespace .Values.namespace  -}}
-{{- end -}}
-
-{{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
-{{- define "pulsar.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Define cluster's name
-*/}}
-{{- define "pulsar.cluster.name" -}}
-{{- if .Values.clusterName }}
-{{- .Values.clusterName }}
-{{- else -}}
-{{- template "pulsar.fullname" .}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
-{{- define "pulsar.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Create the common labels.
-*/}}
-{{- define "pulsar.standardLabels" -}}
-app: {{ template "pulsar.name" . }}
-chart: {{ template "pulsar.chart" . }}
-release: {{ .Release.Name }}
-heritage: {{ .Release.Service }}
-cluster: {{ template "pulsar.cluster.name" . }}
-{{- if .Values.labels }}
-{{ .Values.labels | toYaml | trim }}
-{{- end }}
-{{- end }}
-
-{{/*
-Create the template labels.
-*/}}
-{{- define "pulsar.template.labels" -}}
-app: {{ template "pulsar.name" . }}
-release: {{ .Release.Name }}
-cluster: {{ template "pulsar.cluster.name" . }}
-{{- if .Values.labels }}
-{{ .Values.labels | toYaml | trim }}
-{{- end }}
-{{- end }}
-
-{{/*
-Create the match labels.
-*/}}
-{{- define "pulsar.matchLabels" -}}
-app: {{ template "pulsar.name" . }}
-release: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Create ImagePullSecrets
-*/}}
-{{- define "pulsar.imagePullSecrets" -}}
-{{- if .Values.images.imagePullSecrets -}}
-imagePullSecrets:
-{{- range .Values.images.imagePullSecrets }}
-- name: {{ . }}
-{{- end }}
-{{- end -}}
 {{- end }}
