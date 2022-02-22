@@ -776,9 +776,12 @@ broker:
 ##
 functions:
   component: functions-worker
-
+  ## Pulsar: Functions Worker ClusterRole or Role
+  ## templates/broker-rbac.yaml
+  # Default is false which deploys functions with ClusterRole and ClusterRoleBinding at the cluster level
+  # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
   limit_to_namespace: false
-  
+
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
 ##
