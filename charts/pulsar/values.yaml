@@ -777,6 +777,8 @@ broker:
 functions:
   component: functions-worker
 
+  limit_to_namespace: false
+  
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
 ##
