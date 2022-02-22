@@ -42,7 +42,7 @@ This Helm Chart includes all the components of Apache Pulsar for a complete expe
 It includes support for:
 
 - [x] Security
-    - [x] Automatically provisioned TLS certs, using [Jetstack](https://www.jetstack.io/)'s [cert-manager](https://cert-manager.io/docs/)
+    - [x] Automatically provisioned TLS certs, using [Jetstack](https://www.jetstack.io/)'s [cert-manager](https://cert-manager.io/docs/) v1.5.4+
         - [x] self-signed
         - [x] [Let's Encrypt](https://letsencrypt.org/)
     - [x] TLS Encryption
