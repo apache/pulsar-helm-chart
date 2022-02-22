@@ -31,11 +31,12 @@ spec:
   template:
     spec:
       initContainers:
+      {{- if and .Values.pulsar_metadata.waitZookeeperTimeout (not (eq (.Values.pulsar_metadata.waitZookeeperTimeout | toString) "0")) }}
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-cs-ready
         image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - >-
             until nslookup {{ .Values.pulsar_metadata.configurationStore}}; do
@@ -46,11 +47,11 @@ spec:
       - name: wait-zookeeper-ready
         image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
-            until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else }}
@@ -58,17 +59,19 @@ spec:
               sleep 3;
             done;
             {{- end}}
+      {{- end }}
+      {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (not (eq (.Values.pulsar_metadata.waitBookkeeperTimeout | toString) "0")) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before initializing pulsar metadata
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
-          until bin/bookkeeper shell whatisinstanceid; do
+          until timeout 15 bin/bookkeeper shell whatisinstanceid; do
             sleep 3;
           done;
         envFrom:
@@ -76,6 +79,7 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
         image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
@@ -84,7 +88,7 @@ spec:
         resources:
 {{ toYaml .Values.pulsar_metadata.resources | indent 10 }}
       {{- end }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.pulsar_metadata.initTimeout | default 60 }}", "sh", "-c"]
         args:
           - |
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}

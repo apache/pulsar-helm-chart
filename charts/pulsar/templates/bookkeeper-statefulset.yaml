@@ -104,13 +104,14 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end}}
+      {{- if and .Values.bookkeeper.waitMetadataTimeout (not (eq (.Values.bookkeeper.waitMetadataTimeout | toString) "0")) }}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.bookkeeper.waitMetadataTimeout }}", "sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
         - >
@@ -124,6 +125,7 @@ spec:
       {{- end}}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+      {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"

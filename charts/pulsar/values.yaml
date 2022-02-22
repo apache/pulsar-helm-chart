@@ -421,6 +421,10 @@ bookkeeper:
   ## BookKeeper Cluster Initialize
   ## templates/bookkeeper-cluster-initialize.yaml
   metadata:
+    ## Timeout for waiting for zookeeper to become available before running metadata initialization
+    waitZookeeperTimeout: 600
+    ## Timeout for running metadata initialization
+    initTimeout: 60
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
@@ -472,6 +476,8 @@ bookkeeper:
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for bookkeeper cluster metadata to be initialized before starting a bookie
+  waitMetadataTimeout: 600
   resources:
     requests:
       memory: 512Mi
@@ -623,6 +629,8 @@ autorecovery:
   annotations: {}
   # tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for bookkeeper to become available before starting a broker
+  waitBookkeeperTimeout: 120
   resources:
     requests:
       memory: 64Mi
@@ -652,6 +660,12 @@ pulsar_metadata:
   # configurationStore:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
+  ## Timeout for waiting for zookeeper to become available before running metadata initialization
+  waitZookeeperTimeout: 600
+  ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
+  waitBookkeeperTimeout: 120
+  ## Timeout for running metadata initialization
+  initTimeout: 60  
 
   ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
@@ -712,6 +726,10 @@ broker:
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for zookeeper to become available before starting a broker
+  waitZookeeperTimeout: 600
+  ## Timeout for waiting for bookkeeper to become available before starting a broker
+  waitBookkeeperTimeout: 120
   resources:
     requests:
       memory: 512Mi
@@ -823,6 +841,10 @@ proxy:
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for zookeeper to become available before starting a proxy
+  waitZookeeperTimeout: 600
+  ## Timeout for waiting for brokers to become available before starting a proxy
+  waitBrokerTimeout: 120
   resources:
     requests:
       memory: 128Mi
