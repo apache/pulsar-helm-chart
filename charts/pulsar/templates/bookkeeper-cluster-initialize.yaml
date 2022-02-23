@@ -27,6 +27,11 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: "{{ .Values.bookkeeper.component }}-init"
 spec:
+# This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
+# https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+{{- if .Values.job.ttl.enabled }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished }}
+{{- end }}
   template:
     spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
