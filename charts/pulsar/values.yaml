@@ -572,8 +572,7 @@ bookkeeper:
       -Xlog:safepoint
       -Xlog:gc+heap=trace
       -verbosegc
-      -Xloggc:/var/log/bookie-gc.log
-      -XX:G1LogLevel=finest
+      -Xlog:gc:/var/log/bookie-gc.log
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
