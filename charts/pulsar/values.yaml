@@ -1119,6 +1119,11 @@ pulsar_manager:
     port: 9527
     targetPort: 9527
     annotations: {}
+  serviceAdmin:
+    enabled: false
+    type: LoadBalancer
+    port: 9527
+    targetPort: 9527
   ## Pulsar manager ingress
   ## templates/pulsar-manager-ingress.yaml
   ##
