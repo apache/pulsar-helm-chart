@@ -567,10 +567,10 @@ bookkeeper:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-      -XX:+PrintGCDetails
-      -XX:+PrintGCTimeStamps
-      -XX:+PrintGCApplicationStoppedTime
-      -XX:+PrintHeapAtGC
+      -Xlog:gc*
+      -Xlog:::time,level,tags
+      -Xlog:safepoint
+      -Xlog:gc+heap=trace
       -verbosegc
       -Xloggc:/var/log/bookie-gc.log
       -XX:G1LogLevel=finest
