@@ -215,6 +215,7 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
         emptyDir: {}
       {{- end }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       {{- if .Values.zookeeper.extraVolumes }}
 {{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
       {{- end }}
