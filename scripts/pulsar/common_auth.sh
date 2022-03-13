@@ -25,7 +25,7 @@ fi
 
 OUTPUT=${CHART_HOME}/output
 OUTPUT_BIN=${OUTPUT}/bin
-PULSARCTL_VERSION=v0.4.0
+PULSARCTL_VERSION=v2.9.2.7
 PULSARCTL_BIN=${HOME}/.pulsarctl/pulsarctl
 export PATH=${HOME}/.pulsarctl/plugins:${PATH}
 
