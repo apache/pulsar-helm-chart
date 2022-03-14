@@ -215,7 +215,6 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
         emptyDir: {}
       {{- end }}
-      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       {{- if .Values.zookeeper.extraVolumes }}
 {{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
       {{- end }}
@@ -239,6 +238,7 @@ spec:
           name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
           defaultMode: 0755
       {{- end}}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence }}
   volumeClaimTemplates:
   - metadata:
