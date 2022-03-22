@@ -63,6 +63,10 @@ spec:
           ports:
             - name: application
               containerPort: {{ .Values.pulsar_manager.service.targetPort }}
+            {{- if .Values.pulsar_manager.serviceAdmin.enabled }}
+            - name: admin
+              containerPort: {{ .Values.pulsar_manager.serviceAdmin.targetPort }}
+            {{- end }}
           volumeMounts:
           - name: pulsar-manager-data
             mountPath: /data
