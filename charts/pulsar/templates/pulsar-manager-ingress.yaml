@@ -49,13 +49,13 @@ spec:
           - path: {{ .Values.pulsar_manager.ingress.path }}
             {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
             backend:
-              serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
+              serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-frontend"
               servicePort: {{ .Values.pulsar_manager.service.targetPort }}
             {{- else }}
             pathType: ImplementationSpecific
             backend:
               service:
-                name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
+                name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-frontend"
                 port:
                   number: {{ .Values.pulsar_manager.service.targetPort }}
             {{- end }}
