@@ -43,3 +43,32 @@ spec:
 {{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | indent 4 }}
 {{- end }}
 {{- end }}
+---
+{{- if or .Values.components.pulsar_manager .Values.extra.pulsar_manager }}
+  {{- if .Values.pulsar_manager.serviceAdmin.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-backend"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}
+  annotations:
+  {{ toYaml .Values.pulsar_manager.service.annotations | indent 4 }}
+spec:
+  type: {{ .Values.pulsar_manager.serviceAdmin.type }}
+  ports:
+    - name: admin
+      port: {{ .Values.pulsar_manager.serviceAdmin.port }}
+      targetPort: {{ .Values.pulsar_manager.serviceAdmin.targetPort }}
+      protocol: TCP
+  selector:
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}
+  {{- if .Values.pulsar_manager.service.loadBalancerSourceRanges }}
+loadBalancerSourceRanges:
+  {{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | indent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
