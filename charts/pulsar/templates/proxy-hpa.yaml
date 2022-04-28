@@ -1,0 +1,17 @@
+{{- if .Values.proxy.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+spec:
+  maxReplicas: {{ .Values.proxy.autoscaling.maxReplicas }}
+  {{- with .Values.proxy.autoscaling.metrics }}
+  metrics:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  minReplicas: {{ .Values.proxy.autoscaling.minReplicas }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+{{- end }}

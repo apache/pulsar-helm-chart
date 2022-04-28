@@ -668,6 +668,11 @@ broker:
   # so the metrics are correctly rendered in grafana dashboard
   component: broker
   replicaCount: 3
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    metrics: ~
   # If using Prometheus-Operator enable this PodMonitor to discover broker scrape targets
   # Prometheus-Operator does not add scrape targets based on k8s annotations
   podMonitor:
@@ -784,6 +789,11 @@ proxy:
   # so the metrics are correctly rendered in grafana dashboard
   component: proxy
   replicaCount: 3
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    metrics: ~
   # If using Prometheus-Operator enable this PodMonitor to discover proxy scrape targets
   # Prometheus-Operator does not add scrape targets based on k8s annotations
   podMonitor:
