@@ -17,15 +17,20 @@
 # under the License.
 #
 
-apiVersion: v2
-appVersion: "2.9.2"
-description: Apache Pulsar Helm chart for Kubernetes
-name: pulsar
-version: 2.9.3
-home: https://pulsar.apache.org
-sources:
-- https://github.com/apache/pulsar
-icon: http://pulsar.apache.org/img/pulsar.svg
-maintainers:
-- name: The Apache Pulsar Team
-  email: dev@pulsar.apache.org
+{{- if .Values.broker.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+spec:
+  maxReplicas: {{ .Values.broker.autoscaling.maxReplicas }}
+  {{- with .Values.broker.autoscaling.metrics }}
+  metrics:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  minReplicas: {{ .Values.broker.autoscaling.minReplicas }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+{{- end }}
