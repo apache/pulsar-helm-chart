@@ -17,34 +17,20 @@
 # under the License.
 #
 
-images:
-  zookeeper:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  bookie:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  autorecovery:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  broker:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  functions:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  proxy:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-
-bookkeeper:
-  metadata:
-    image:
-      repository: apachepulsar/pulsar-all
-      tag: 2.6.0
-
-
-pulsar_metadata:
-  image:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
+{{- if .Values.broker.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+spec:
+  maxReplicas: {{ .Values.broker.autoscaling.maxReplicas }}
+  {{- with .Values.broker.autoscaling.metrics }}
+  metrics:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  minReplicas: {{ .Values.broker.autoscaling.minReplicas }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+{{- end }}

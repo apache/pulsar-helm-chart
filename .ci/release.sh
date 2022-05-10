@@ -18,14 +18,17 @@
 # under the License.
 #
 
-BINDIR=`dirname "$0"`
-CHARTS_HOME=`cd ${BINDIR}/..;pwd`
+
+BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+CHARTS_HOME="$(cd "${BINDIR}/.." && pwd)"
 CHARTS_PKGS=${CHARTS_HOME}/.chart-packages
 CHARTS_INDEX=${CHARTS_HOME}/.chart-index
 CHARTS_REPO=${CHARTS_REPO:-"https://pulsar.apache.org/charts/"}
 OWNER=${OWNER:-apache}
 REPO=${REPO:-pulsar-helm-chart}
 PUBLISH_CHARTS=${PUBLISH_CHARTS:-"false"}
+PULSAR_SITE_REPO_SLUG=${PULSAR_SITE_REPO_SLUG:-"apache/pulsar"}
+PULSAR_SITE_BRANCH=${PULSAR_SITE_BRANCH:-"asf-site"}
 
 # hack/common.sh need this variable to be set
 PULSAR_CHART_HOME=${CHARTS_HOME}
@@ -70,16 +73,15 @@ function release::git_setup() {
 
 function release::publish_charts() {
     release::git_setup
-    git clone https://${GITHUB_TOKEN}@github.com/apache/pulsar
-    cd pulsar
-    git checkout asf-site
+    git clone -b "$PULSAR_SITE_BRANCH" --depth 1 "https://${GITHUB_TOKEN}@github.com/${PULSAR_SITE_REPO_SLUG}" pulsar-site
+    cd pulsar-site
     mkdir -p content/charts
     cp --force ${CHARTS_INDEX}/index.yaml content/charts/index.yaml
     git add content/charts/index.yaml
     ls content/charts
     git commit --message="Publish new charts to ${CHARTS_REPO}" --signoff
     if [[ "x${PUBLISH_CHARTS}" == "xtrue" ]]; then
-      git push --set-upstream origin asf-site
+      git push --set-upstream origin "$PULSAR_SITE_BRANCH"
     else
       echo "Skipping publishing charts"
     fi
