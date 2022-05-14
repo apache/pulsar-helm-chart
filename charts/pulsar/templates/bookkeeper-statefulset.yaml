@@ -104,6 +104,10 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end}}
+      {{- if .Values.bookkeeper.securityContext }}
+      securityContext:
+{{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
+      {{- end }}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
