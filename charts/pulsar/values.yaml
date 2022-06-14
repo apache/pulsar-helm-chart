@@ -361,6 +361,10 @@ zookeeper:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  # Ensures 2.10.0 non-root docker image works correctly.
+  securityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: "OnRootMismatch"
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -489,6 +493,10 @@ bookkeeper:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  # Ensures 2.10.0 non-root docker image works correctly.
+  securityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: "OnRootMismatch"
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -572,7 +580,6 @@ bookkeeper:
       -Xlog:safepoint
       -Xlog:gc+heap=trace
       -verbosegc
-      -Xlog:gc:/var/log/bookie-gc.log
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
