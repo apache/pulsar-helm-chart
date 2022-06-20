@@ -740,6 +740,12 @@ broker:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  extreEnvs: []
+#    - name: POD_NAME
+#      valueFrom:
+#        fieldRef:
+#          apiVersion: v1
+#          fieldPath: metadata.name
   ## Broker configmap
   ## templates/broker-configmap.yaml
   ##
@@ -856,6 +862,12 @@ proxy:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  extreEnvs: []
+#    - name: POD_IP
+#      valueFrom:
+#        fieldRef:
+#          apiVersion: v1
+#          fieldPath: status.podIP
   ## Proxy configmap
   ## templates/proxy-configmap.yaml
   ##
