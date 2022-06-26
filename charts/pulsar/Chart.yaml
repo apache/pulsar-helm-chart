@@ -25,7 +25,7 @@ version: 2.9.3
 home: https://pulsar.apache.org
 sources:
 - https://github.com/apache/pulsar
-icon: http://pulsar.apache.org/img/pulsar.svg
+icon: https://pulsar.apache.org/img/pulsar.svg
 maintainers:
 - name: The Apache Pulsar Team
   email: dev@pulsar.apache.org
