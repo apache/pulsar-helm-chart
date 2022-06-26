@@ -889,6 +889,7 @@ proxy:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
+    httpNumThreads: "8"
   ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Proxy service
