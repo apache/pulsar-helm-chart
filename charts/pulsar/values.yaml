@@ -194,7 +194,7 @@ images:
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
-    tag: v0.2.0
+    tag: v0.3.0
     pullPolicy: IfNotPresent
     hasCommand: false
 
