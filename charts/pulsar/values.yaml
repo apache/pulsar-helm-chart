@@ -652,7 +652,7 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
