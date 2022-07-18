@@ -48,7 +48,7 @@ bookkeeper:
   metadata:
     image:
       repository: apachepulsar/pulsar-all
-      tag: 2.9.2
+      tag: 2.9.3
 
 broker:
   replicaCount: 1
@@ -72,24 +72,24 @@ toolset:
 images:
   zookeeper:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
   bookie:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
   autorecovery:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
   broker:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
   functions:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
   proxy:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
 
 pulsar_metadata:
   image:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    tag: 2.9.3
