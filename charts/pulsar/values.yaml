@@ -903,6 +903,9 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
+  ## Possibility to specify a specific NodePort if you set proxy.service.type to 'NodePort'.
+  ## Uncomment only if you set proxy.service.type to 'NodePort'.
+  # nodePort: 32000
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##

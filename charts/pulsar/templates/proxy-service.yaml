@@ -40,6 +40,9 @@ spec:
     - name: "{{ .Values.tcpPrefix }}pulsar"
       port: {{ .Values.proxy.ports.pulsar }}
       protocol: TCP
+      {{- if .Values.proxy.service.nodePort }}
+      nodePort: {{ .Values.proxy.service.nodePort }}
+      {{- end }}
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
@@ -48,6 +51,9 @@ spec:
     - name: "{{ .Values.tlsPrefix }}pulsarssl"
       port: {{ .Values.proxy.ports.pulsarssl }}
       protocol: TCP
+      {{- if .Values.proxy.service.nodePort }}
+      nodePort: {{ .Values.proxy.service.nodePort }}
+      {{- end }}
     {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
