@@ -663,6 +663,9 @@ pulsar_metadata:
   # to use this, you should explicit set components.zookeeper to false
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
+  
+  ## optiona, you can specify where to run pulsar-cluster-initialize job
+  # nodeSelector:
 
 # Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
 extraInitCommand: ""
