@@ -114,5 +114,9 @@ spec:
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
       restartPolicy: OnFailure
+      {{- if .Values.pulsar_metadata.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 6 }}
+      {{- end }}
 {{- end }}
 {{- end }}
