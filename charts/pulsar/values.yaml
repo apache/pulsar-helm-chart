@@ -383,6 +383,10 @@ zookeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selectors:
+        # matchLabels:
+        # app: pulsar-zookeeper
   ## Zookeeper configmap
   ## templates/zookeeper-configmap.yaml
   ##
@@ -515,6 +519,10 @@ bookkeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selectors:
+        # matchLabels:
+        # app: pulsar-bookkeeper-journal
       useMultiVolumes: false
       multiVolumes:
         - name: journal0
@@ -531,6 +539,8 @@ bookkeeper:
       local_storage: true
       # storageClassName:
       # storageClass:
+        # ...
+      # selector:
         # ...
       useMultiVolumes: false
       multiVolumes:
@@ -551,6 +561,8 @@ bookkeeper:
       local_storage: true
       # storageClassName:
       # storageClass: ## this is common too
+        # ...
+      # selector:
         # ...
 
   ## Bookkeeper configmap
