@@ -105,6 +105,12 @@ spec:
               {{- if not .Values.pulsar_metadata.configurationStore }}
               --configuration-store {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
               {{- end }}
+              {{- if not .Values.pulsar_metadata.proxyUrl }}
+              --proxy-url {{ .Values.pulsar_metadata.proxyUrl }} \
+              {{- end }}
+              {{- if not .Values.pulsar_metadata.proxyProtocol }}
+              --proxy-protocol {{ .Values.pulsar_metadata.proxyProtocol }} \
+              {{- end }}
               --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
               --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
               --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \
