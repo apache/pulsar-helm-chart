@@ -30,6 +30,11 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
 
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.8.1
+
       - name: Tune Runner VM
         uses: ./.github/actions/tune-runner-vm
 
