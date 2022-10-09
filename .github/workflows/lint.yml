@@ -46,6 +46,4 @@ jobs:
       - name: Lint chart
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         id: lint
-        uses: helm/chart-testing-action@v2.0.0
-        with:
-          command: lint
+        run: .ci/lint.sh
