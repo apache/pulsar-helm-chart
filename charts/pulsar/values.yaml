@@ -189,8 +189,8 @@ images:
     tag: v2.17.2
     pullPolicy: IfNotPresent
   grafana:
-    repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.16
+    repository: grafana/grafana-oss
+    tag: 9.2.0
     pullPolicy: IfNotPresent
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
