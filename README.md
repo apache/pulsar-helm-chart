@@ -22,7 +22,7 @@
 
 This is the officially supported Helm Chart for installing Apache Pulsar on Kubernetes.
 
-Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/en/deploy-kubernetes/) for more details.
+Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/deploy-kubernetes/) for more details.
 
 ## Features
 
@@ -83,7 +83,7 @@ Before proceeding to deploying Pulsar, you need to prepare your environment.
 
 ### Tools
 
-`helm` and `kubectl` need to be [installed on your computer](http://pulsar.apache.org/docs/en/helm-tools/).
+`helm` and `kubectl` need to be [installed on your computer](https://pulsar.apache.org/docs/helm-tools/).
 
 ## Add to local Helm repository
 
@@ -103,7 +103,7 @@ helm install <release-name> apache/pulsar
 
 You need a Kubernetes cluster whose version is 1.18 or higher in order to use this chart, due to the usage of certain Kubernetes features.
 
-We provide some instructions to guide you through the preparation: http://pulsar.apache.org/docs/en/helm-prepare/
+We provide some instructions to guide you through the preparation: http://pulsar.apache.org/docs/helm-prepare/
 
 ## Deploy Pulsar to Kubernetes
 
@@ -146,11 +146,11 @@ We provide some instructions to guide you through the preparation: http://pulsar
     ```
 
 For more information, please follow our detailed
-[quick start guide](http://pulsar.apache.org/docs/en/kubernetes-helm/).
+[quick start guide](https://pulsar.apache.org/docs/getting-started-helm/).
 
 ## Customize the deployment 
 
-We provide a [detailed guideline](http://pulsar.apache.org/docs/en/helm-deploy/) for you to customize
+We provide a [detailed guideline](https://pulsar.apache.org/docs/helm-deploy/) for you to customize
 the Helm Chart for a production-ready deployment.
 
 You can also checkout out the example values file for different deployments.
@@ -177,7 +177,7 @@ helm upgrade -f pulsar.yaml \
     <pulsar-release-name> apache/pulsar
 ```
 
-For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/en/helm-upgrade/) guide.
+For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
 ## Upgrading to 2.10.0 and above
 
