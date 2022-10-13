@@ -186,7 +186,7 @@ images:
     tag: 2.9.3
   prometheus:
     repository: prom/prometheus
-    tag: v2.17.2
+    tag: v2.39.1
     pullPolicy: IfNotPresent
   grafana:
     repository: streamnative/apache-pulsar-grafana-dashboard-k8s
