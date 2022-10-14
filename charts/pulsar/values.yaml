@@ -275,8 +275,7 @@ zookeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  # If using Prometheus-Operator enable this PodMonitor to discover zookeeper scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
     enabled: false
     interval: 10s
@@ -316,9 +315,7 @@ zookeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "8000"
+  annotations: {}
   tolerations: []
   gracePeriod: 30
   resources:
@@ -412,10 +409,9 @@ bookkeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  # If using Prometheus-Operator enable this PodMonitor to discover bookie scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
@@ -585,10 +581,9 @@ autorecovery:
   # so the metrics are correctly rendered in grafana dashboard
   component: recovery
   replicaCount: 1
-  # If using Prometheus-Operator enable this PodMonitor to discover autorecovery scrape targets
-  # # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
@@ -657,10 +652,9 @@ broker:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
-  # If using Prometheus-Operator enable this PodMonitor to discover broker scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
@@ -784,10 +778,9 @@ proxy:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
-  # If using Prometheus-Operator enable this PodMonitor to discover proxy scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
