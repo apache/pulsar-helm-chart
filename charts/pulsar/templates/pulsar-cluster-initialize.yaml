@@ -38,7 +38,7 @@ spec:
       initContainers:
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-cs-ready
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -49,7 +49,7 @@ spec:
 
       {{- end }}
       - name: wait-zookeeper-ready
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -66,7 +66,7 @@ spec:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before initializing pulsar metadata
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -83,7 +83,7 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
       {{- if .Values.pulsar_metadata.resources }}
         resources:
