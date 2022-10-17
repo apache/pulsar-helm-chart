@@ -19,7 +19,7 @@
 **Table of contents**
 
 - [Prepare the Apache Pulsar Helm Chart Release Candidate](#prepare-the-apache-pulsar-helm-chart-release-candidate)
-  - [Pre-requisites](#pre-requisites)
+  - [Prerequisites](#prerequisites)
   - [Build Release Notes](#build-release-notes)
   - [Build RC artifacts](#build-rc-artifacts)
   - [Prepare Vote email on the Apache Pulsar release candidate](#prepare-vote-email-on-the-apache-pulsar-release-candidate)
@@ -44,7 +44,7 @@ This document details the steps for releasing the Apache Pulsar Helm Chart.
 
 # Prepare the Apache Pulsar Helm Chart Release Candidate
 
-## Pre-requisites
+## Prerequisites
 
 - Helm version >= 3.0.2
 - Helm gpg plugin (one option: https://github.com/technosophos/helm-gpg)
