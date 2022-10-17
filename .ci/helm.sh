@@ -111,6 +111,7 @@ function ci::install_pulsar_chart() {
     sleep 10
 
     echo ${HELM} dependency update ${CHARTS_HOME}/charts/pulsar
+    ${HELM} dependency update ${CHARTS_HOME}/charts/pulsar
     echo ${HELM} install --set initialize=true --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
     ${HELM} template --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
     ${HELM} install --set initialize=true --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
