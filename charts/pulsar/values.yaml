@@ -752,9 +752,9 @@ broker:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-    managedLedgerDefaultEnsembleSize: "2"
-    managedLedgerDefaultWriteQuorum: "2"
-    managedLedgerDefaultAckQuorum: "2"
+    managedLedgerDefaultEnsembleSize: "1"
+    managedLedgerDefaultWriteQuorum: "1"
+    managedLedgerDefaultAckQuorum: "1"
   ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Broker service
@@ -1009,7 +1009,7 @@ kube-prometheus-stack:
   prometheus-node-exporter:
     enabled: true
   alertmanager:
-    enabled: true
+    enabled: false
 
 ## Components Stack: pulsar_manager
 ## templates/pulsar-manager.yaml
