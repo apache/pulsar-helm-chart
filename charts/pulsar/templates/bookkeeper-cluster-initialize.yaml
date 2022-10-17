@@ -88,6 +88,6 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
-      restartPolicy: Never
+      restartPolicy: OnFailure
 {{- end }}
 {{- end }}
