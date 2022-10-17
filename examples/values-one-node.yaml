@@ -21,14 +21,6 @@
 affinity:
   anti_affinity: false
 
-images:
-  broker:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-  functions:
-    repository: apachepulsar/pulsar-all
-    tag: 2.6.0
-
 # disable auto recovery
 components:
   autorecovery: false

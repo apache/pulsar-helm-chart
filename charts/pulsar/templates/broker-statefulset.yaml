@@ -227,6 +227,10 @@ spec:
         - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
+{{- if .Values.broker.extreEnvs }}
+        env:
+{{ toYaml .Values.broker.extreEnvs | indent 8 }}
+{{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"

@@ -34,7 +34,6 @@ spec:
     - name: server
       port: {{ .Values.prometheus.port }}
   selector:
-    app: {{ template "pulsar.name" . }}
-    release: {{ .Release.Name }}
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.prometheus.component }}
 {{- end }}

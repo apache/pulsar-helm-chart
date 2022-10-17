@@ -103,6 +103,13 @@ function do_create_namespace() {
 
 do_create_namespace
 
+kubectl get namespace "${namespace}" > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "error: failed to get namespace '${namespace}'"
+  echo "please check that this namespace exists, or use the '-c' option to create it"
+  exit 1
+fi
+
 extra_opts=""
 if [[ "${symmetric}" == "true" ]]; then
   extra_opts="${extra_opts} -s"
