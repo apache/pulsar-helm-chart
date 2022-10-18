@@ -105,6 +105,7 @@ function ci::install_pulsar_chart() {
 
     echo "Installing the pulsar chart"
     ${KUBECTL} create namespace ${NAMESPACE}
+    ci::install_cert_manager
     echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
     ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
     sleep 10
