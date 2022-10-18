@@ -163,7 +163,7 @@ spec:
             - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - 'cat /proc/net/tcp && echo ruok | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.readiness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.readiness.timeoutSeconds }}
