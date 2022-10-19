@@ -19,6 +19,9 @@
 
 #!/usr/bin/env bash
 
+# If installation fails, the build should fail
+set -e
+
 NAMESPACE=cert-manager
 NAME=cert-manager
 VERSION=v1.10.0
