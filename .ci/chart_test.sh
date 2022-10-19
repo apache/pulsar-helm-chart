@@ -41,8 +41,8 @@ fi
 # install pulsar chart
 ci::install_pulsar_chart ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
 
-# test producer
-ci::test_pulsar_producer
+# test producer/consumer
+ci::test_pulsar_producer_consumer
 
 if [[ "x${FUNCTION}" == "xtrue" ]]; then
     # install cert manager
