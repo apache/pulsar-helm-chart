@@ -20,7 +20,7 @@
 {{- if .Values.components.bookkeeper }}
 {{- if .Values.bookkeeper.pdb.usePolicy }}
 # pdb version detection
-{{- if semverCompare "<1.21.0" .Capabilities.KubeVersion.Version }}
+{{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}
 apiVersion: policy/v1beta1
 {{- else }}
 apiVersion: policy/v1
