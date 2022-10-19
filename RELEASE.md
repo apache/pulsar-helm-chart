@@ -16,29 +16,6 @@
  specific language governing permissions and limitations
  under the License.
 -->
-**Table of contents**
-
-- [Prepare the Apache Pulsar Helm Chart Release Candidate](#prepare-the-apache-pulsar-helm-chart-release-candidate)
-  - [Prerequisites](#prerequisites)
-  - [Build Release Notes](#build-release-notes)
-  - [Build RC artifacts](#build-rc-artifacts)
-  - [Prepare Vote email on the Apache Pulsar release candidate](#prepare-vote-email-on-the-apache-pulsar-release-candidate)
-- [Verify the release candidate by PMCs](#verify-the-release-candidate-by-pmcs)
-  - [SVN check](#svn-check)
-  - [Licence check](#licence-check)
-  - [Signature check](#signature-check)
-  - [SHA512 sum check](#sha512-sum-check)
-- [Verify release candidates by Contributors](#verify-release-candidates-by-contributors)
-- [Publish the final release](#publish-the-final-release)
-  - [Summarize the voting for the release](#summarize-the-voting-for-the-release)
-  - [Publish release to SVN](#publish-release-to-svn)
-  - [Publish release tag](#publish-release-tag)
-  - [Notify developers of release](#notify-developers-of-release)
-  - [Create release on GitHub](#create-release-on-github)
-  - [Close the milestone](#close-the-milestone)
-  - [Announce the release on the community slack](#announce-the-release-on-the-community-slack)
-  - [Bump chart version in Chart.yaml](#bump-chart-version-in-chartyaml)
-  - [Remove old releases](#remove-old-releases)
 
 This document details the steps for releasing the Apache Pulsar Helm Chart.
 
@@ -68,10 +45,7 @@ official Apache releases must not include the rcN suffix.
     export VERSION=1.0.1-candidate-1
     export VERSION_WITHOUT_RC=${VERSION%-candidate-*}
 
-    # Set PULSAR_REPO_ROOT to the path of your git repo
-    export PULSAR_REPO_ROOT=$(pwd)
-
-    # Example after cloning
+    # Clone and set PULSAR_REPO_ROOT
     git clone https://github.com/apache/pulsar-helm-chart.git pulsar
     cd pulsar-helm-chart
     export PULSAR_REPO_ROOT=$(pwd)
@@ -86,7 +60,7 @@ official Apache releases must not include the rcN suffix.
 - Clean the checkout: the sdist step below will
 
     ```shell
-    git clean -fxd
+    git clean -fdX .
     ```
 
 - Update Helm Chart version in `Chart.yaml`, example: `version: 1.0.0` (without
@@ -286,12 +260,12 @@ EOF
 
 Note, you need to update the `helm gpg verify` output and verify the end of the voting period in the body.
 
-# Verify the release candidate by PMCs
+# Verify the release candidate by the PMC
 
-The PMCs should verify the releases in order to make sure the release is following the
+The PMC should verify the releases in order to make sure the release is following the
 [Apache Legal Release Policy](http://www.apache.org/legal/release-policy.html).
 
-At least 3 (+1) votes should be recorded in accordance to
+At least 3 (+1) votes from PMC members should be recorded in accordance to
 [Votes on Package Releases](https://www.apache.org/foundation/voting.html#ReleaseVotes)
 
 The legal checks include:
