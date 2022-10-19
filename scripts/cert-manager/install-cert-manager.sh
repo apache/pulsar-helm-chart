@@ -24,7 +24,7 @@ set -e
 
 NAMESPACE=cert-manager
 NAME=cert-manager
-VERSION=v1.10.0
+VERSION=v1.7.3
 
 # Install cert-manager CustomResourceDefinition resources
 echo "Installing cert-manager CRD resources ..."
