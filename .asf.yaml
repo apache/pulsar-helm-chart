@@ -38,10 +38,10 @@ github:
     squash:  true
     merge:   false
     rebase:  false
-  ghp_branch: gh-pages
-  ghp_path:
 
 notifications:
   commits:      commits@pulsar.apache.org
   issues:       commits@pulsar.apache.org
   pullrequests: commits@pulsar.apache.org
+  discussions:  dev@pulsar.apache.org
+  jira_options: link label
