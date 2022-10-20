@@ -38,7 +38,7 @@ components:
   pulsar_manager: false
 
 zookeeper:
-  replicaCount:
+  replicaCount: 1
   # Disable pod monitor since we're disabling CRD installation
   podMonitor:
     enabled: false

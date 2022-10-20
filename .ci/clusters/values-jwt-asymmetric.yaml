@@ -56,6 +56,9 @@ bookkeeper:
 
 broker:
   replicaCount: 1
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
   configData:
     ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
     ## without persistence
@@ -65,8 +68,16 @@ broker:
     managedLedgerDefaultWriteQuorum: "1"
     managedLedgerDefaultAckQuorum: "1"
 
+autorecovery:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
 proxy:
   replicaCount: 1
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
 
 toolset:
   useProxy: false
