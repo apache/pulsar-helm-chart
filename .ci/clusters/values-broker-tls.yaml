@@ -19,6 +19,14 @@
 
 kube-prometheus-stack:
   enabled: false
+  prometheusOperator:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus:
+    enabled: false
 
 # disabled AntiAffinity
 affinity:

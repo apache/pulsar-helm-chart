@@ -39,8 +39,19 @@ components:
 ## disable monitoring stack
 kube-prometheus-stack:
   enabled: false
+  prometheusOperator:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus:
+    enabled: false
 
 zookeeper:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -61,6 +72,9 @@ zookeeper:
         # provisioner: kubernetes.io/gce-pd
 bookkeeper:
   replicaCount: 3
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -78,3 +92,18 @@ bookkeeper:
       ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
       ##
       storageClassName: gp2
+
+broker:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+autorecovery:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+proxy:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
