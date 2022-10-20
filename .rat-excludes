@@ -1,0 +1,3 @@
+.gitignore
+.rat-excludes
+charts/pulsar/Chart.lock
