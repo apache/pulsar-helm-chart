@@ -367,6 +367,11 @@ zookeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selector:
+        # matchLabels:
+        # app: pulsar-zookeeper
+      selector: {}
   # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces
   # Example value: "us-east1-pulsar-zookeeper-0.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-1.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-2.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-0.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-1.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-2.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888"
   externalZookeeperServerList: ""
@@ -501,6 +506,11 @@ bookkeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selector:
+        # matchLabels:
+        # app: pulsar-bookkeeper-journal
+      selector: {}
       useMultiVolumes: false
       multiVolumes:
         - name: journal0
@@ -517,6 +527,8 @@ bookkeeper:
       local_storage: true
       # storageClassName:
       # storageClass:
+        # ...
+      # selector:
         # ...
       useMultiVolumes: false
       multiVolumes:
@@ -537,6 +549,8 @@ bookkeeper:
       local_storage: true
       # storageClassName:
       # storageClass: ## this is common too
+        # ...
+      # selector:
         # ...
 
   ## Bookkeeper configmap

@@ -248,6 +248,10 @@ spec:
         {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.common.local_storage }}
         storageClassName: "local-storage"
         {{- end }}
+        {{- with .Values.bookkeeper.volumes.common.selector }}
+        selector:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
   {{- else }}
   {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
   {{- $fullname := include "pulsar.fullname" . -}}
@@ -262,6 +266,10 @@ spec:
           storage: {{ .size }}
     {{- if .storageClassName }}
       storageClassName: "{{ .storageClassName }}"
+    {{- end }}
+    {{- with .Values.bookkeeper.volumes.journal.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- else }}
@@ -279,6 +287,10 @@ spec:
     {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage }}
       storageClassName: "local-storage"
     {{- end }}
+    {{- with .Values.bookkeeper.volumes.journal.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
   {{- end }}
   {{- if .Values.bookkeeper.volumes.ledgers.useMultiVolumes }}
   {{- $fullname := include "pulsar.fullname" . -}}
@@ -293,6 +305,10 @@ spec:
           storage: {{ .size }}
     {{- if .storageClassName }}
       storageClassName: "{{ .storageClassName }}"
+    {{- end }}
+    {{- with .Values.bookkeeper.volumes.ledgers.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- end }}
   {{- else }}
@@ -309,6 +325,10 @@ spec:
       storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
     {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.ledgers.local_storage }}
       storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.bookkeeper.volumes.ledgers.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- end }}

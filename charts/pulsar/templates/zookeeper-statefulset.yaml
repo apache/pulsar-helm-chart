@@ -268,5 +268,9 @@ spec:
     {{- else if and .Values.volumes.local_storage .Values.zookeeper.volumes.data.local_storage }}
       storageClassName: "local-storage"
     {{- end }}
+    {{- with .Values.zookeeper.volumes.data.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
 {{- end }}
 {{- end }}
