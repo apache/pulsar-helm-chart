@@ -36,15 +36,14 @@ components:
   # pulsar manager
   pulsar_manager: false
 
-monitoring:
-  # monitoring - prometheus
-  prometheus: false
-  # monitoring - grafana
-  grafana: false
-  # monitoring - node_exporter
-  node_exporter: false
+## disable monitoring stack
+kube-prometheus-stack:
+  enabled: false
 
 zookeeper:
+  # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces
+  # Example value: "us-east1-pulsar-zookeeper-0.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-1.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-2.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-0.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-1.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-2.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888"
+  externalZookeeperServerList: ""
   volumes:
     # use a persistent volume or emptyDir
     persistence: true

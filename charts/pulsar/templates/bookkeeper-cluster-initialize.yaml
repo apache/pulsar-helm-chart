@@ -37,9 +37,13 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end }}
+      nodeSelector:
+      {{- if .Values.pulsar_metadata.nodeSelector }}
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+      {{- end }}
       initContainers:
       - name: wait-zookeeper-ready
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -55,7 +59,7 @@ spec:
             {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
       {{- if .Values.bookkeeper.metadata.resources }}
         resources:
@@ -70,7 +74,7 @@ spec:
                 echo "bookkeeper cluster already initialized";
             else
                 {{- if not (eq .Values.metadataPrefix "") }}
-                bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' || yes &&
+                bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' &&
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;
             fi
@@ -88,6 +92,6 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
-      restartPolicy: Never
+      restartPolicy: OnFailure
 {{- end }}
 {{- end }}

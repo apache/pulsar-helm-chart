@@ -35,10 +35,14 @@ spec:
 {{- end }}
   template:
     spec:
+    {{- if .Values.pulsar_metadata.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+    {{- end }}
       initContainers:
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-cs-ready
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -46,10 +50,9 @@ spec:
             until nslookup {{ .Values.pulsar_metadata.configurationStore}}; do
               sleep 3;
             done;
-
       {{- end }}
       - name: wait-zookeeper-ready
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -66,7 +69,7 @@ spec:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before initializing pulsar metadata
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -83,7 +86,7 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
-        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
       {{- if .Values.pulsar_metadata.resources }}
         resources:
@@ -114,5 +117,9 @@ spec:
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
       restartPolicy: OnFailure
+      {{- if .Values.pulsar_metadata.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+      {{- end }}
 {{- end }}
 {{- end }}

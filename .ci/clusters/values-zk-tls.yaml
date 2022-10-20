@@ -17,12 +17,8 @@
 # under the License.
 #
 
-monitoring:
-  prometheus: false
-  grafana: false
-  node_exporter: false
-  alert_manager: false
-
+kube-prometheus-stack:
+  enabled: false
 
 # disabled AntiAffinity
 affinity:
@@ -67,7 +63,8 @@ tls:
   zookeeper:
     enabled: true
 
-# disable cert manager
+# enable cert-manager
 certs:
   internal_issuer:
-    enabled: false
+    enabled: true
+    type: selfsigning

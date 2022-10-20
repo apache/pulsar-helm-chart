@@ -29,9 +29,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-
-      - name: Tune Runner VM
-        uses: ./.github/actions/tune-runner-vm
+        with:
+          fetch-depth: 0
 
       - name: Detect changed files
         id:   changes
@@ -43,9 +42,22 @@ jobs:
         id: check_changes
         run: echo "::set-output name=docs_only::${{ fromJSON(steps.changes.outputs.all_count) == fromJSON(steps.changes.outputs.docs_count) && fromJSON(steps.changes.outputs.docs_count) > 0 }}"
 
-      - name: Lint chart
+      - name: Set up Helm
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        id: lint
-        uses: helm/chart-testing-action@v2.0.0
+        uses: azure/setup-helm@v3
         with:
-          command: lint
+          version: v3.10.0
+
+      - name: Set up Python
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Set up chart-testing
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        uses: ./.github/actions/chart-testing-action
+
+      - name: Run chart-testing (lint)
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: ct lint --check-version-increment=false --target-branch ${{ github.event.repository.default_branch }}
