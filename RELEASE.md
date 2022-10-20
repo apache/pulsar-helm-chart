@@ -69,7 +69,7 @@ official Apache releases must not include the rcN suffix.
 - Add and commit the version change.
 
     ```shell
-    git add chart
+    git add charts/pulsar/Chart.yaml
     git commit -m "Chart: Bump version to $VERSION_WITHOUT_RC"
     ```
 
@@ -87,15 +87,15 @@ official Apache releases must not include the rcN suffix.
      in the file produced.
 
     ```shell
-    git archive --format=tar.gz ${VERSION} --prefix=pulsar-chart-${VERSION_WITHOUT_RC}/ \
-        -o pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz chart .rat-excludes
+    git archive --format=tar.gz pulsar-${VERSION} --prefix=pulsar-chart-${VERSION_WITHOUT_RC}/ \
+        -o pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz .
     ```
 
 - Generate chart binary
 
 
     ```shell
-    helm package chart --dependency-update
+    helm package charts/pulsar --dependency-update
     ```
 
 - Sign the chart binary
@@ -118,17 +118,18 @@ official Apache releases must not include the rcN suffix.
 
     ```shell
     $ helm gpg verify pulsar-${VERSION_WITHOUT_RC}.tgz
-    gpg: Signature made Thu Jan  6 21:33:35 2022 MST
-    gpg:                using RSA key E1A1E984F55B8F280BD9CBA20BB7163892A2E48E
-    gpg: Good signature from "Jed Cunningham <jedcunningham@apache.org>" [ultimate]
-    plugin: Chart SHA verified. sha256:b33eac716e0416a18af89fb4fa1043fcfcf24f9f903cda3912729815213525df
+    gpg: Signature made Thu Oct 20 16:36:24 2022 CDT
+    gpg:                using RSA key BD4291E509D771B79E7BD1F5C5724B3F5588C4EB
+    gpg:                issuer "mmarshall@apache.org"
+    gpg: Good signature from "Michael Marshall <mmarshall@apache.org>" [ultimate]
+    plugin: Chart SHA verified. sha256:deb035dcb765b1989ed726eabe3d7d89529df05658c8eec6cdd4dc213fa0513e
     ```
 
 - Generate SHA512/ASC
 
     ```shell
-    ${PULSAR_REPO_ROOT}/dev/sign.sh pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz
-    ${PULSAR_REPO_ROOT}/dev/sign.sh pulsar-${VERSION_WITHOUT_RC}.tgz
+    ${PULSAR_REPO_ROOT}/scripts/sign.sh pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz
+    ${PULSAR_REPO_ROOT}/scripts/sign.sh pulsar-${VERSION_WITHOUT_RC}.tgz
     ```
 
 - Move the artifacts to ASF dev dist repo, generate convenience `index.yaml` & publish them
@@ -148,7 +149,7 @@ official Apache releases must not include the rcN suffix.
 
   ###### Generate index.yaml file - Start
   # Download the latest index.yaml on Pulsar Website
-  curl https://pulsar.apache.org/charts/index.yaml --output index.yaml
+  curl https://dist.apache.org/repos/dist/release/pulsar/helm-chart/index.yaml --output index.yaml
 
   # Replace the URLs from "https://downloads.apache.org" to "https://archive.apache.org"
   # as the downloads.apache.org only contains latest releases.
@@ -283,8 +284,8 @@ The files should be present in the sub-folder of
 The following files should be present (7 files):
 
 * `pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz` + .asc + .sha512
-* `pulsar-{VERSION_WITHOUT_RC}.tgz` + .asc + .sha512
-* `pulsar-{VERSION_WITHOUT_RC}.tgz.prov`
+* `pulsar-${VERSION_WITHOUT_RC}.tgz` + .asc + .sha512
+* `pulsar-${VERSION_WITHOUT_RC}.tgz.prov`
 
 As a PMC member you should be able to clone the SVN repository:
 
@@ -308,10 +309,10 @@ This can be done with the Apache RAT tool.
 * Enter the sources folder run the check
 
 ```shell
-java -jar $PATH_TO_RAT/apache-rat-0.13/apache-rat-0.13.jar chart -E .rat-excludes
+java -jar $PATH_TO_RAT/apache-rat-0.15/apache-rat-0.15.jar pulsar-chart-${VERSION_WITHOUT_RC} -E .rat-excludes
 ```
 
-where `.rat-excludes` is the file in the root of Chart source code.
+where `.rat-excludes` is the file in the root of git repo.
 
 ## Signature check
 
