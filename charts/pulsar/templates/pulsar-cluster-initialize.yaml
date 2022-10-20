@@ -35,6 +35,10 @@ spec:
 {{- end }}
   template:
     spec:
+    {{- if .Values.pulsar_metadata.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+    {{- end }}
       initContainers:
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-cs-ready
@@ -46,7 +50,6 @@ spec:
             until nslookup {{ .Values.pulsar_metadata.configurationStore}}; do
               sleep 3;
             done;
-
       {{- end }}
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
