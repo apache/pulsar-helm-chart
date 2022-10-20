@@ -61,7 +61,7 @@ spec:
     {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
       {{- if .Values.toolset.resources }}
         resources:

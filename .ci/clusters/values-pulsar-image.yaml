@@ -17,11 +17,8 @@
 # under the License.
 #
 
-monitoring:
-  prometheus: false
-  grafana: false
-  node_exporter: false
-  alert_manager: false
+kube-prometheus-stack:
+  enabled: false
 
 volumes:
   persistence: false
@@ -45,10 +42,6 @@ bookkeeper:
     diskUsageWarnThreshold: "0.999"
     PULSAR_PREFIX_diskUsageThreshold: "0.999"
     PULSAR_PREFIX_diskUsageWarnThreshold: "0.999"
-  metadata:
-    image:
-      repository: apachepulsar/pulsar-all
-      tag: 2.9.2
 
 broker:
   replicaCount: 1
@@ -66,30 +59,3 @@ proxy:
 
 toolset:
   useProxy: false
-
-# use pulsar image
-
-images:
-  zookeeper:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-  bookie:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-  autorecovery:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-  broker:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-  functions:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-  proxy:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-
-pulsar_metadata:
-  image:
-    repository: apachepulsar/pulsar-all
-    tag: 2.9.2

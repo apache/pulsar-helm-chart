@@ -111,7 +111,7 @@ spec:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -124,7 +124,7 @@ spec:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
       {{- if .Values.autorecovery.resources }}
         resources:

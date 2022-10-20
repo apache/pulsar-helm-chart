@@ -19,9 +19,12 @@
 
 #!/usr/bin/env bash
 
+# If installation fails, the build should fail
+set -e
+
 NAMESPACE=cert-manager
 NAME=cert-manager
-VERSION=v1.5.4
+VERSION=v1.7.3
 
 # Install cert-manager CustomResourceDefinition resources
 echo "Installing cert-manager CRD resources ..."

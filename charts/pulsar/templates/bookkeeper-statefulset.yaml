@@ -104,11 +104,15 @@ spec:
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     {{- end}}
+      {{- if .Values.bookkeeper.securityContext }}
+      securityContext:
+{{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
+      {{- end }}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -126,7 +130,7 @@ spec:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
         {{- if .Values.bookkeeper.probe.liveness.enabled }}
         livenessProbe:
