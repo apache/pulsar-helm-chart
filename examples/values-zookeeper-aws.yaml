@@ -36,13 +36,9 @@ components:
   # pulsar manager
   pulsar_manager: false
 
-monitoring:
-  # monitoring - prometheus
-  prometheus: false
-  # monitoring - grafana
-  grafana: false
-  # monitoring - node_exporter
-  node_exporter: false
+## disable monitoring stack
+kube-prometheus-stack:
+  enabled: false
 
 zookeeper:
   # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces

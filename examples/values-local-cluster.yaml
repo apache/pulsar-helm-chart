@@ -28,10 +28,5 @@ components:
   pulsar_manager: true
 
 ## disable monitoring stack
-monitoring:
-  # monitoring - prometheus
-  prometheus: false
-  # monitoring - grafana
-  grafana: false
-  # monitoring - node_exporter
-  node_exporter: false
+kube-prometheus-stack:
+  enabled: false
