@@ -60,4 +60,4 @@ jobs:
 
       - name: Run chart-testing (lint)
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+        run: ct lint --check-version-increment false --target-branch ${{ github.event.repository.default_branch }}
