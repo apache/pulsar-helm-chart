@@ -39,11 +39,22 @@ components:
 ## disable monitoring stack
 kube-prometheus-stack:
   enabled: false
+  prometheusOperator:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus:
+    enabled: false
 
 zookeeper:
   # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces
   # Example value: "us-east1-pulsar-zookeeper-0.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-1.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-2.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-0.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-1.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-2.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888"
   externalZookeeperServerList: ""
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -62,3 +73,23 @@ zookeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+
+bookkeeper:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+autorecovery:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+broker:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+proxy:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false

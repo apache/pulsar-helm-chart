@@ -36,8 +36,8 @@ This Helm Chart includes all the components of Apache Pulsar for a complete expe
     - [x] Proxies
 - [x] Management & monitoring components:
     - [x] Pulsar Manager
-    - [x] Prometheus
-    - [x] Grafana
+    - [x] Optional PodMonitors for each component (enabled by default)
+    - [x] [Kube-Prometheus-Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) (as of 3.0.0)
 
 It includes support for:
 
@@ -163,6 +163,27 @@ You can also checkout out the example values file for different deployments.
 - [Deploy a Pulsar cluster with TLS encryption](examples/values-tls.yaml)
 - [Deploy a Pulsar cluster with JWT authentication using symmetric key](examples/values-jwt-symmetric.yaml)
 - [Deploy a Pulsar cluster with JWT authentication using asymmetric key](examples/values-jwt-asymmetric.yaml)
+
+## Disabling Kube-Prometheus-Stack CRDs
+
+In order to disable the kube-prometheus-stack fully, it is necessary to add the following to your `values.yaml`:
+
+```yaml
+kube-prometheus-stack:
+  enabled: false
+  prometheusOperator:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus:
+    enabled: false
+```
+
+Otherwise, the helm chart installation will attempt to install the CRDs for the kube-prometheus-stack. Additionally,
+you'll need to disable each of the component's `PodMonitors`. This is shown in some [examples](./examples) and is
+verified in some [tests](./.ci/clusters).
 
 ## Upgrading
 
