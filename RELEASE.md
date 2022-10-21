@@ -193,11 +193,6 @@ cat <<EOF
 EOF
 ```
 
-```shell
-export VOTE_END_TIME=$(date --utc -d "now + 72 hours + 10 minutes" +'%Y-%m-%d %H:%M')
-export TIME_DATE_URL="to?iso=$(date --utc -d "now + 72 hours + 10 minutes" +'%Y%m%dT%H%M')&p0=136&font=cursive"
-```
-
 Body:
 
 ```shell
@@ -209,7 +204,7 @@ This is a call for the vote to release Helm Chart version ${VERSION_WITHOUT_RC}.
 The release candidate is available at:
 https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION/
 
-pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz - is the "main source release" that comes with INSTALL instructions.
+pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz - is the "main source release".
 pulsar-${VERSION_WITHOUT_RC}.tgz - is the binary Helm Chart release.
 
 Public keys are available at: https://www.apache.org/dist/pulsar/KEYS
@@ -220,23 +215,13 @@ helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/puls
 helm repo update
 helm install pulsar apache-pulsar-dist-dev/pulsar
 
-pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though not strictly required for releasing the artifact based on ASF Guidelines.
+pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though it is not strictly required for releasing the artifact based on ASF Guidelines. 
 
-$ helm gpg verify pulsar-${VERSION_WITHOUT_RC}.tgz
-gpg: Signature made Thu Jan  6 21:33:35 2022 MST
-gpg:                using RSA key E1A1E984F55B8F280BD9CBA20BB7163892A2E48E
-gpg: Good signature from "Jed Cunningham <jedcunningham@apache.org>" [ultimate]
-plugin: Chart SHA verified. sha256:b33eac716e0416a18af89fb4fa1043fcfcf24f9f903cda3912729815213525df
+You can optionally verify this file using this helm plugin https://github.com/technosophos/helm-gpg, or by using helm --verify (https://helm.sh/docs/helm/helm_verify/).
 
-The vote will be open for at least 72 hours ($VOTE_END_TIME UTC) or until the necessary number of votes is reached.
+helm gpg verify pulsar-${VERSION_WITHOUT_RC}.tgz
 
-https://www.timeanddate.com/countdown/$TIME_DATE_URL
-
-Please vote accordingly:
-
-[ ] +1 approve
-[ ] +0 no opinion
-[ ] -1 disapprove with the reason
+The vote will be open for at least 72 hours.
 
 Only votes from PMC members are binding, but members of the community are
 encouraged to test the release and vote with "(non-binding)".
@@ -251,15 +236,16 @@ Please note that the version number excludes the \`-candidate-X\` string, so it'
 simply ${VERSION_WITHOUT_RC}. This will allow us to rename the artifact without modifying
 the artifact checksums when we actually release it.
 
-The status of testing the Helm Chart by the community is kept here:
-<TODO COPY LINK TO THE ISSUE CREATED>
-
 Thanks,
 <your name>
 EOF
 ```
 
 Note, you need to update the `helm gpg verify` output and verify the end of the voting period in the body.
+
+## Note about `helm gpg` vs `helm --verify`
+
+Helm ships with a gpg verification tool, but it appears not to work with the currently used format for our KEYS file.
 
 # Verify the release candidate by the PMC
 
@@ -394,20 +380,23 @@ upgrading the Chart or installing by overriding default of `values.yaml`.
 
 ## Summarize the voting for the release
 
-Once the vote has been passed, you will need to send a result vote to dev@pulsar.apache.org:
+Once the vote has been passed, you will need to send a result vote to [dev@pulsar.apache.org](mailto:dev@pulsar.apache.org):
 
 Subject:
 
-```
-[RESULT][VOTE] Release Apache Pulsar Helm Chart 1.0.1 based on 1.0.1-candidate-1
+```shell
+cat <<EOF
+[RESULT][VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION}
+EOF
 ```
 
 Message:
 
-```
+```shell
+cat <<EOF
 Hello all,
 
-The vote to release Apache Pulsar Helm Chart version 1.0.1 based on 1.0.1-candidate-1 is now closed.
+The vote to release Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC} based on ${VERSION} is now closed.
 
 The vote PASSED with X binding "+1", Y non-binding "+1" and 0 "-1" votes:
 
@@ -423,6 +412,7 @@ I'll continue with the release process and the release announcement will follow 
 
 Thanks,
 <your name>
+EOF
 ```
 
 ## Publish release to SVN
@@ -436,7 +426,7 @@ the binaries again, and gives a clearer history in the svn commit logs):
 
 ```shell
 # First clone the repo
-export RC=1.0.1-candidate-1
+export RC=$(git describe)
 export VERSION=${RC%-candidate-*}
 svn checkout https://dist.apache.org/repos/dist/release/pulsar pulsar-dist-release
 
@@ -450,10 +440,23 @@ cd ${VERSION}
 for f in ../../../pulsar-dist-dev/helm-chart/$RC/*; do svn cp $f ${$(basename $f)/}; done
 svn rm index.yaml
 svn commit -m "Release Pulsar Helm Chart ${VERSION} from ${RC}"
-
 ```
 
 Verify that the packages appear in [Pulsar Helm Chart](https://dist.apache.org/repos/dist/release/pulsar/helm-chart/).
+
+Then, run the following command from within `pulsar-dist-release/helm-chart` in the svn repo.
+
+```shell
+sed -i 's|https://downloads.apache.org/pulsar/helm-chart/|https://archive.apache.org/dist/pulsar/helm-chart/|' index.yaml
+helm repo index ${VERSION}/ --merge ./index.yaml --url "https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}"
+```
+
+Verify that the updated `index.yaml` file has the most recent version. Then run:
+
+```shell
+svn add index.yaml
+svn commit -m "Adding Pulsar Helm Chart ${VERSION} to index.yaml"
+```
 
 ## Publish release tag
 
@@ -537,8 +540,9 @@ Bump the chart version to the next version in `charts/pulsar/Chart.yaml` in mast
 
 ## Remove old releases
 
-We should keep the old version a little longer than a day or at least until the updated
-``index.yaml`` is published. This is to avoid errors for users who haven't run ``helm repo update``.
+We should keep the old version a little longer than a day. We updated the `index.yaml` earlier so that it points to the
+older releases. The short delay will help avoid errors for users who haven't run ``helm repo update`` to get the latest
+`index.yaml`.
 
 It is probably ok if we leave last 2 versions on release svn repo too.
 
