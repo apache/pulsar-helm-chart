@@ -93,12 +93,6 @@ To add this chart to your local Helm repository:
 helm repo add apache https://pulsar.apache.org/charts
 ```
 
-To use the helm chart:
-
-```bash
-helm install <release-name> apache/pulsar
-```
-
 ## Kubernetes cluster preparation
 
 You need a Kubernetes cluster whose version is 1.18 or higher in order to use this chart, due to the usage of certain Kubernetes features.
@@ -107,37 +101,15 @@ We provide some instructions to guide you through the preparation: http://pulsar
 
 ## Deploy Pulsar to Kubernetes
 
-1. Clone the Pulsar Helm charts repository.
+1. Configure your values file. The best way to know which values are available is to read the [values.yaml](./charts/pulsar/values.yaml).
+
+2. Install the chart:
 
     ```bash
-    git clone https://github.com/apache/pulsar-helm-chart
-    ```
-    ```bash
-    cd pulsar-helm-chart
+    helm install <release-name> -n <namespace> -f your-values.yaml apache/pulsar
     ```
 
-2. Run `prepare_helm_release.sh` to create required kubernetes resources for installing this Helm chart.
-    - A k8s namespace for installing the Pulsar release (if `-c` is specified)
-    - Create the JWT secret keys and tokens for three superusers: `broker-admin`, `proxy-admin`, and `admin`.
-      By default, it generates asymmetric pubic/private key pair. You can choose to generate symmetric secret key
-      by specifying `--symmetric` in the following command.
-        - `proxy-admin` role is used for proxies to communicate to brokers.
-        - `broker-admin` role is used for inter-broker communications.
-        - `admin` role is used by the admin tools.
-
-    ```bash
-    ./scripts/pulsar/prepare_helm_release.sh -n <k8s-namespace> -k <pulsar-release-name> -c
-    ```
-
-3. Use the Pulsar Helm charts to install Apache Pulsar. 
-
-    This command installs and starts Apache Pulsar.
-
-    ```bash 
-    $ helm install <pulsar-release-name> apache/pulsar
-    ```
-
-5. Access the Pulsar cluster
+3. Access the Pulsar cluster
 
     The default values will create a `ClusterIP` for the proxy you can use to interact with the cluster. To find the IP address of proxy use:
 
