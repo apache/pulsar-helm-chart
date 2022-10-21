@@ -185,6 +185,19 @@ Otherwise, the helm chart installation will attempt to install the CRDs for the 
 you'll need to disable each of the component's `PodMonitors`. This is shown in some [examples](./examples) and is
 verified in some [tests](./.ci/clusters).
 
+## Grafana Dashboards
+
+The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana. Dashboards are loaded via a Kubernetes `ConfigMap`. Please see their documentation for loading those dashboards.
+
+The `apache/pulsar` GitHub repo contains some dashboards [here](https://github.com/apache/pulsar/tree/master/grafana).
+
+### Third Party Dashboards
+
+* StreamNative provides Grafana Dashboards for Apache Pulsar in this [GitHub repository](https://github.com/streamnative/apache-pulsar-grafana-dashboard).
+* DataStax provides Grafana Dashboards for Apache Pulsar in this [GitHub repository](https://github.com/datastax/pulsar-helm-chart/tree/master/helm-chart-sources/pulsar/grafana-dashboards).
+
+Note: if you have third party dashboards that you would like included in this list, please open a pull request.
+
 ## Upgrading
 
 Once your Pulsar Chart is installed, configuration changes and chart
