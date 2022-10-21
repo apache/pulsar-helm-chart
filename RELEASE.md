@@ -230,7 +230,7 @@ For license checks, the .rat-excludes files is included, so you can run the foll
 
 tar -xvf pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz
 cd pulsar-chart-${VERSION_WITHOUT_RC}
-java -jar $PATH_TO_RAT/apache-rat-0.13/apache-rat-0.13.jar chart -E .rat-excludes
+java -jar $PATH_TO_RAT/apache-rat-0.15/apache-rat-0.15.jar . -E .rat-excludes
 
 Please note that the version number excludes the \`-candidate-X\` string, so it's now
 simply ${VERSION_WITHOUT_RC}. This will allow us to rename the artifact without modifying
