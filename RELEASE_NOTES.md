@@ -8,6 +8,16 @@ This Apache Pulsar Helm Chart release contains several important new features, b
 
 * Switch from custom deployment of Prometheus and Grafana to using the [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts). This change includes enabling `PodMonitors` by default for the Broker, Bookkeeper, Zookeeper, Autorecovery, and Proxy pods, as well as deploying the related CRDs by default. If this will be a problem, here is documentation to [disable](https://github.com/apache/pulsar-helm-chart#disabling-kube-prometheus-stack-crds) the CRD deployment. Additionally, the Grafana Dashboards that were previously deployed will no longer ship with this Helm Chart. Here is [documentation](https://github.com/apache/pulsar-helm-chart#grafana-dashboards) on available alternatives. Here is the related PR https://github.com/apache/pulsar-helm-chart/pull/299.
 
+## Upgrade considerations
+
+* When upgrading from any previous version of the helm chart, there are a few things to consider. First, this is the first release of the Helm Chart that packages a 2.10 docker image as the default version of Apache Pulsar. As a result, you may have issues with Zookeeper and Bookkeeper file system permissions. If so, you may need to use the following in your initial values file. See https://github.com/apache/pulsar-helm-chart#upgrading-to-apache-pulsar-2100-and-above-or-helm-chart-version-300-and-above for more instructions.
+    ```yaml
+      securityContext:
+        fsGroup: 0
+        fsGroupChangePolicy: "Always"
+    ```
+* When upgrading to the [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts), the helm chart will not install the CRDs by default. You can install those following these instructions: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-40x-to-41x.
+
 ## What's Changed
 * Bump Apache Pulsar 2.10.2 by @Jason918 in https://github.com/apache/pulsar-helm-chart/pull/310
 * Replace monitoring solution with kube-prometheus-stack dependency by @michaeljmarshall in https://github.com/apache/pulsar-helm-chart/pull/299
