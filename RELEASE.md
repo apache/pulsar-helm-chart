@@ -42,7 +42,7 @@ official Apache releases must not include the rcN suffix.
 
     ```shell
     # Set Version
-    export VERSION=1.0.1-candidate-1
+    export VERSION=3.0.0-candidate-1
     export VERSION_WITHOUT_RC=${VERSION%-candidate-*}
 
     # Clone and set PULSAR_REPO_ROOT
@@ -199,7 +199,7 @@ Body:
 cat <<EOF
 Hello Apache Pulsar Community,
 
-This is a call for the vote to release Helm Chart version ${VERSION_WITHOUT_RC}.
+This is a call for the vote to release the Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC}.
 
 The release candidate is available at:
 https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION/
