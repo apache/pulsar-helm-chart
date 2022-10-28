@@ -185,7 +185,7 @@ helm upgrade -f pulsar.yaml \
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
-## Upgrading to 2.10.0 and above
+## Upgrading to Apache Pulsar 2.10.0 and above (or Helm Chart version 3.0.0 and above)
 
 The 2.10.0+ Apache Pulsar docker image is a non-root container, by default. That complicates an upgrade to 2.10.0
 because the existing files are owned by the root user but are not writable by the root group. In order to leverage this
