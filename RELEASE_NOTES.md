@@ -10,7 +10,7 @@ This Apache Pulsar Helm Chart release contains several important new features, b
 
 ## Upgrade considerations
 
-* When upgrading from any previous version of the helm chart, there are a few things to consider. First, this is the first release of the Helm Chart that packages a 2.10 docker image as the default version of Apache Pulsar. As a result, you may have issues with Zookeeper and Bookkeeper file system permissions. If so, you may need to use the following in your initial values file. See https://github.com/apache/pulsar-helm-chart#upgrading-to-apache-pulsar-2100-and-above-or-helm-chart-version-300-and-above for more instructions.
+* When upgrading from any previous version of the helm chart, there are a few things to consider. First, this is the first release of the Helm Chart that packages a 2.10 docker image as the default version of Apache Pulsar. Notably, that docker image is run as a non root user, by default. As a result, you may have issues with Zookeeper and Bookkeeper file system permissions. If so, you may need to use the following in your initial values file. See https://github.com/apache/pulsar-helm-chart#upgrading-to-apache-pulsar-2100-and-above-or-helm-chart-version-300-and-above for more instructions.
     ```yaml
       securityContext:
         fsGroup: 0
@@ -67,4 +67,4 @@ Thank you to all of our new contributors!
 * @elangelo made their first contribution in https://github.com/apache/pulsar-helm-chart/pull/225
 * @claudio-vellage made their first contribution in https://github.com/apache/pulsar-helm-chart/pull/286
 
-**Full Changelog**: https://github.com/apache/pulsar-helm-chart/compare/pulsar-2.9.4...3.0.0
+**Full Changelog**: https://github.com/apache/pulsar-helm-chart/compare/pulsar-2.9.4...pulsar-3.0.0
