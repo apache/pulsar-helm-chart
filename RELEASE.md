@@ -500,14 +500,15 @@ Body:
 cat <<EOF
 Dear Pulsar community,
 
-I am pleased to announce that we have released Apache Pulsar Helm chart $VERSION 🎉 🎊
+The Apache Pulsar team is pleased to announce the release of Apache Pulsar Helm
+Chart $VERSION.
 
 The source release, as well as the "binary" Helm Chart release, are available:
 
 Official Sources: https://pulsar.apache.org/download/
 ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION
 Docs: https://pulsar.apache.org/docs/helm-overview
-Release Notes: https://pulsar.apache.org/docs/helm-chart/$VERSION/release_notes.html
+Release Notes: https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION
 
 Thanks to all the contributors who made this possible.
 
