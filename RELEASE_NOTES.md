@@ -72,7 +72,7 @@ This Apache Pulsar Helm Chart release contains several important new features, b
 
 ## Release Update
 
-The Apache Pulsar Helm Chart's release process has changed from an automated process to a manual one, in order to align with the Apache Software Foundation's requirements for voting on releases. As a result, you can expect releases to be hosted on the `https://dist.apache.org/repos/dist/release/pulsar/helm-chart/`. Please see the [RELEASE.md](./RELEASE.md) for the new release process.
+The Apache Pulsar Helm Chart's release process has changed from an automated process to a manual one, in order to align with the Apache Software Foundation's requirements for voting on releases. As a result, you can expect releases to be hosted at https://downloads.apache.org/pulsar/helm-chart/. Please see the [RELEASE.md](./RELEASE.md) for the new release process.
 
 ## New Contributors
 Thank you to all of our new contributors!
