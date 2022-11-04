@@ -547,10 +547,6 @@ Thanks to all the contributors who made this possible.
 EOF
 ```
 
-## Bump chart version in Chart.yaml
-
-Bump the chart version to the next version in `charts/pulsar/Chart.yaml` in master.
-
 ## Remove old releases
 
 We should keep the old version a little longer than a day. We updated the `index.yaml` earlier so that it points to the
