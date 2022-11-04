@@ -169,7 +169,7 @@ official Apache releases must not include the rcN suffix.
 
   ```shell
   cd ..
-  export PREVIOUS_VERSION=1.0.0-candidate-1
+  export PREVIOUS_VERSION=3.0.0-candidate-1
   svn rm ${PREVIOUS_VERSION}
   svn commit -m "Remove old Helm Chart release: ${PREVIOUS_VERSION}"
   ```
@@ -426,7 +426,7 @@ the binaries again, and gives a clearer history in the svn commit logs):
 
 ```shell
 # First clone the repo
-export RC=$(git describe)
+export RC=3.0.0-candidate-1
 export VERSION=${RC%-candidate-*}
 svn checkout https://dist.apache.org/repos/dist/release/pulsar pulsar-dist-release
 
@@ -436,27 +436,14 @@ export PULSAR_SVN_RELEASE_HELM=$(pwd)
 svn mkdir ${VERSION}
 cd ${VERSION}
 
-# Move the artifacts to svn folder & commit (don't copy or copy & remove - index.yaml)
-for f in ../../../pulsar-dist-dev/helm-chart/$RC/*; do svn cp $f ${$(basename $f)/}; done
-svn rm index.yaml
+# Move the artifacts to svn folder, remove index.yaml, and commit
+for f in ../../../pulsar-dist-dev/helm-chart/$RC/*; do cp $f $(basename $f); done
+rm index.yaml
+svn add pulsar-*
 svn commit -m "Release Pulsar Helm Chart ${VERSION} from ${RC}"
 ```
 
 Verify that the packages appear in [Pulsar Helm Chart](https://dist.apache.org/repos/dist/release/pulsar/helm-chart/).
-
-Then, run the following command from within `pulsar-dist-release/helm-chart` in the svn repo.
-
-```shell
-sed -i 's|https://downloads.apache.org/pulsar/helm-chart/|https://archive.apache.org/dist/pulsar/helm-chart/|' index.yaml
-helm repo index ${VERSION}/ --merge ./index.yaml --url "https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}"
-```
-
-Verify that the updated `index.yaml` file has the most recent version. Then run:
-
-```shell
-svn add index.yaml
-svn commit -m "Adding Pulsar Helm Chart ${VERSION} to index.yaml"
-```
 
 ## Publish release tag
 
@@ -469,7 +456,32 @@ git tag -s pulsar-${VERSION} -m "Apache Pulsar Helm Chart ${VERSION}"
 git push upstream pulsar-${VERSION}
 ```
 
+## Update index.yaml
+
+The `index.yaml` file is the way helm users discover the binaries for the helm distribution. We currently host the
+file at `pulsar.apache.org/charts/index.yaml`.
+
+Then, run the following command from within `github.com/apache/pulsar-site` in the git repo.
+
+```shell
+# Run on a branch based on main branch
+cd site2/website-next/static/charts
+cp ${PULSAR_SVN_RELEASE_HELM}/${VERSION}/pulsar-${VERSION}.tgz .
+helm repo index --merge ./index.yaml . --url "https://downloads.apache.org/pulsar/helm-chart/${VERSION}"
+```
+
+Verify that the updated `index.yaml` file has the most recent version. Then run:
+
+```shell
+git add index.yaml
+git commit -m "Adding Pulsar Helm Chart ${VERSION} to index.yaml"
+```
+
+Then open a PR.
+
 ## Notify developers of release
+
+Once the `index.yaml` is live on the website, it is time to announce the release.
 
 - Notify users@pulsar.apache.org (cc'ing dev@pulsar.apache.org) that
 the artifacts have been published:
