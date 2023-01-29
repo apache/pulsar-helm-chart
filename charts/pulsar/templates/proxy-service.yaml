@@ -37,22 +37,28 @@ spec:
     - name: http
       port: {{ .Values.proxy.ports.http }}
       protocol: TCP
+      {{- if .Values.proxy.service.adminNodePort }}
+      nodePort: {{ .Values.proxy.service.adminNodePort }}
+      {{- end }}
     - name: "{{ .Values.tcpPrefix }}pulsar"
       port: {{ .Values.proxy.ports.pulsar }}
       protocol: TCP
-      {{- if .Values.proxy.service.nodePort }}
-      nodePort: {{ .Values.proxy.service.nodePort }}
+      {{- if .Values.proxy.service.pulsarNodePort }}
+      nodePort: {{ .Values.proxy.service.pulsarNodePort }}
       {{- end }}
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
       port: {{ .Values.proxy.ports.https }}
       protocol: TCP
+      {{- if .Values.proxy.service.adminNodePort }}
+      nodePort: {{ .Values.proxy.service.adminNodePort }}
+      {{- end }}
     - name: "{{ .Values.tlsPrefix }}pulsarssl"
       port: {{ .Values.proxy.ports.pulsarssl }}
       protocol: TCP
-      {{- if .Values.proxy.service.nodePort }}
-      nodePort: {{ .Values.proxy.service.nodePort }}
+      {{- if .Values.proxy.service.pulsarNodePort }}
+      nodePort: {{ .Values.proxy.service.pulsarNodePort }}
       {{- end }}
     {{- end }}
   selector:

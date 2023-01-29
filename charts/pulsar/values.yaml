@@ -903,9 +903,10 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
-  ## Possibility to specify a specific NodePort if you set proxy.service.type to 'NodePort'.
-  ## Uncomment only if you set proxy.service.type to 'NodePort'.
-  # nodePort: 32000
+  ## Possibility to specify a specific NodePort for Pulsar (pulsarNodePort), and/ or the admin service (adminNodePort) if you set proxy.service.type to 'NodePort'.
+  ## Uncomment the following two lines only if you set proxy.service.type to 'NodePort'.
+  # pulsarNodePort: 32000
+  # adminNodePort: 32001
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##
