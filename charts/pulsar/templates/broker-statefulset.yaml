@@ -61,6 +61,18 @@ spec:
 {{ toYaml .Values.broker.tolerations | indent 8 }}
     {{- end }}
       affinity:
+        {{- if .Values.broker.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.broker.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.broker.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.broker.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.broker.affinity.anti_affinity}}
         podAntiAffinity:
           {{ if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
