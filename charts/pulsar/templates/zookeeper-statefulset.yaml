@@ -75,7 +75,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.zookeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.zookeeper.affinity.type }}:
             - weight: 100
@@ -94,7 +94,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.zookeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}

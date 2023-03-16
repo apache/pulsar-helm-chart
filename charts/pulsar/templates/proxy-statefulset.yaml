@@ -78,7 +78,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.proxy.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.proxy.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.proxy.affinity.type }}:
             - weight: 100
@@ -97,7 +97,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.proxy.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.proxy.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
