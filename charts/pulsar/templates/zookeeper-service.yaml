@@ -48,4 +48,7 @@ spec:
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
+  {{- if .Values.zookeeper.service.spec }}
+    {{- toYaml .Values.zookeeper.service.spec | trim | nindent 2 }}
+  {{- end }}
 {{- end }}

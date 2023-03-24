@@ -398,8 +398,8 @@ zookeeper:
   ## templates/zookeeper-service.yaml
   ##
   service:
-    annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    spec:
+      publishNotReadyAddresses: true
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
