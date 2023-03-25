@@ -28,7 +28,9 @@ metadata:
     component: {{ .Values.broker.component }}
 spec:
   serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  {{- if not .Values.broker.autoscaling.enabled }}
   replicas: {{ .Values.broker.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
