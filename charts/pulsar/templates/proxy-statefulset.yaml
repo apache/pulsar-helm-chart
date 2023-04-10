@@ -186,16 +186,16 @@ spec:
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar proxy
         ports:
         # prometheus needs to access /metrics endpoint
-        - name: http
-          containerPort: {{ .Values.proxy.ports.http }}
+        - name: sts-http
+          containerPort: {{ .Values.proxy.ports.containerPorts.http }}
         {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
-        - name: "{{ .Values.tcpPrefix }}pulsar"
+        - name: "sts-{{ .Values.tcpPrefix }}pulsar"
           containerPort: {{ .Values.proxy.ports.pulsar }}
         {{- end }}
         {{- if and (.Values.tls.enabled) (.Values.tls.proxy.enabled) }}
-        - name: https
-          containerPort: {{ .Values.proxy.ports.https }}
-        - name: "{{ .Values.tlsPrefix }}pulsarssl"
+        - name: sts-https
+          containerPort: {{ .Values.proxy.ports.containerPorts.https }}
+        - name: "sts-{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.proxy.ports.pulsarssl }}
         {{- end }}
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
