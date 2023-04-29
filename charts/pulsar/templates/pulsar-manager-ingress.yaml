@@ -35,6 +35,9 @@ metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 spec:
+  {{- with .Values.pulsar_manager.ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
 {{- if .Values.pulsar_manager.ingress.tls.enabled }}
   tls:
     - hosts:

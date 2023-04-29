@@ -913,6 +913,7 @@ proxy:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -959,6 +960,7 @@ dashboard:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -1071,6 +1073,7 @@ pulsar_manager:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
