@@ -37,10 +37,10 @@ Options:
        -h,--help               prints the usage message
        -n,--name               name of the Kubernetes cluster,default value: kind
        -c,--nodeNum            the count of the cluster nodes,default value: 6
-       -k,--k8sVersion         version of the Kubernetes cluster,default value: v1.12.8
+       -k,--k8sVersion         version of the Kubernetes cluster,default value: v1.24.12
        -v,--volumeNum          the volumes number of each kubernetes node,default value: 9
 Usage:
-    $0 --name testCluster --nodeNum 4 --k8sVersion v1.12.9
+    $0 --name testCluster --nodeNum 4 --k8sVersion v1.24.12
 EOF
 }
 
@@ -83,7 +83,7 @@ done
 
 clusterName=${clusterName:-pulsar-dev}
 nodeNum=${nodeNum:-6}
-k8sVersion=${k8sVersion:-v1.24.13}
+k8sVersion=${k8sVersion:-v1.24.12}
 volumeNum=${volumeNum:-9}
 
 echo "clusterName: ${clusterName}"
