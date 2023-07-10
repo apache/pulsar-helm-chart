@@ -73,9 +73,9 @@ It includes support for:
 
 In order to use this chart to deploy Apache Pulsar on Kubernetes, the followings are required.
 
-1. kubectl 1.18 or higher, compatible with your cluster ([+/- 1 minor release from your cluster](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin))
+1. kubectl 1.19 or higher, compatible with your cluster ([+/- 1 minor release from your cluster](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin))
 2. Helm v3 (3.0.2 or higher)
-3. A Kubernetes cluster, version 1.18 or higher.
+3. A Kubernetes cluster, version 1.19 or higher.
 
 ## Environment setup
 
@@ -95,7 +95,7 @@ helm repo add apache https://pulsar.apache.org/charts
 
 ## Kubernetes cluster preparation
 
-You need a Kubernetes cluster whose version is 1.18 or higher in order to use this chart, due to the usage of certain Kubernetes features.
+You need a Kubernetes cluster whose version is 1.19 or higher in order to use this chart, due to the usage of certain Kubernetes features.
 
 We provide some instructions to guide you through the preparation: http://pulsar.apache.org/docs/helm-prepare/
 
