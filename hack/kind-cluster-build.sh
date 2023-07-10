@@ -83,7 +83,7 @@ done
 
 clusterName=${clusterName:-pulsar-dev}
 nodeNum=${nodeNum:-6}
-k8sVersion=${k8sVersion:-v1.18.19}
+k8sVersion=${k8sVersion:-v1.24.15}
 volumeNum=${volumeNum:-9}
 
 echo "clusterName: ${clusterName}"
