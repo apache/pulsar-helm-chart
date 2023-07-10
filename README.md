@@ -18,11 +18,13 @@
     under the License.
 
 -->
-# Official Apache Pulsar Helm Chart
+# Apache Pulsar Helm Chart
 
-This is the officially supported Helm Chart for installing Apache Pulsar on Kubernetes.
+This is a Helm Chart for installing Apache Pulsar on Kubernetes.
 
 Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/deploy-kubernetes/) for more details.
+
+> :warning: This helm chart is updated outside of the regular Pulsar release cycle and might lag behind a bit. It only supports basic Kubernetes features. Ultimately, it's meant as a template and starting point for a Kubernetes deployment. In many cases, it would require some customizations.
 
 ## Features
 
