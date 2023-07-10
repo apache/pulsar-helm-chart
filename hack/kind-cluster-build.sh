@@ -153,7 +153,7 @@ if [[ "${matchedCluster}" == "${clusterName}" ]]; then
     kind delete cluster --name=${clusterName}
 fi
 echo "start to create k8s cluster"
-kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName}
+kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName} --loglevel 3
 export KUBECONFIG=${workDir}/kubeconfig.yaml
 kind get kubeconfig --name=${clusterName} > ${KUBECONFIG}
 
