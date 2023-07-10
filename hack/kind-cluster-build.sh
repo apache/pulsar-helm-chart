@@ -119,6 +119,8 @@ configFile=${workDir}/kind-config.yaml
 cat <<EOF > ${configFile}
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  ipFamily: ipv4
 nodes:
 - role: control-plane
   extraPortMappings:
