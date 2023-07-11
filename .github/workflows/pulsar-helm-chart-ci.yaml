@@ -82,6 +82,8 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
+    outputs:
+      no_chart_changes: ${{ steps.ct-lint.outputs.no_chart_changes }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -114,8 +116,21 @@ jobs:
         uses: ./.github/actions/chart-testing-action
 
       - name: Run chart-testing (lint)
+        id: ct-lint
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        run: ct lint --check-version-increment=false --validate-maintainers=false --target-branch ${{ github.event.repository.default_branch }}
+        run: |
+          ct lint --check-version-increment=false \
+            --validate-maintainers=false \
+            --target-branch ${{ github.event.repository.default_branch }} \
+            | tee /tmp/ct-lint.log || { 
+            if grep -q "No chart changes detected." /tmp/ct-lint.log; then
+              echo no_chart_changes=true >> $GITHUB_OUTPUT
+              exit 0
+            else
+              echo no_chart_changes=false >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          }
 
       - name: Wait for ssh connection when build fails
         # ssh access is enabled for builds in own forks
