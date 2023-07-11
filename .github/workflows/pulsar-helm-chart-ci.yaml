@@ -150,15 +150,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: BK TLS Only
-            values_file: .ci/clusters/values-bk-tls.yaml
-            shortname: bk-tls
           - name: Basic
             values_file: .ci/clusters/values-local-pv.yaml
             shortname: basic
-          - name: Broker & Proxy TLS Installation
-            values_file: .ci/clusters/values-broker-tls.yaml
-            shortname: broker-tls
           - name: Pulsar Function
             values_file: .ci/clusters/values-function.yaml
             shortname: function
@@ -171,9 +165,15 @@ jobs:
           - name: JWT Public/Private Key
             values_file: .ci/clusters/values-jwt-symmetric.yaml
             shortname: jwt-symmetric
-          - name: TLS Installation
+          - name: TLS
             values_file: .ci/clusters/values-tls.yaml
             shortname: tls
+          - name: Broker & Proxy TLS
+            values_file: .ci/clusters/values-broker-tls.yaml
+            shortname: broker-tls
+          - name: BK TLS Only
+            values_file: .ci/clusters/values-bk-tls.yaml
+            shortname: bk-tls
           - name: ZK TLS Only
             values_file: .ci/clusters/values-zk-tls.yaml
             shortname: zk-tls
