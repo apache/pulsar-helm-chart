@@ -903,6 +903,9 @@ proxy:
     https: 443
     pulsar: 6650
     pulsarssl: 6651
+    containerPorts:
+      http: 8080
+      https: 8443
   service:
     annotations: {}
     type: LoadBalancer
