@@ -24,7 +24,8 @@ set -e
 
 NAMESPACE=cert-manager
 NAME=cert-manager
-VERSION=v1.7.3
+# check compatibility with k8s versions from https://cert-manager.io/docs/installation/supported-releases/
+VERSION=v1.11.4
 
 # Install cert-manager CustomResourceDefinition resources
 echo "Installing cert-manager CRD resources ..."
