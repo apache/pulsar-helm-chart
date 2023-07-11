@@ -159,10 +159,10 @@ jobs:
           - name: Use Pulsar Image
             values_file: .ci/clusters/values-pulsar-image.yaml
             shortname: pulsar-image
-          - name: JWT Secret Key
+          - name: JWT Asymmetric Keys
             values_file: .ci/clusters/values-jwt-asymmetric.yaml
             shortname: jwt-asymmetric
-          - name: JWT Public/Private Key
+          - name: JWT Symmetric Key
             values_file: .ci/clusters/values-jwt-symmetric.yaml
             shortname: jwt-symmetric
           - name: TLS
@@ -212,6 +212,11 @@ jobs:
 
       - name: Run chart-testing (install)
         run: |
+          case "${{ matrix.shortname }}" in
+            "jwt-symmetric")
+              export SYMMETRIC=true
+              ;;
+          esac
           .ci/chart_test.sh ${{ matrix.values_file }}
 
       - name: Collect k8s logs on failure
