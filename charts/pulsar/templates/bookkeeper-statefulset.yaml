@@ -267,7 +267,7 @@ spec:
     {{- if .storageClassName }}
       storageClassName: "{{ .storageClassName }}"
     {{- end }}
-    {{- with .Values.bookkeeper.volumes.journal.selector }}
+    {{- with $.Values.bookkeeper.volumes.journal.selector }}
       selector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
@@ -306,7 +306,7 @@ spec:
     {{- if .storageClassName }}
       storageClassName: "{{ .storageClassName }}"
     {{- end }}
-    {{- with .Values.bookkeeper.volumes.ledgers.selector }}
+    {{- with $.Values.bookkeeper.volumes.ledgers.selector }}
       selector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
