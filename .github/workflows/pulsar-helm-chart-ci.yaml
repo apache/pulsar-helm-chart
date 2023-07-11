@@ -196,6 +196,18 @@ jobs:
         with:
           limit-access-to-actor: true
 
+      - name: Setup debugging tools for ssh access
+        if: ${{ github.repository != 'apache/pulsar-helm-chart' && github.event_name == 'pull_request' }}
+        run: |
+          cat >> $HOME/.bash_profile <<'EOF'
+          # use kind environment's kubeconfig
+          export KUBECONFIG=$(ls $HOME/kind/pulsar-ci-*/kubeconfig.yaml)
+          # install k9s on the fly
+          if ! command -v k9s &>/dev/null; then
+            curl -L -s https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin k9s
+          fi
+          EOF
+
       - name: Run chart-testing (install)
         run: |
           .ci/chart_test.sh ${{ matrix.values_file }}
