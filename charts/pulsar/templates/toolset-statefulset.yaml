@@ -61,7 +61,7 @@ spec:
     {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
       {{- if .Values.toolset.resources }}
         resources:
@@ -70,6 +70,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.toolset.additionalCommand }}
+          {{ .Values.toolset.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/client.conf;
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}

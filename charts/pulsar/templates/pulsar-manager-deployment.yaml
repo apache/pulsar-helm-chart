@@ -89,6 +89,8 @@ spec:
                 {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
+          - name: PULSAR_MANAGER_OPTS
+            value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       volumes:
         - name: pulsar-manager-data

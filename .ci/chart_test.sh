@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -20,8 +21,8 @@
 set -e
 
 
-BINDIR=`dirname "$0"`
-PULSAR_HOME=`cd ${BINDIR}/..;pwd`
+BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PULSAR_HOME="$(cd "${BINDIR}/.." && pwd)"
 VALUES_FILE=$1
 TLS=${TLS:-"false"}
 SYMMETRIC=${SYMMETRIC:-"false"}
@@ -32,9 +33,6 @@ source ${PULSAR_HOME}/.ci/helm.sh
 # create cluster
 ci::create_cluster
 
-# install storage provisioner
-ci::install_storage_provisioner
-
 extra_opts=""
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"
@@ -43,8 +41,8 @@ fi
 # install pulsar chart
 ci::install_pulsar_chart ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
 
-# test producer
-ci::test_pulsar_producer
+# test producer/consumer
+ci::test_pulsar_producer_consumer
 
 if [[ "x${FUNCTION}" == "xtrue" ]]; then
     # install cert manager

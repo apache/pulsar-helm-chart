@@ -32,7 +32,7 @@ metadata:
 {{- end }}
 spec:
   ports:
-  - name: bookie
+  - name: "{{ .Values.tcpPrefix }}bookie"
     port: {{ .Values.bookkeeper.ports.bookie }}
   - name: http
     port: {{ .Values.bookkeeper.ports.http }}

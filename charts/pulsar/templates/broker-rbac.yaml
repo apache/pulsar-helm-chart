@@ -97,8 +97,11 @@ subjects:
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
+{{- if .Values.rbac.limit_to_namespace }}
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-{{ template "pulsar.namespace" . }}"
+{{- else}}
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
+{{- end}}
 spec:
   readOnlyRootFilesystem: false
   privileged: false

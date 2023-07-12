@@ -28,6 +28,7 @@ affinity:
 # disable auto recovery
 components:
   autorecovery: false
+  pulsar_manager: true
 
 zookeeper:
   replicaCount: 1

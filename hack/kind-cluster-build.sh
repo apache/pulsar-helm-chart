@@ -25,6 +25,7 @@ source ${PULSAR_CHART_HOME}/hack/common.sh
 
 hack::ensure_kubectl
 hack::ensure_helm
+hack::ensure_kind
 
 usage() {
     cat <<EOF
@@ -82,7 +83,9 @@ done
 
 clusterName=${clusterName:-pulsar-dev}
 nodeNum=${nodeNum:-6}
-k8sVersion=${k8sVersion:-v1.14.10}
+# k8sVersion must be compatible with the used kind version
+# see https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0 for the list of supported k8s versions for kind 0.20.0
+k8sVersion=${k8sVersion:-v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093}
 volumeNum=${volumeNum:-9}
 
 echo "clusterName: ${clusterName}"
@@ -118,6 +121,8 @@ configFile=${workDir}/kind-config.yaml
 cat <<EOF > ${configFile}
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  ipFamily: ipv4
 nodes:
 - role: control-plane
   extraPortMappings:
@@ -150,7 +155,7 @@ if [[ "${matchedCluster}" == "${clusterName}" ]]; then
     kind delete cluster --name=${clusterName}
 fi
 echo "start to create k8s cluster"
-kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName}
+kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName} --verbosity 3
 export KUBECONFIG=${workDir}/kubeconfig.yaml
 kind get kubeconfig --name=${clusterName} > ${KUBECONFIG}
 
@@ -228,13 +233,6 @@ spec:
           - tcp-connect:${registryNodeIP}:5000
 EOF
 $KUBECTL_BIN apply -f ${registryFile}
-
-echo "init pulsar  env"
-$KUBECTL_BIN apply -f ${PULSAR_CHART_HOME}/manifests/local-dind/local-volume-provisioner.yaml
-
-docker pull gcr.io/google-containers/kube-scheduler:${k8sVersion}
-docker tag gcr.io/google-containers/kube-scheduler:${k8sVersion} mirantis/hypokube:final
-kind load docker-image --name=${clusterName} mirantis/hypokube:final
 
 echo "############# success create cluster:[${clusterName}] #############"
 

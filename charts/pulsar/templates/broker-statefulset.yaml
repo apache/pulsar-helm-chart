@@ -106,7 +106,7 @@ spec:
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -129,7 +129,7 @@ spec:
       # This init container will wait for bookkeeper to be ready before
       # deploying the broker
       - name: wait-bookkeeper-ready
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -159,7 +159,7 @@ spec:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
         {{- if .Values.broker.probe.liveness.enabled }}
         livenessProbe:
@@ -168,6 +168,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.liveness.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.liveness.failureThreshold }}
         {{- end }}
         {{- if .Values.broker.probe.readiness.enabled }}
@@ -177,6 +178,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.readiness.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.readiness.failureThreshold }}
         {{- end }}
         {{- if .Values.broker.probe.startup.enabled }}
@@ -186,6 +188,7 @@ spec:
             port: {{ .Values.broker.ports.http }}
           initialDelaySeconds: {{ .Values.broker.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.broker.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.broker.probe.startup.timeoutSeconds }}
           failureThreshold: {{ .Values.broker.probe.startup.failureThreshold }}
         {{- end }}
       {{- if .Values.broker.resources }}
@@ -195,6 +198,9 @@ spec:
         command: ["sh", "-c"]
         args:
         - >
+        {{- if .Values.broker.additionalCommand }}
+          {{ .Values.broker.additionalCommand }}
+        {{- end }}
           bin/apply-config-from-env.py conf/broker.conf;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > status;
@@ -206,7 +212,7 @@ spec:
             bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
           cat conf/pulsar_env.sh;
-          exec bin/pulsar broker;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar broker;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
@@ -221,6 +227,10 @@ spec:
         - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
+{{- if .Values.broker.extreEnvs }}
+        env:
+{{ toYaml .Values.broker.extreEnvs | indent 8 }}
+{{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"

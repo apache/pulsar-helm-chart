@@ -28,10 +28,9 @@ metadata:
     component: {{ .Values.proxy.component }}
 data:
   clusterName: {{ template "pulsar.cluster.name" . }}
-  httpNumThreads: "8"
   statusFilePath: "{{ template "pulsar.home" . }}/status"
   # prometheus needs to access /metrics endpoint
-  webServicePort: "{{ .Values.proxy.ports.http }}"
+  webServicePort: "{{ .Values.proxy.ports.containerPorts.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
   servicePort: "{{ .Values.proxy.ports.pulsar }}"
   brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
@@ -40,7 +39,7 @@ data:
   {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
   tlsEnabledInProxy: "true"
   servicePortTls: "{{ .Values.proxy.ports.pulsarssl }}"
-  webServicePortTls: "{{ .Values.proxy.ports.https }}"
+  webServicePortTls: "{{ .Values.proxy.ports.containerPorts.https }}"
   tlsCertificateFilePath: "/pulsar/certs/proxy/tls.crt"
   tlsKeyFilePath: "/pulsar/certs/proxy/tls.key"
   tlsTrustCertsFilePath: "/pulsar/certs/ca/ca.crt"
@@ -65,7 +64,7 @@ data:
   # disable authorization on proxy and forward authorization credentials to broker
   authorizationEnabled: "false"
   forwardAuthorizationCredentials: "true"
-  superUserRoles: {{ .Values.auth.superUsers | values | join "," }}
+  superUserRoles: {{ .Values.auth.superUsers | values | sortAlpha | join "," }}
   {{- end }}
   {{- if eq .Values.auth.authentication.provider "jwt" }}
   # token authentication configuration
