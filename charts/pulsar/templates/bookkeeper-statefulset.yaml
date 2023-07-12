@@ -78,7 +78,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.bookkeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.bookkeeper.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.bookkeeper.affinity.type }}:
             - weight: 100
@@ -97,7 +97,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.bookkeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.bookkeeper.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
