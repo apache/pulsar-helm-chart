@@ -793,7 +793,7 @@ broker:
 ##
 functions:
   component: functions-worker
-  useBookieAsStateStore: true
+  useBookieAsStateStore: false
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
