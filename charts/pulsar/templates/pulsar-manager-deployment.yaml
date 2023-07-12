@@ -41,7 +41,9 @@ spec:
         {{- if .Values.pulsar_manager.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/pulsar-manager-configmap.yaml") . | sha256sum }}
         {{- end }}
-{{ toYaml .Values.pulsar_manager.annotations | indent 8 }}
+{{- with .Values.pulsar_manager.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
     {{- if .Values.pulsar_manager.nodeSelector }}
       nodeSelector:
