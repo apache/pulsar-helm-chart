@@ -28,7 +28,9 @@ metadata:
     component: {{ .Values.broker.component }}
 spec:
   serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  {{- if not .Values.broker.autoscaling.enabled }}
   replicas: {{ .Values.broker.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
@@ -79,7 +81,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.broker.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.broker.affinity.type }}:
             - weight: 100
@@ -98,7 +100,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.broker.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}

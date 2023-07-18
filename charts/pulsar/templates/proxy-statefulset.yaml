@@ -28,7 +28,9 @@ metadata:
     component: {{ .Values.proxy.component }}
 spec:
   serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+  {{- if not .Values.proxy.autoscaling.enabled }}
   replicas: {{ .Values.proxy.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
@@ -78,7 +80,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.proxy.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.proxy.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.proxy.affinity.type }}:
             - weight: 100
@@ -97,7 +99,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.proxy.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.proxy.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
