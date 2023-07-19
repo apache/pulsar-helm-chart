@@ -50,6 +50,9 @@ data:
   {{- end }}
   {{- if or .Values.components.functions .Values.extra.functionsAsPods }}
   functionsWorkerEnabled: "true"
+  {{- if .Values.functions.useBookieAsStateStore }}
+  PF_stateStorageServiceUrl: "bk://{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}:{{ .Values.bookkeeper.ports.statestore }}"
+  {{- end }}
   PF_functionRuntimeFactoryClassName: "org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactory"
   PF_pulsarFunctionsCluster: {{ template "pulsar.cluster.name" . }}
   PF_connectorsDirectory: ./connectors

@@ -437,6 +437,7 @@ bookkeeper:
   ports:
     http: 8000
     bookie: 3181
+    statestore: 4181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -796,6 +797,7 @@ broker:
 ##
 functions:
   component: functions-worker
+  useBookieAsStateStore: false
   ## Pulsar: Functions Worker ClusterRole or Role
   ## templates/broker-rbac.yaml
   # Default is false which deploys functions with ClusterRole and ClusterRoleBinding at the cluster level
