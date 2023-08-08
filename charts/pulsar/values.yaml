@@ -917,6 +917,12 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
+    nodePorts:
+      http: ""
+      https: ""
+      pulsar: ""
+      pulsarssl: ""
+    
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##

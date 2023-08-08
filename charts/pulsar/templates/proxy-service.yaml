@@ -38,20 +38,40 @@ spec:
       port: {{ .Values.proxy.ports.http }}
       protocol: TCP
       targetPort: sts-http
+      {{- if and (eq .Values.service.type "NodePort") (ne .Values.service.nodePorts.http "") }}
+        nodePort: {{ .Values.service.nodePorts.http }}
+      {{- else}}
+        nodePort: null
+      {{- end}}
     - name: "{{ .Values.tcpPrefix }}pulsar"
       port: {{ .Values.proxy.ports.pulsar }}
       protocol: TCP
       targetPort: "sts-{{ .Values.tcpPrefix }}pulsar"
+      {{- if and (eq .Values.service.type "NodePort") (ne .Values.service.nodePorts.pulsar "") }}
+        nodePort: {{ .Values.service.nodePorts.pulsar }}
+      {{- else}}
+        nodePort: null
+      {{- end}}
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
       port: {{ .Values.proxy.ports.https }}
       protocol: TCP
       targetPort: sts-https
+      {{- if and (eq .Values.service.type "NodePort") (ne .Values.service.nodePorts.https "") }}
+        nodePort: {{ .Values.service.nodePorts.https }}
+      {{- else}}
+        nodePort: null
+      {{- end}}
     - name: "{{ .Values.tlsPrefix }}pulsarssl"
       port: {{ .Values.proxy.ports.pulsarssl }}
       protocol: TCP
       targetPort: "sts-{{ .Values.tlsPrefix }}pulsarssl"
+      {{- if and (eq .Values.service.type "NodePort") (ne .Values.service.nodePorts.pulsarssl "") }}
+        nodePort: {{ .Values.service.nodePorts.pulsarssl }}
+      {{- else}}
+        nodePort: null
+      {{- end}}
     {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
