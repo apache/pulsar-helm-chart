@@ -189,8 +189,8 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
-          - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
-            mountPath: /pulsar/data/bookkeeper
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
+          mountPath: /pulsar/data/bookkeeper
         {{- else }}
           {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
             {{- $fullname := include "pulsar.fullname" . -}}
