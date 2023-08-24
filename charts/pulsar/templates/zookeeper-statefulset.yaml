@@ -100,9 +100,7 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}
-    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
-    {{- end }}
       {{- if .Values.zookeeper.securityContext }}
       securityContext:
 {{ toYaml .Values.zookeeper.securityContext | indent 8 }}
