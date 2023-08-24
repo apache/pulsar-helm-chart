@@ -114,6 +114,9 @@ spec:
         args:
           - >-
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
+            echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
+            echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
+            export BOOKIE_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
             until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
@@ -138,6 +141,9 @@ spec:
           - >
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             bin/apply-config-from-env.py conf/bookkeeper.conf;
+            echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
+            echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
+            export BOOKIE_MEM="-Xmx128M";
             until bin/bookkeeper shell whatisinstanceid; do
               echo "bookkeeper cluster is not initialized yet. backoff for 3 seconds ...";
               sleep 3;
