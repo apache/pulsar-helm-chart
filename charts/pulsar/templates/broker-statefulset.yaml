@@ -58,6 +58,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.broker.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.broker.priorityClassName }}
+      priorityClassName: {{ .Values.broker.priorityClassName }}
+    {{- end }}
     {{- if .Values.broker.tolerations }}
       tolerations:
 {{ toYaml .Values.broker.tolerations | indent 8 }}

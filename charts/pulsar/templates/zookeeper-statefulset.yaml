@@ -54,6 +54,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.zookeeper.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.zookeeper.priorityClassName }}
+      priorityClassName: {{ .Values.zookeeper.priorityClassName }}
+    {{- end }}
     {{- if .Values.zookeeper.tolerations }}
       tolerations:
 {{ toYaml .Values.zookeeper.tolerations | indent 8 }}
