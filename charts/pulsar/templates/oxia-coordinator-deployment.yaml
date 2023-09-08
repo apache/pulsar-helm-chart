@@ -56,7 +56,10 @@ spec:
     {{- if .Values.oxia.coordinator.tolerations }}
       tolerations:
 {{ toYaml .Values.oxia.coordinator.tolerations | indent 8 }}
-    {{- end }}    
+    {{- end }}
+    {{- if .Values.oxia.coordinator.priorityClassName }}
+      priorityClassName: {{ .Values.oxia.coordinator.priorityClassName }}
+    {{- end }}
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:
         - command:

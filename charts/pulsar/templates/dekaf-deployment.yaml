@@ -53,6 +53,10 @@ spec:
 {{ toYaml .Values.dekaf.deployment.tolerations | default list | indent 8 }}
       {{- end }}
 
+      {{- if ((.Values.dekaf).deployment).priorityClassName }}
+      priorityClassName: {{ .Values.dekaf.deployment.priorityClassName }}
+      {{- end }}
+
       containers:
         - name: dekaf
           image: "{{ .Values.images.dekaf.repository }}:{{ .Values.images.dekaf.tag }}"
