@@ -45,6 +45,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.dashboard.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.dashboard.priorityClassName }}
+      priorityClassName: {{ .Values.dashboard.priorityClassName }}
+    {{- end }}
     {{- if .Values.dashboard.tolerations }}
       tolerations:
 {{ toYaml .Values.dashboard.tolerations | indent 8 }}

@@ -300,6 +300,7 @@ zookeeper:
     leaderElection: 3888
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   probe:
     liveness:
       enabled: true
@@ -440,6 +441,7 @@ bookkeeper:
     statestore: 4181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   probe:
     liveness:
       enabled: true
@@ -616,6 +618,7 @@ autorecovery:
     http: 8000
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   affinity:
     anti_affinity: true
     anti_affinity_topology_key: kubernetes.io/hostname
@@ -698,6 +701,7 @@ broker:
     pulsarssl: 6651
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   probe:
     liveness:
       enabled: true
@@ -827,6 +831,7 @@ proxy:
   restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   probe:
     liveness:
       enabled: true
@@ -948,6 +953,7 @@ dashboard:
   replicaCount: 1
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   annotations: {}
   tolerations: []
   gracePeriod: 0
@@ -994,6 +1000,7 @@ toolset:
   restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1053,6 +1060,7 @@ pulsar_manager:
   restartPodsOnConfigMapChange: false
   # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
+  # priorityClassName: high-priority-nonpreempting
   annotations: {}
   tolerations: []
   gracePeriod: 30

@@ -53,6 +53,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.toolset.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.toolset.priorityClassName }}
+      priorityClassName: {{ .Values.toolset.priorityClassName }}
+    {{- end }}
     {{- if .Values.toolset.tolerations }}
       tolerations:
 {{ toYaml .Values.toolset.tolerations | indent 8 }}
