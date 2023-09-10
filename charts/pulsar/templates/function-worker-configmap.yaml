@@ -29,4 +29,6 @@ metadata:
     component: {{ .Values.functions.component }}
 data:
   pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+{{ toYaml .Values.functions | indent 2 }}
+
 {{- end }}
