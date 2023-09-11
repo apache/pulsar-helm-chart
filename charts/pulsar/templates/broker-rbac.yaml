@@ -18,6 +18,13 @@
 #
 
 {{- if or .Values.components.functions .Values.extra.functionsAsPods }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+---
+
 apiVersion: rbac.authorization.k8s.io/v1
 {{- if .Values.functions.rbac.limit_to_namespace }}
 kind: Role
@@ -42,13 +49,6 @@ rules:
   - statefulsets
   verbs:
   - '*'
----
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
