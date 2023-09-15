@@ -33,6 +33,10 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   minReplicas: {{ .Values.broker.autoscaling.minReplicas }}
+  {{- with .Values.broker.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   scaleTargetRef:
     apiVersion: apps/v1
     kind: StatefulSet

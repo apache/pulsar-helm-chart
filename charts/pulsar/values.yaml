@@ -684,6 +684,7 @@ broker:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
+    behavior: ~
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -818,6 +819,7 @@ proxy:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
+    behavior: ~
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true

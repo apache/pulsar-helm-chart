@@ -33,6 +33,10 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   minReplicas: {{ .Values.proxy.autoscaling.minReplicas }}
+  {{- with .Values.proxy.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   scaleTargetRef:
     apiVersion: apps/v1
     kind: StatefulSet
