@@ -301,6 +301,7 @@ zookeeper:
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   # priorityClassName: high-priority-nonpreempting
+  minReadySeconds: 60
   probe:
     liveness:
       enabled: true
@@ -441,6 +442,7 @@ bookkeeper:
     statestore: 4181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  minReadySeconds: 60
   # priorityClassName: high-priority-nonpreempting
   probe:
     liveness:
@@ -702,6 +704,7 @@ broker:
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   # priorityClassName: high-priority-nonpreempting
+  minReadySeconds: 60
   probe:
     liveness:
       enabled: true

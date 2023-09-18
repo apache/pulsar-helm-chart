@@ -36,6 +36,7 @@ spec:
   updateStrategy:
 {{ toYaml .Values.bookkeeper.updateStrategy | indent 4 }}
   podManagementPolicy: {{ .Values.bookkeeper.podManagementPolicy }}
+  minReadySeconds: {{ .Values.bookkeeper.minReadySeconds }}
   template:
     metadata:
       labels:
