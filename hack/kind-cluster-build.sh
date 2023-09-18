@@ -85,7 +85,7 @@ clusterName=${clusterName:-pulsar-dev}
 nodeNum=${nodeNum:-6}
 # k8sVersion must be compatible with the used kind version
 # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0 for the list of supported k8s versions for kind 0.20.0
-k8sVersion=${k8sVersion:-v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093}
+k8sVersion=${k8sVersion:-v1.27.2@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72}
 volumeNum=${volumeNum:-9}
 
 echo "clusterName: ${clusterName}"

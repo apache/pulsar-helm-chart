@@ -38,6 +38,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
+  minReadySeconds: {{.Values.broker.minReadySeconds }}
   template:
     metadata:
       labels:

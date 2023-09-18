@@ -37,6 +37,7 @@ spec:
   updateStrategy:
 {{ toYaml .Values.zookeeper.updateStrategy | indent 4 }}
   podManagementPolicy: {{ .Values.zookeeper.podManagementPolicy }}
+  minReadySeconds: {{ .Values.zookeeper.minReadySeconds }}
   template:
     metadata:
       labels:
