@@ -126,6 +126,8 @@ components:
   toolset: true
   # pulsar manager
   pulsar_manager: false
+  # pulsar sql
+  sql_worker: false
 
 ## which extra components to deploy (Deprecated)
 extra:
@@ -153,37 +155,41 @@ images:
   zookeeper:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
-    tag:
+    tag: "3.1.0"
     pullPolicy: IfNotPresent
   bookie:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
-    tag:
+    tag: "3.1.0"
     pullPolicy: IfNotPresent
   autorecovery:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
-    tag:
+    tag: "3.1.0"
     pullPolicy: IfNotPresent
   broker:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
-    tag:
+    tag: "3.1.0"
     pullPolicy: IfNotPresent
   proxy:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
-    tag:
+    tag: "3.1.0"
     pullPolicy: IfNotPresent
   functions:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
-    tag:
+    tag: "3.1.0"
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
-    tag: v0.3.0
+    tag: v0.4.0
     pullPolicy: IfNotPresent
     hasCommand: false
+  trino:
+    repository: streamnative/sn-platform
+    tag: "3.1.0"
+    pullPolicy: IfNotPresent
 
 ## TLS
 ## templates/tls-certs.yaml
@@ -226,6 +232,17 @@ tls:
   # settings for generating certs for toolset
   toolset:
     cert_name: tls-toolset
+  trino:
+    enabled: false
+    # name of chart generated certificate
+    cert_name: tls-trino
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    trustCertsEnabled: false
+    # use "changeit" as password if not set passwordSecretRef
+    # passwordSecretRef:
+    #   key: password
+    #   name: ""
 
 # Enable or disable broker authentication and authorization.
 auth:
@@ -1108,3 +1125,177 @@ job:
   ttl:
     enabled: false
     secondsAfterFinished: 3600
+
+
+# Deploy pulsar sql
+trino:
+  security:
+    authentication:
+      password:
+        enabled: false
+        # a K8S secret that stores the password file
+        #
+        # a) generate the password file `password.db`:
+        #    $ touch password.db
+        #    $ htpasswd -B -C 10 password.db <username>
+        #
+        # b) generate the secret: `kubectl -n pulsar create secret generic [PASSWORD FILE SECRET NAME] --from-file=password=password.db`
+        #    example: kubectl -n pulsar create secret generic prod-pulsar-trino-password --from-file=password=password.db
+        passwordFileName: "password.db"
+        passwordFileSecret: '[PASSWORD FILE SECRET NAME]'
+        passwordFileSecretKey: 'password'
+      jwt:
+        enabled: false
+        publicKeyFileName: "public.key"
+        publicKeyConfigMapName: '[PUBLIC KEY CM NAME]'
+        # the public key stored in the configmap should be persisted in PEM format.
+        # trino prefers the PEM format. If you generate the public key using `pulsar tokens` CLI,
+        # you can use `openssl rsa -pubin -in <public key file> -inform DER -pubout -out <public key file in PEM format> -outform PEM`
+        # to convert the public key file to a public key file in PEM format.
+        publicKeyConfigMapKey: 'public.key'
+      tls:
+        enabled: false
+    rules: >
+      {
+        "rules": [
+        ]
+      }
+  coordinator:
+    component: coordinator
+    replicaCount: 1
+    tolerations: []
+    affinity:
+      anti_affinity: true
+      zone_anti_affinity: true
+      # Set the anti affinity type. Valid values:
+      # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+      # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+      type: preferredDuringSchedulingIgnoredDuringExecution
+    labels: {}
+    annotations: {}
+    gracePeriod: 10
+    ports:
+      http: 8081
+      https: 8443
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: 2
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
+    probe:
+      liveness:
+        enabled: true
+        failureThreshold: 10
+        initialDelaySeconds: 10
+        periodSeconds: 30
+        path: "/v1/status"
+      readiness:
+        enabled: true
+        failureThreshold: 10
+        initialDelaySeconds: 10
+        periodSeconds: 30
+        path: "/v1/status"
+      startup:
+        enabled: false
+        failureThreshold: 30
+        initialDelaySeconds: 10
+        periodSeconds: 30
+    config:
+      http:
+        port: 8081
+      query:
+        maxMemory: "1GB"
+        maxMemoryPerNode: "128MB"
+        maxTotalMemoryPerNode: "256MB"
+      # Add custom configs to config.properties
+      custom:
+        # To add custom config `sql.forced-session-time-zone=America/New_York`
+        # sql.forced-session-time-zone: America/New_York
+    jvm:
+      memory: 2G
+    log:
+      trino:
+        level: DEBUG
+  worker:
+    service:
+      spec:
+        type: ClusterIP
+        clusterIP: None
+    component: worker
+    replicaCount: 2
+    tolerations: []
+    affinity:
+      anti_affinity: true
+      zone_anti_affinity: true
+      # Set the anti affinity type. Valid values:
+      # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+      # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+      type: preferredDuringSchedulingIgnoredDuringExecution
+    labels: {}
+    annotations: {}
+    gracePeriod: 10
+    ports:
+      http: 8081
+      https: 8443
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: 2
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
+    probe:
+      liveness:
+        enabled: true
+        failureThreshold: 10
+        initialDelaySeconds: 10
+        periodSeconds: 30
+      readiness:
+        enabled: true
+        failureThreshold: 10
+        initialDelaySeconds: 10
+        periodSeconds: 30
+      startup:
+        enabled: false
+        failureThreshold: 30
+        initialDelaySeconds: 10
+        periodSeconds: 30
+    config:
+      query:
+        maxMemory: "1GB"
+        maxMemoryPerNode: "128MB"
+        maxTotalMemoryPerNode: "256MB"
+      # Add custom configs to config.properties
+      custom:
+        # To add custom config `sql.forced-session-time-zone=America/New_York`
+        # sql.forced-session-time-zone: America/New_York
+    jvm:
+      memory: 2G
+    log:
+      trino:
+        level: DEBUG
+  node:
+    environment: production
+  read_offload:
+    enabled: false
+  catalog:
+    pulsar:
+      maxEntryReadBatchSize: "100"
+      targetNumSplits: "16"
+      maxSplitMessageQueueSize: "10000"
+      maxSplitEntryQueueSize: "1000"
+      namespaceDelimiterRewriteEnable: "true"
+      rewriteNamespaceDelimiter: "/"
+      bookkeeperThrottleValue: "0"
+      managedLedgerCacheSizeMB: "0"
+      bookkeeperNumIOThreads: "8"
+      bookkeeperNumWorkerThreads: "8"
+      mlNumSchedulerThreads: "8"
+  service:
+    spec:
+      type: ClusterIP
+      clusterIP: None
+  exporter:
+    enabled: false
+    whitelist: []
+    rules: []

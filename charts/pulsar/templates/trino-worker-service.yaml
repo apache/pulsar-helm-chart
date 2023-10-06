@@ -16,29 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-apiVersion: v2
-appVersion: "2.10.4"
-description: Apache Pulsar Helm chart for Kubernetes
-name: pulsar
-version: 3.1.0
-sources:
-- https://eaba.github.io/pulsar-helm-chart/
-icon: https://pulsar.apache.org/img/pulsar.svg
-maintainers:
-- name: The Apache Pulsar Team
-  email: dev@pulsar.apache.org
-- name: eaba
-dependencies:
-  - name: kube-prometheus-stack
-    version: 41.x.x
-    repository: https://prometheus-community.github.io/helm-charts
-    condition: kube-prometheus-stack.enabled
-  - name: cert-manager
-    version: v1.8.x
-    repository: https://charts.jetstack.io
-    condition: cert-manager.enabled
-  - name: keycloak
-    version: 9.x.x
-    repository: https://charts.bitnami.com/bitnami
-    condition: keycloak.enabled
+{{- if .Values.components.sql_worker }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "trino.worker.service" . }}
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.trino.worker.component }}
+spec:
+{{- with .Values.trino.worker.service.spec }}
+{{ toYaml . | indent 2 }}
+{{- end }}
+  ports:
+    - port: {{ .Values.trino.worker.ports.http }}
+      targetPort: {{ .Values.trino.worker.ports.http }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ template "pulsar.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Values.trino.worker.component }}
+{{- end }}
