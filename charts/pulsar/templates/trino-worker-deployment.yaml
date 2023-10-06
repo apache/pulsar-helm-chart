@@ -1,0 +1,251 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.components.sql_worker }}
+{{- if gt (int .Values.trino.worker.replicaCount) 0 }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "trino.worker" . }}
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.trino.worker.component }}
+{{- with .Values.trino.worker.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  replicas: {{ .Values.trino.worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.trino.worker.component }}
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.trino.worker.component }}
+{{- with .Values.trino.worker.labels }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.trino.exporter.enabled }}"
+        prometheus.io/port: "5556"        
+        {{- include "pulsar.istio.pod.annotations" . | nindent 8 }}
+        checksum/config: {{ include (print $.Template.BasePath "/trino/trino-worker-configmap.yaml") . | sha256sum }}
+        {{- if .Values.trino.exporter.enabled }}
+        checksum/exporter-config: {{ include (print $.Template.BasePath "/trino/trino-jmx-exporter-configmap.yaml") . | sha256sum }}
+        {{- end }}
+{{- with .Values.trino.worker.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+      {{- with .Values.trino.worker.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.trino.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      affinity:
+        {{- include "pulsar.antiAffinityRules" (dict "Values" .Values "thisAffinity" .Values.trino.worker.affinity "Component" .Values.trino.worker.component "Release" .Release "Chart" .Chart) | indent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.trino.worker.gracePeriod }}
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml .Values.global.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}-worker
+          {{- include "trino.worker.image" . | nindent 10 }}
+          {{- if .Values.trino.worker.probe.liveness.enabled }}
+          livenessProbe:
+            {{- if .Values.trino.security.authentication.tls.enabled }}
+            tcpSocket:
+              port: {{ .Values.trino.coordinator.ports.https }}
+            {{- else }}
+            exec:
+              command:
+                - /bin/bash
+                - /trino/health_check.sh
+            {{- end }}
+            initialDelaySeconds: {{ .Values.trino.worker.probe.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.trino.worker.probe.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.trino.worker.probe.liveness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.trino.worker.probe.readiness.enabled }}
+          readinessProbe:
+            {{- if .Values.trino.security.authentication.tls.enabled }}
+            tcpSocket:
+              port: {{ .Values.trino.coordinator.ports.https }}
+            {{- else }}
+            exec:
+              command:
+                - /bin/bash
+                - /trino/health_check.sh
+            {{- end }}
+            initialDelaySeconds: {{ .Values.trino.worker.probe.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.trino.worker.probe.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.trino.worker.probe.readiness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.trino.worker.resources }}
+          resources:
+{{ toYaml .Values.trino.worker.resources | indent 12 }}
+          {{- end }}
+          command: ["sh", "-c"]
+          args:
+            - >-
+              cp {{ template "pulsar.home" . }}/conf/trino/node.properties.template {{ template "pulsar.home" . }}/conf/trino/node.properties;
+              echo "node.id=${HOSTNAME}" >> {{ template "pulsar.home" . }}/conf/trino/node.properties ;
+              echo "node.internal-address=$(echo ${POD_IP} | tr "." "-").{{ template "trino.worker.service" . }}.{{ template "pulsar.namespace" . }}.svc.cluster.local" >> {{ template "pulsar.home" . }}/conf/trino/node.properties ;
+              ln -s {{ template "pulsar.home" . }}/conf/trino {{ template "pulsar.home" . }}/lib/trino/etc;
+              {{- if .Values.tls.trino.enabled }}
+              set -ex;
+              mkdir -p /pulsar/jks;
+              openssl pkcs12 -export -in /pulsar/certs/trino/tls.crt -inkey /pulsar/certs/trino/tls.key -out /pulsar/jks/server-cert.p12 -name trino-coordinator -passout "pass:{{ template "pulsar.trino.jks.password" . }}";
+              keytool -importkeystore -srckeystore /pulsar/jks/server-cert.p12 -srcstoretype PKCS12 -srcstorepass {{ template "pulsar.trino.jks.password" . }} -alias trino-coordinator -destkeystore /pulsar/jks/trino.keystore.jks -deststorepass {{ template "pulsar.trino.jks.password" . }};
+              {{- if .Values.tls.trino.trustCertsEnabled }}
+              echo "y" | keytool -import -alias selfsigned -file /pulsar/certs/trino/ca.crt -keystore /pulsar/jks/trust.jks -trustcacerts -storepass {{ template "pulsar.trino.jks.password" . }}; 
+              {{- end }}
+              {{- end }}
+              bin/pulsar sql-worker run \
+                --etc-dir={{ template "pulsar.home" . }}/conf/trino \
+                --data-dir={{ template "pulsar.home" . }}/data;
+          env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          {{- if and .Values.broker.offload.s3.enabled .Values.broker.offload.s3.secret }}
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.broker.offload.s3.secret }}
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.broker.offload.s3.secret }}
+                key: AWS_SECRET_ACCESS_KEY
+          {{- end }}
+          volumeMounts:
+            - mountPath: {{ template "pulsar.home" . }}/conf/trino/node.properties.template
+              name: config-volume
+              subPath: node.properties
+            - mountPath: {{ template "pulsar.home" . }}/conf/trino/log.properties
+              name: config-volume
+              subPath: log.properties
+            - mountPath: {{ template "pulsar.home" . }}/conf/trino/jvm.config
+              name: config-volume
+              subPath: jvm.config
+            - mountPath: {{ template "pulsar.home" . }}/conf/trino/config.properties
+              name: config-volume
+              subPath: config.properties
+            - mountPath: {{ template "pulsar.home" . }}/conf/trino/catalog/pulsar.properties
+              name: config-volume
+              subPath: pulsar.properties
+            - mountPath: /trino/health_check.sh
+              name: config-volume
+              subPath: health_check.sh
+            {{- if .Values.auth.authentication.enabled }}
+            {{- if eq .Values.auth.authentication.provider "jwt" }}
+            - mountPath: "/pulsar/tokens"
+              name: client-token
+              readOnly: true
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
+            - mountPath: "/pulsar/certs/ca"
+              name: ca
+              readOnly: true
+            {{- end}}
+            {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.zookeeper.enabled .Values.tls.bookie.enabled)) }}
+            - name: trino-certs
+              mountPath: "/pulsar/certs/trino"
+              readOnly: true
+            {{- end}}
+{{- with .Values.trino.extraVolumeMounts }}
+{{ toYaml . | indent 12 }}
+{{- end }}                        
+          ports:
+            - name: http
+              containerPort: {{ .Values.trino.worker.ports.http }}
+              protocol: TCP
+        {{- if .Values.trino.exporter.enabled }}
+        - name: jmx-exporter
+          image: "{{ .Values.images.trino.exporter.repository }}:{{ .Values.images.trino.exporter.tag }}"
+          imagePullPolicy: {{ .Values.images.trino.exporter.pullPolicy }}
+          command:
+            - java
+            - -jar
+            - jmx_prometheus_httpserver.jar
+            - "0.0.0.0:5556"
+            - /jmx_config/jmx_exporter.yaml
+          ports:
+          - containerPort: 5556
+            protocol: TCP
+          volumeMounts:
+            - mountPath: /jmx_config/jmx_exporter.yaml
+              name: jmx-exporter-config-volume
+              subPath: jmx_exporter.yaml
+        {{- end }}
+      volumes:
+        {{- if .Values.auth.authentication.enabled }}
+        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        - name: client-token
+          secret:
+            secretName: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.client }}"
+            items:
+              - key: TOKEN
+                path: client/token
+        {{- end}}
+        {{- end}}
+        {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
+        - name: ca
+          secret:
+            secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
+            items:
+              - key: ca.crt
+                path: ca.crt
+        {{- end}}
+        {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.zookeeper.enabled .Values.tls.bookie.enabled)) }}
+        - name: trino-certs
+          secret:
+            secretName: "{{ template "pulsar.trino.tls.secret.name" . }}"
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+              {{- if .Values.tls.trino.trustCertsEnabled }}
+              - key: ca.crt
+                path: ca.crt
+              {{- end }}
+        {{- end }}
+        - name: config-volume
+          configMap:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.trino.worker.component }}"
+        {{- if .Values.trino.exporter.enabled }}
+        - name: jmx-exporter-config-volume
+          configMap:
+            name: "{{ template "pulsar.fullname" . }}-trino-jmx-exporter"
+        {{- end }}
+{{- with .Values.trino.extraVolumes }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end }}
+{{- end }}

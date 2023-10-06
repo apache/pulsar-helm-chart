@@ -1,0 +1,67 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- if and .Values.components.sql_worker (and .Values.ingress.trino.enabled (not .Values.istio.enabled)) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "trino.service" . }}-ingress"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.trino.coordinator.component }}
+  annotations:
+  {{- if .Values.external_dns.enabled }}
+    {{- if .Values.domain.enabled }}
+    external-dns.alpha.kubernetes.io/hostname: {{ template "trino.service_domain" . }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.ingress.trino.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.ingress.trino.type }}
+  ports:
+    {{- if .Values.ingress.trino.tls.enabled }}
+    - name: https
+      port: {{ .Values.ingress.trino.ports.https }}
+      protocol: TCP
+{{- if .Values.tls.trino.enabled }}
+      targetPort: {{ .Values.trino.coordinator.ports.https }}
+{{- else }}
+      targetPort: {{ .Values.trino.coordinator.ports.http }}
+{{- end }}
+    {{- else }}
+    - name: http
+      port: {{ .Values.ingress.trino.ports.http }}
+      protocol: TCP
+{{- if .Values.tls.trino.enabled }}
+      targetPort: {{ .Values.trino.coordinator.ports.https }}
+{{- else }}
+      targetPort: {{ .Values.trino.coordinator.ports.http }}
+{{- end }}
+    {{- end }}
+  selector:
+    app: {{ template "pulsar.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Values.trino.coordinator.component }}
+  {{- with .Values.ingress.trino.extraSpec }}
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
