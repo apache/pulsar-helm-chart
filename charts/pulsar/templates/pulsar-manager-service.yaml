@@ -30,6 +30,12 @@ metadata:
 {{ toYaml .Values.pulsar_manager.service.annotations | indent 4 }}
 spec:
   type: {{ .Values.pulsar_manager.service.type }}
+  {{- if .Values.pulsar_manager.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.pulsar_manager.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if .Values.pulsar_manager.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
   ports:
     - name: server
       port: {{ .Values.pulsar_manager.service.port }}
