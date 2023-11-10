@@ -65,7 +65,6 @@ data:
     ensureFileNotEmpty ${keyFile}
     ensureFileNotEmpty ${caFile}
     
-#    PASSWORD=$(head /dev/urandom | base64 | head -c 24)
     PASSWORD=badger123snake
 
     openssl pkcs12 \
