@@ -21,7 +21,7 @@ under the License.
 Define the pulsar zookeeper
 */}}
 {{- define "pulsar.zookeeper.service" -}}
-{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}
+{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}
 {{- end }}
 
 {{/*
