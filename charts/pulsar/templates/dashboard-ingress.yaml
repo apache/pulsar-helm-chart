@@ -18,7 +18,7 @@
 #
 
 {{- if .Values.extra.dashboard }}
-{{- if .Values.dashboard.ingress.enabled }}
+{{- if and .Values.dashboard.ingress.enabled .Values.dashboard.ingress.hostname }}
 {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
 {{- else }}

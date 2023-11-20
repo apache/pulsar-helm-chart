@@ -1,0 +1,100 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if and .Values.dashboard.ingress.enabled .Values.dashboard.ingress.hosts }}
+{{- $fullname := include "pulsar.fullname" . -}}
+
+{{- /* To assist in configuring TLS this Ingress provides the ability to dynamically */ -}}
+{{- /* configure the TLS spec based off of host configurations should a TLS spec not be provided. */ -}}
+
+{{- $tlsData := dict -}}
+
+{{- /* Build a TLS secret to host lookup */ -}}
+{{- range $i, $host := .Values.dashboard.ingress.hosts -}}
+  {{- $hostTLS := $host.tls | default dict -}}
+  {{- $hostTLSEnabled := $hostTLS.enabled | default true -}}
+  {{- if $hostTLSEnabled }}
+    {{- /* Generate secret name */ -}}
+    {{- $hostTLSSecretName := print "pulsar-" $.Values.dashboard.component "-" $hostTLS.secretName "-tls" -}}
+    {{- /* Default to an empty list */ -}}
+    {{- $tlsSecretHosts := list -}}
+    {{- /* Get the host list if we have seen the secret before */ -}}
+    {{- if hasKey $tlsData $hostTLSSecretName }}
+      {{- $tlsSecretHosts = get $tlsData $hostTLSSecretName -}}
+    {{- end }}
+    {{- /* Add the host to the list */ -}}
+    {{- $tlsSecretHosts = append $tlsSecretHosts $host.host -}}
+    {{- /* Update the list of hosts in the dict */ -}}
+    {{- $tlsData = set $tlsData $hostTLSSecretName $tlsSecretHosts -}}
+  {{- end }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+{{- /* global annotations */ -}}
+{{- with .Values.dashboard.ingress.annotations }}
+{{- toYaml . | nindent 4 }}
+{{- end }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.dashboard.component }}
+  name: "{{ $fullname }}-{{ .Values.dashboard.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+spec:
+  {{- with .Values.dashboard.ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    {{- /* Iterate over the list of hosts */ -}}
+    {{- range $i, $host := .Values.dashboard.ingress.hosts }}
+    {{- $excludePaths := ($host.excludePaths | default list) }}
+    {{- $includePaths := ($host.includePaths | default list) }}
+    - host: {{ $host.host }}
+      http:
+        paths:
+        {{- /* Iterate over the list of paths */ -}}
+        {{- range $pathName, $path := $.Values.dashboard.ingress.paths -}}
+        {{- /* A path is included explicitly if the includePaths is empty or the is path is present within the includedPaths */ -}}
+        {{- $isIncluded := or (empty $host.includePaths) (has $pathName $host.includePaths) }}
+        {{- /* A path is excluded explicitly if the path is present within the excludedPaths  */ -}}
+        {{- $isExcluded := or (not (empty $host.excludePaths)) (has $pathName $host.excludePaths) }}
+        {{- /* If the path is included and not excluded create an ingress object specifically for the path */ -}}
+        {{- if and $isIncluded (not $isExcluded) }}
+          - path: {{ $path.path }}
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: "{{ $fullname }}-{{ $.Values.dashboard.component }}"
+                port:
+                  number: {{ $.Values.dashboard.ingress.port }}
+        {{- end }}
+        {{- end }}
+  {{- end }}
+  {{- if .Values.dashboard.ingress.tls.enabled }}
+  tls:
+    {{- range $tlsSecretName, $tlsHosts := $tlsData }}
+    - hosts:
+      {{- range $tlsHosts }}
+      - {{ . }}
+      {{- end }}
+      secretName: {{ $tlsSecretName }}
+    {{- end }}
+  {{- end }}
+{{- end }}
