@@ -29,8 +29,7 @@
   {{- $hostTLS := $host.tls | default dict -}}
   {{- $hostTLSEnabled := $hostTLS.enabled | default true -}}
   {{- if $hostTLSEnabled }}
-    {{- /* Generate secret name */ -}}
-    {{- $hostTLSSecretName := print "pulsar-" $.Values.pulsar_manager.component "-" $hostTLS.secretName "-tls" -}}
+    {{- $hostTLSSecretName := $hostTLS.secretName -}}
     {{- /* Default to an empty list */ -}}
     {{- $tlsSecretHosts := list -}}
     {{- /* Get the host list if we have seen the secret before */ -}}
@@ -87,7 +86,7 @@ spec:
         {{- end }}
         {{- end }}
   {{- end }}
-  {{- if .Values.tls.pulsar_manager.enabled }}
+  {{- if .Values.pulsar_manager.ingress.tls.enabled }}
   tls:
     {{- range $tlsSecretName, $tlsHosts := $tlsData }}
     - hosts:
