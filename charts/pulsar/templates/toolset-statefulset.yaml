@@ -45,7 +45,9 @@ spec:
         {{- if .Values.toolset.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/toolset-configmap.yaml") . | sha256sum }}
         {{- end }}
-{{ toYaml .Values.toolset.annotations | indent 8 }}
+{{- with .Values.toolset.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
     {{- if .Values.toolset.nodeSelector }}
       nodeSelector:
@@ -61,7 +63,7 @@ spec:
     {{- end}}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
       {{- if .Values.toolset.resources }}
         resources:

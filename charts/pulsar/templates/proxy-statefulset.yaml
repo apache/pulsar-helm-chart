@@ -28,7 +28,9 @@ metadata:
     component: {{ .Values.proxy.component }}
 spec:
   serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+  {{- if not .Values.proxy.autoscaling.enabled }}
   replicas: {{ .Values.proxy.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
@@ -78,7 +80,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.proxy.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.proxy.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.proxy.affinity.type }}:
             - weight: 100
@@ -97,7 +99,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.proxy.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.proxy.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
@@ -108,11 +110,12 @@ spec:
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
-        image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
         command: ["sh", "-c"]
         args:
           - >-
+            export PULSAR_MEM="-Xmx128M";
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
@@ -125,7 +128,7 @@ spec:
       # This init container will wait for at least one broker to be ready before
       # deploying the proxy
       - name: wait-broker-ready
-        image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
         command: ["sh", "-c"]
         args:
@@ -139,13 +142,13 @@ spec:
             done;
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
-        image: "{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
         {{- if .Values.proxy.probe.liveness.enabled }}
         livenessProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.containerPorts.http }}
           initialDelaySeconds: {{ .Values.proxy.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.liveness.periodSeconds }}
           timeoutSeconds: {{ .Values.proxy.probe.liveness.timeoutSeconds }}
@@ -155,7 +158,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.containerPorts.http }}
           initialDelaySeconds: {{ .Values.proxy.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.readiness.periodSeconds }}
           timeoutSeconds: {{ .Values.proxy.probe.readiness.timeoutSeconds }}
@@ -165,7 +168,7 @@ spec:
         startupProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.containerPorts.http }}
           initialDelaySeconds: {{ .Values.proxy.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.startup.periodSeconds }}
           timeoutSeconds: {{ .Values.proxy.probe.startup.timeoutSeconds }}
@@ -186,22 +189,26 @@ spec:
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar proxy
         ports:
         # prometheus needs to access /metrics endpoint
-        - name: http
-          containerPort: {{ .Values.proxy.ports.http }}
+        - name: sts-http
+          containerPort: {{ .Values.proxy.ports.containerPorts.http }}
         {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
-        - name: "{{ .Values.tcpPrefix }}pulsar"
+        - name: "sts-{{ .Values.tcpPrefix }}pulsar"
           containerPort: {{ .Values.proxy.ports.pulsar }}
         {{- end }}
         {{- if and (.Values.tls.enabled) (.Values.tls.proxy.enabled) }}
-        - name: https
-          containerPort: {{ .Values.proxy.ports.https }}
-        - name: "{{ .Values.tlsPrefix }}pulsarssl"
+        - name: sts-https
+          containerPort: {{ .Values.proxy.ports.containerPorts.https }}
+        - name: "sts-{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.proxy.ports.pulsarssl }}
         {{- end }}
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
+{{- if .Values.proxy.extreEnvs }}
+        env:
+{{ toYaml .Values.proxy.extreEnvs | indent 8 }}
+{{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"

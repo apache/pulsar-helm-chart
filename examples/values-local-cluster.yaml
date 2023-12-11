@@ -28,10 +28,38 @@ components:
   pulsar_manager: true
 
 ## disable monitoring stack
-monitoring:
-  # monitoring - prometheus
-  prometheus: false
-  # monitoring - grafana
-  grafana: false
-  # monitoring - node_exporter
-  node_exporter: false
+kube-prometheus-stack:
+  enabled: false
+  prometheusOperator:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus:
+    enabled: false
+
+zookeeper:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+bookkeeper:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+autorecovery:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+broker:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
+proxy:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false

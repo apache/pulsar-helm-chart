@@ -17,12 +17,16 @@
 # under the License.
 #
 
-monitoring:
-  prometheus: false
-  grafana: false
-  node_exporter: false
-  alert_manager: false
-
+kube-prometheus-stack:
+  enabled: false
+  prometheusOperator:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus:
+    enabled: false
 
 # disabled AntiAffinity
 affinity:
@@ -35,9 +39,15 @@ components:
 
 zookeeper:
   replicaCount: 1
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
 
 bookkeeper:
   replicaCount: 3
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
   configData:
     diskUsageThreshold: "0.999"
     diskUsageWarnThreshold: "0.999"
@@ -46,6 +56,9 @@ bookkeeper:
 
 broker:
   replicaCount: 1
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
   configData:
     ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
     ## without persistence
@@ -55,8 +68,16 @@ broker:
     managedLedgerDefaultWriteQuorum: "1"
     managedLedgerDefaultAckQuorum: "1"
 
+autorecovery:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
 proxy:
   replicaCount: 1
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
 
 toolset:
   useProxy: false
@@ -69,7 +90,8 @@ tls:
   bookie:
     enabled: true
 
-# disable cert manager
+# enable cert-manager
 certs:
   internal_issuer:
-    enabled: false
+    enabled: true
+    type: selfsigning

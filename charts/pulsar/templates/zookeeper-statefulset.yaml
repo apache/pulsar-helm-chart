@@ -46,7 +46,9 @@ spec:
         {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
         {{- end }}
-{{ toYaml .Values.zookeeper.annotations | indent 8 }}
+{{- with .Values.zookeeper.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
     {{- if .Values.zookeeper.nodeSelector }}
       nodeSelector:
@@ -75,7 +77,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.zookeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.zookeeper.affinity.type }}:
             - weight: 100
@@ -94,16 +96,20 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.zookeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}
     {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
     {{- end }}
+      {{- if .Values.zookeeper.securityContext }}
+      securityContext:
+{{ toYaml .Values.zookeeper.securityContext | indent 8 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
-        image: "{{ .Values.images.zookeeper.repository }}:{{ .Values.images.zookeeper.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.zookeeper "root" .) }}"
         imagePullPolicy: {{ .Values.images.zookeeper.pullPolicy }}
       {{- if .Values.zookeeper.resources }}
         resources:
@@ -134,10 +140,19 @@ spec:
           containerPort: {{ .Values.zookeeper.ports.clientTls }}
         {{- end }}
         env:
-        - name: ZOOKEEPER_SERVERS
-          value:
-            {{- $global := . }}
-            {{ range $i, $e := until (.Values.zookeeper.replicaCount | int) }}{{ if ne $i 0 }},{{ end }}{{ template "pulsar.fullname" $global }}-{{ $global.Values.zookeeper.component }}-{{ printf "%d" $i }}{{ end }}
+         - name: ZOOKEEPER_SERVERS
+        {{- if .Values.zookeeper.externalZookeeperServerList }}
+           value: {{ .Values.zookeeper.externalZookeeperServerList }}
+        {{- else }}
+           {{- $global := . }}
+           value: {{ range $i, $e := until (.Values.zookeeper.replicaCount | int) }}{{ if ne $i 0 }},{{ end }}{{ template "pulsar.fullname" $global }}-{{ $global.Values.zookeeper.component }}-{{ printf "%d" $i }}{{ end }}
+        {{- end }}
+         - name: EXTERNAL_PROVIDED_SERVERS
+        {{- if .Values.zookeeper.externalZookeeperServerList }}
+           value: "true"
+        {{- else }}
+           value: "false"
+        {{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
@@ -238,6 +253,7 @@ spec:
           name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
           defaultMode: 0755
       {{- end}}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence }}
   volumeClaimTemplates:
   - metadata:
@@ -253,6 +269,10 @@ spec:
       storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
     {{- else if and .Values.volumes.local_storage .Values.zookeeper.volumes.data.local_storage }}
       storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.zookeeper.volumes.data.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
 {{- end }}
 {{- end }}

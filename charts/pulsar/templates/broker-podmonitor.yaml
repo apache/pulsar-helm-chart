@@ -22,7 +22,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: {{ template "pulsar.name" . }}-broker
+  name: {{ template "pulsar.fullname" . }}-broker
   labels:
     app: {{ template "pulsar.name" . }}
     chart: {{ template "pulsar.chart" . }}

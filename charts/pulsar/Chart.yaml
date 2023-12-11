@@ -18,14 +18,20 @@
 #
 
 apiVersion: v2
-appVersion: "2.7.4"
+appVersion: "2.10.4"
 description: Apache Pulsar Helm chart for Kubernetes
 name: pulsar
-version: 2.7.13
+version: 3.0.0
 home: https://pulsar.apache.org
 sources:
 - https://github.com/apache/pulsar
-icon: http://pulsar.apache.org/img/pulsar.svg
+- https://github.com/apache/pulsar-helm-chart
+icon: https://pulsar.apache.org/img/pulsar.svg
 maintainers:
 - name: The Apache Pulsar Team
   email: dev@pulsar.apache.org
+dependencies:
+  - name: kube-prometheus-stack
+    version: 41.x.x
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: kube-prometheus-stack.enabled

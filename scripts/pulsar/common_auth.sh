@@ -36,6 +36,7 @@ discoverArch() {
     x86_64) ARCH="amd64";;
     i686) ARCH="386";;
     i386) ARCH="386";;
+    arm64) ARCH="arm64";;
   esac
 }
 
