@@ -135,21 +135,20 @@ official Apache releases must not include the rcN suffix.
 - Move the artifacts to ASF dev dist repo, generate convenience `index.yaml` & publish them
 
   ```shell
-  # First clone the repo
-  svn checkout https://dist.apache.org/repos/dist/dev/pulsar pulsar-dist-dev
-
+  APACHE_USER=<your ASF userid>
   # Create new folder for the release
-  cd pulsar-dist-dev/helm-chart
-  svn mkdir ${VERSION}
+  svn mkdir --username $APACHE_USER -m "Add directory for pulsar-helm-chart $VERSION release" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION
+  # checkout the directory
+  svn co --username $APACHE_USER https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION helm-chart-$VERSION
 
   # Move the artifacts to svn folder
-  mv ${PULSAR_REPO_ROOT}/pulsar-${VERSION_WITHOUT_RC}.tgz* ${VERSION}/
-  mv ${PULSAR_REPO_ROOT}/pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz* ${VERSION}/
-  cd ${VERSION}
+  mv ${PULSAR_REPO_ROOT}/pulsar-${VERSION_WITHOUT_RC}.tgz* helm-chart-${VERSION}/
+  mv ${PULSAR_REPO_ROOT}/pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz* helm-chart-${VERSION}/
+  cd helm-chart-${VERSION}/
 
   ###### Generate index.yaml file - Start
   # Download the latest index.yaml on Pulsar Website
-  curl https://dist.apache.org/repos/dist/release/pulsar/helm-chart/index.yaml --output index.yaml
+  curl https://pulsar.apache.org/charts/index.yaml --output index.yaml
 
   # Replace the URLs from "https://downloads.apache.org" to "https://archive.apache.org"
   # as the downloads.apache.org only contains latest releases.
