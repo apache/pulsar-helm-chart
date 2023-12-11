@@ -167,10 +167,8 @@ official Apache releases must not include the rcN suffix.
 - Remove old Helm Chart versions from the dev repo
 
   ```shell
-  cd ..
   export PREVIOUS_VERSION=3.0.0-candidate-1
-  svn rm ${PREVIOUS_VERSION}
-  svn commit -m "Remove old Helm Chart release: ${PREVIOUS_VERSION}"
+  svn rm --username $APACHE_USER -m "Remove old Helm Chart release: ${PREVIOUS_VERSION}" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${PREVIOUS_VERSION}
   ```
 
 - Push Tag for the release candidate
@@ -264,7 +262,7 @@ The legal checks include:
 ## SVN check
 
 The files should be present in the sub-folder of
-[Pulsar dist](https://dist.apache.org/repos/dist/dev/pulsar/)
+[Pulsar dist](https://dist.apache.org/repos/dist/dev/pulsar/helm-chart)
 
 The following files should be present (7 files):
 
@@ -275,7 +273,7 @@ The following files should be present (7 files):
 As a PMC member you should be able to clone the SVN repository:
 
 ```shell
-svn co https://dist.apache.org/repos/dist/dev/pulsar
+svn co https://dist.apache.org/repos/dist/dev/pulsar/helm-chart
 ```
 
 Or update it if you already checked it out:
@@ -367,7 +365,8 @@ Checking pulsar-chart-1.0.0-source.tar.gz.sha512
 Contributors can run below commands to test the Helm Chart
 
 ```shell
-helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/1.0.1-candidate-1/
+export VERSION=3.0.0-candidate-1
+helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}/
 helm repo update
 helm install pulsar apache-pulsar-dist-dev/pulsar
 ```
@@ -424,22 +423,13 @@ The best way of doing this is to svn cp between the two repos (this avoids havin
 the binaries again, and gives a clearer history in the svn commit logs):
 
 ```shell
-# First clone the repo
-export RC=3.0.0-candidate-1
-export VERSION=${RC%-candidate-*}
-svn checkout https://dist.apache.org/repos/dist/release/pulsar pulsar-dist-release
-
-# Create new folder for the release
-cd pulsar-dist-release/helm-chart
-export PULSAR_SVN_RELEASE_HELM=$(pwd)
-svn mkdir ${VERSION}
-cd ${VERSION}
-
-# Move the artifacts to svn folder, remove index.yaml, and commit
-for f in ../../../pulsar-dist-dev/helm-chart/$RC/*; do cp $f $(basename $f); done
-rm index.yaml
-svn add pulsar-*
-svn commit -m "Release Pulsar Helm Chart ${VERSION} from ${RC}"
+export VERSION=3.0.0-candidate-1
+export VERSION_WITHOUT_RC=${VERSION%-candidate-*}
+APACHE_USER=<your ASF userid>
+svn rm --username $APACHE_USER -m "Remove temporary index.yaml file" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}/index.yaml
+svn move --username $APACHE_USER -m "Release Pulsar Helm Chart ${VERSION_WITHOUT_RC} from ${VERSION}" \
+  https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION} \
+  https://dist.apache.org/repos/dist/release/pulsar/helm-chart/${VERSION_WITHOUT_RC}
 ```
 
 Verify that the packages appear in [Pulsar Helm Chart](https://dist.apache.org/repos/dist/release/pulsar/helm-chart/).
