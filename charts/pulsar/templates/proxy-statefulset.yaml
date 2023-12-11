@@ -148,7 +148,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.containerPorts.http }}
           initialDelaySeconds: {{ .Values.proxy.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.liveness.periodSeconds }}
           timeoutSeconds: {{ .Values.proxy.probe.liveness.timeoutSeconds }}
@@ -158,7 +158,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.containerPorts.http }}
           initialDelaySeconds: {{ .Values.proxy.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.readiness.periodSeconds }}
           timeoutSeconds: {{ .Values.proxy.probe.readiness.timeoutSeconds }}
@@ -168,7 +168,7 @@ spec:
         startupProbe:
           httpGet:
             path: /status.html
-            port: {{ .Values.proxy.ports.http }}
+            port: {{ .Values.proxy.ports.containerPorts.http }}
           initialDelaySeconds: {{ .Values.proxy.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.proxy.probe.startup.periodSeconds }}
           timeoutSeconds: {{ .Values.proxy.probe.startup.timeoutSeconds }}
