@@ -115,6 +115,7 @@ spec:
         command: ["sh", "-c"]
         args:
           - >-
+            export PULSAR_MEM="-Xmx128M";
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
