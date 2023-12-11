@@ -19,9 +19,15 @@
 
 {{- if or .Values.components.functions .Values.extra.functionsAsPods }}
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.functions.rbac.limit_to_namespace }}
+kind: Role
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-role"
+{{- else}}
 kind: ClusterRole
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
+{{- end}}
 rules:
 - apiGroups: [""]
   resources:
@@ -46,13 +52,24 @@ metadata:
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.functions.rbac.limit_to_namespace }}
+kind: RoleBinding
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-rolebinding"
+{{- else}}
 kind: ClusterRoleBinding
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
+{{- end}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
+{{- if .Values.functions.rbac.limit_to_namespace }}
+  kind: Role
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-role"
+{{- else}}
   kind: ClusterRole
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"
+{{- end}}
 subjects:
 - kind: ServiceAccount
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}"

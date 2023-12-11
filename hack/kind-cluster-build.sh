@@ -83,7 +83,9 @@ done
 
 clusterName=${clusterName:-pulsar-dev}
 nodeNum=${nodeNum:-6}
-k8sVersion=${k8sVersion:-v1.18.19}
+# k8sVersion must be compatible with the used kind version
+# see https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0 for the list of supported k8s versions for kind 0.20.0
+k8sVersion=${k8sVersion:-v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093}
 volumeNum=${volumeNum:-9}
 
 echo "clusterName: ${clusterName}"
@@ -119,6 +121,8 @@ configFile=${workDir}/kind-config.yaml
 cat <<EOF > ${configFile}
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  ipFamily: ipv4
 nodes:
 - role: control-plane
   extraPortMappings:
@@ -151,7 +155,7 @@ if [[ "${matchedCluster}" == "${clusterName}" ]]; then
     kind delete cluster --name=${clusterName}
 fi
 echo "start to create k8s cluster"
-kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName}
+kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName} --verbosity 3
 export KUBECONFIG=${workDir}/kubeconfig.yaml
 kind get kubeconfig --name=${clusterName} > ${KUBECONFIG}
 

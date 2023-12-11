@@ -55,6 +55,10 @@ data:
   {{- else }}
   ledgerDirectories: "/pulsar/data/bookkeeper/ledgers"
   {{- end }}
+  {{- if .Values.functions.useBookieAsStateStore }}
+  # Stateful function config
+  extraServerComponents: "org.apache.bookkeeper.stream.server.StreamStorageLifecycleComponent"
+  {{- end }}
   # TLS config
   {{- include "pulsar.bookkeeper.config.tls" . | nindent 2 }}
 {{ toYaml .Values.bookkeeper.configData | indent 2 }}

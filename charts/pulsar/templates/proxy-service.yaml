@@ -37,17 +37,21 @@ spec:
     - name: http
       port: {{ .Values.proxy.ports.http }}
       protocol: TCP
+      targetPort: sts-http
     - name: "{{ .Values.tcpPrefix }}pulsar"
       port: {{ .Values.proxy.ports.pulsar }}
       protocol: TCP
+      targetPort: "sts-{{ .Values.tcpPrefix }}pulsar"
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
       port: {{ .Values.proxy.ports.https }}
       protocol: TCP
+      targetPort: sts-https
     - name: "{{ .Values.tlsPrefix }}pulsarssl"
       port: {{ .Values.proxy.ports.pulsarssl }}
       protocol: TCP
+      targetPort: "sts-{{ .Values.tlsPrefix }}pulsarssl"
     {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}

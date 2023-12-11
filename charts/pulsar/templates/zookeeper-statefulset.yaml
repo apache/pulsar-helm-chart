@@ -46,7 +46,9 @@ spec:
         {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
         {{- end }}
-{{ toYaml .Values.zookeeper.annotations | indent 8 }}
+{{- with .Values.zookeeper.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
     {{- if .Values.zookeeper.nodeSelector }}
       nodeSelector:
@@ -75,7 +77,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.zookeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.zookeeper.affinity.type }}:
             - weight: 100
@@ -94,7 +96,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.zookeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}

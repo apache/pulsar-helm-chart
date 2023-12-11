@@ -321,6 +321,7 @@ zookeeper:
       timeoutSeconds: 30
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -398,8 +399,7 @@ zookeeper:
   ## templates/zookeeper-service.yaml
   ##
   service:
-    annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    annotations: {}
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
@@ -437,6 +437,7 @@ bookkeeper:
   ports:
     http: 8000
     bookie: 3181
+    statestore: 4181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -460,6 +461,7 @@ bookkeeper:
       timeoutSeconds: 5
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -575,11 +577,6 @@ bookkeeper:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-      -Xlog:gc*
-      -Xlog:gc::utctime
-      -Xlog:safepoint
-      -Xlog:gc+heap=trace
-      -verbosegc
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
@@ -621,6 +618,7 @@ autorecovery:
     # cloud.google.com/gke-nodepool: default-pool
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -686,6 +684,7 @@ broker:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
+    behavior: ~
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -721,6 +720,7 @@ broker:
       timeoutSeconds: 5
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -798,6 +798,13 @@ broker:
 ##
 functions:
   component: functions-worker
+  useBookieAsStateStore: false
+  ## Pulsar: Functions Worker ClusterRole or Role
+  ## templates/broker-rbac.yaml
+  # Default is false which deploys functions with ClusterRole and ClusterRoleBinding at the cluster level
+  # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
+  rbac:
+    limit_to_namespace: false
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
@@ -812,6 +819,7 @@ proxy:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
+    behavior: ~
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -842,6 +850,7 @@ proxy:
       timeoutSeconds: 5
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -904,6 +913,9 @@ proxy:
     https: 443
     pulsar: 6650
     pulsarssl: 6651
+    containerPorts:
+      http: 8080
+      https: 8443
   service:
     annotations: {}
     type: LoadBalancer
@@ -913,6 +925,7 @@ proxy:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -959,6 +972,7 @@ dashboard:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -1071,6 +1085,7 @@ pulsar_manager:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
