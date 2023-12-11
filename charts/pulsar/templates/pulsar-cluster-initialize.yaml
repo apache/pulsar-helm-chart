@@ -58,8 +58,6 @@ spec:
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
-            echo Default PULSAR_MEM settings are set very high, which can cause the init container to fail.;
-            echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
             export PULSAR_MEM="-Xmx128M";
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
@@ -102,8 +100,6 @@ spec:
         args:
           - |
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
-            echo Default PULSAR_MEM settings are set very high, which can cause the init container to fail.;
-            echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
             export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \

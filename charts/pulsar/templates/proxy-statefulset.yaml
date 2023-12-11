@@ -115,8 +115,6 @@ spec:
         command: ["sh", "-c"]
         args:
           - >-
-            echo Default PULSAR_MEM settings are set very high, which can cause the init container to fail.;
-            echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
             export PULSAR_MEM="-Xmx128M";
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
