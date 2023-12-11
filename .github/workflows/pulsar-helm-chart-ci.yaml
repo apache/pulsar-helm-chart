@@ -141,15 +141,21 @@ jobs:
           action: wait
 
   install-chart-tests:
-    name: ${{ matrix.name }} - Install
+    name: ${{ matrix.testScenario.name }} - k8s ${{ matrix.k8sVersion.version }} - Install
     runs-on: ubuntu-22.04
-    timeout-minutes: ${{ matrix.timeout || 45 }}
+    timeout-minutes: ${{ matrix.testScenario.timeout || 45 }}
     needs: ['preconditions', 'ct-lint']
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0 for the list of supported k8s versions for kind 0.20.0
+        k8sVersion:
+          - version: "1.21.14"
+            kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+          - version: "1.27.3"
+            kind_image_tag: v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
+        testScenario:
           - name: Basic
             values_file: .ci/clusters/values-local-pv.yaml
             shortname: basic
@@ -180,7 +186,9 @@ jobs:
           - name: ZK & BK TLS Only
             values_file: .ci/clusters/values-zkbk-tls.yaml
             shortname: zkbk-tls
-                      
+    env:
+      k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
+      KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -233,12 +241,12 @@ jobs:
 
       - name: Run chart-testing (install)
         run: |
-          case "${{ matrix.shortname }}" in
+          case "${{ matrix.testScenario.shortname }}" in
             "jwt-symmetric")
               export SYMMETRIC=true
               ;;
           esac
-          .ci/chart_test.sh ${{ matrix.values_file }}
+          .ci/chart_test.sh ${{ matrix.testScenario.values_file }}
 
       - name: Collect k8s logs on failure
         if: ${{ cancelled() || failure() }}
@@ -254,7 +262,7 @@ jobs:
         if: ${{ cancelled() || failure() }}
         continue-on-error: true
         with:
-          name: k8s-logs-${{ matrix.shortname }}
+          name: k8s-logs-${{ matrix.testScenario.shortname }}
           path: /tmp/k8s-logs
           retention-days: 7
           if-no-files-found: ignore          
