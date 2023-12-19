@@ -210,7 +210,7 @@ For convenience "index.yaml" has been uploaded (though excluded from voting), so
 
 helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION/
 helm repo update
-helm install pulsar apache-pulsar-dist-dev/pulsar
+helm install pulsar apache-pulsar-dist-dev/pulsar --set affinity.anti_affinity=false
 
 pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though it is not strictly required for releasing the artifact based on ASF Guidelines. 
 
