@@ -216,6 +216,8 @@ pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Int
 
 You can optionally verify this file using this helm plugin https://github.com/technosophos/helm-gpg, or by using helm --verify (https://helm.sh/docs/helm/helm_verify/).
 
+helm fetch --prov apache-pulsar-dist-dev/pulsar
+helm plugin install https://github.com/technosophos/helm-gpg
 helm gpg verify pulsar-${VERSION_WITHOUT_RC}.tgz
 
 The vote will be open for at least 72 hours.
