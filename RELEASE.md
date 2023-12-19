@@ -370,7 +370,7 @@ Contributors can run below commands to test the Helm Chart
 export VERSION=3.0.0-candidate-1
 helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}/
 helm repo update
-helm install pulsar apache-pulsar-dist-dev/pulsar
+helm install pulsar apache-pulsar-dist-dev/pulsar --set affinity.anti_affinity=false
 ```
 
 You can then perform any other verifications to check that it works as you expected by
