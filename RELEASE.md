@@ -455,9 +455,26 @@ file at `pulsar.apache.org/charts/index.yaml`.
 Then, run the following command from within `github.com/apache/pulsar-site` in the git repo.
 
 ```shell
+# checkout pulsar-site
+git clone https://github.com/apache/pulsar-site
+cd pulsar-site
+```
+
+```shell
 # Run on a branch based on main branch
-cd site2/website-next/static/charts
+cd static/charts
+# need the chart file temporarily to update the index
+wget https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz
+# store the license header temporarily
+head -n 17 index.yaml > license_header.txt
+# update the index
 helm repo index --merge ./index.yaml . --url "https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}"
+# restore the license header
+mv index.yaml index.yaml.new
+cat license_header.txt index.yaml.new > index.yaml
+rm license_header.txt index.yaml.new
+# remove the temp file
+rm pulsar-${VERSION_WITHOUT_RC}.tgz
 ```
 
 Verify that the updated `index.yaml` file has the most recent version. Then run:
