@@ -186,6 +186,9 @@ jobs:
           - name: ZK & BK TLS Only
             values_file: .ci/clusters/values-zkbk-tls.yaml
             shortname: zkbk-tls
+          - name: PSP
+            values_file: .ci/clusters/values-psp.yaml
+            shortname: psp
     env:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
