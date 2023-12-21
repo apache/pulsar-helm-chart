@@ -19,9 +19,13 @@
 
 name: Pulsar Helm Chart CI
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
