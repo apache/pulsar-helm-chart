@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Detect changed files
         id:   changes
@@ -69,7 +69,7 @@ jobs:
         id: go
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Check license
         run: |
@@ -86,7 +86,9 @@ jobs:
       no_chart_changes: ${{ steps.ct-lint.outputs.no_chart_changes }}
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Tune Runner VM
         uses: ./.github/actions/tune-runner-vm
@@ -157,11 +159,8 @@ jobs:
             kind_image_tag: v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
         testScenario:
           - name: Basic
-            values_file: .ci/clusters/values-local-pv.yaml
+            values_file: .ci/clusters/values-basic.yaml
             shortname: basic
-          - name: Pulsar Function
-            values_file: .ci/clusters/values-function.yaml
-            shortname: function
           - name: Use Pulsar Image
             values_file: .ci/clusters/values-pulsar-image.yaml
             shortname: pulsar-image
@@ -194,7 +193,7 @@ jobs:
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Tune Runner VM
         uses: ./.github/actions/tune-runner-vm
