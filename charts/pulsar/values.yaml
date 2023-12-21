@@ -281,7 +281,7 @@ zookeeper:
   # so the metrics are correctly rendered in grafana dashboard
   component: zookeeper
   # the number of zookeeper servers to run. it should be an odd number larger than or equal to 3.
-  replicaCount: 1
+  replicaCount: 3
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
@@ -684,6 +684,7 @@ broker:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
+    behavior: ~
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -818,6 +819,7 @@ proxy:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
+    behavior: ~
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true

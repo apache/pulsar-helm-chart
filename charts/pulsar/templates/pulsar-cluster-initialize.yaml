@@ -58,6 +58,7 @@ spec:
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
+            export PULSAR_MEM="-Xmx128M";
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
@@ -75,6 +76,9 @@ spec:
         args:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
+          echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
+          echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
+          export BOOKIE_MEM="-Xmx128M";
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
           until bin/bookkeeper shell whatisinstanceid; do
             sleep 3;
@@ -96,6 +100,7 @@ spec:
         args:
           - |
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
+            export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
               --zookeeper {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
