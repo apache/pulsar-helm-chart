@@ -42,8 +42,8 @@ official Apache releases must not include the rcN suffix.
 
     ```shell
     # Set Version
-    export VERSION=3.0.0-candidate-1
-    export VERSION_WITHOUT_RC=${VERSION%-candidate-*}
+    export VERSION_RC=3.0.0-candidate-1
+    export VERSION_WITHOUT_RC=${VERSION_RC%-candidate-*}
 
     # Clone and set PULSAR_REPO_ROOT
     git clone https://github.com/apache/pulsar-helm-chart.git pulsar
@@ -78,7 +78,7 @@ official Apache releases must not include the rcN suffix.
 - Tag your release
 
     ```shell
-    git tag -s pulsar-${VERSION} -m "Apache Pulsar Helm Chart $VERSION"
+    git tag -s pulsar-${VERSION_RC} -m "Apache Pulsar Helm Chart $VERSION_RC"
     ```
 
 - Tarball the repo
@@ -87,7 +87,7 @@ official Apache releases must not include the rcN suffix.
      in the file produced.
 
     ```shell
-    git archive --format=tar.gz pulsar-${VERSION} --prefix=pulsar-chart-${VERSION_WITHOUT_RC}/ \
+    git archive --format=tar.gz pulsar-${VERSION_RC} --prefix=pulsar-chart-${VERSION_WITHOUT_RC}/ \
         -o pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz .
     ```
 
@@ -137,14 +137,14 @@ official Apache releases must not include the rcN suffix.
   ```shell
   APACHE_USER=<your ASF userid>
   # Create new folder for the release
-  svn mkdir --username $APACHE_USER -m "Add directory for pulsar-helm-chart $VERSION release" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION
+  svn mkdir --username $APACHE_USER -m "Add directory for pulsar-helm-chart $VERSION_RC release" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC
   # checkout the directory
-  svn co --username $APACHE_USER https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION helm-chart-$VERSION
+  svn co --username $APACHE_USER https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC helm-chart-$VERSION_RC
 
   # Move the artifacts to svn folder
-  mv ${PULSAR_REPO_ROOT}/pulsar-${VERSION_WITHOUT_RC}.tgz* helm-chart-${VERSION}/
-  mv ${PULSAR_REPO_ROOT}/pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz* helm-chart-${VERSION}/
-  cd helm-chart-${VERSION}/
+  mv ${PULSAR_REPO_ROOT}/pulsar-${VERSION_WITHOUT_RC}.tgz* helm-chart-${VERSION_RC}/
+  mv ${PULSAR_REPO_ROOT}/pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz* helm-chart-${VERSION_RC}/
+  cd helm-chart-${VERSION_RC}/
 
   ###### Generate index.yaml file - Start
   # Download the latest index.yaml on Pulsar Website
@@ -155,27 +155,27 @@ official Apache releases must not include the rcN suffix.
   sed -i 's|https://downloads.apache.org/pulsar/helm-chart/|https://archive.apache.org/dist/pulsar/helm-chart/|' index.yaml
 
   # Generate / Merge the new version with existing index.yaml
-  helm repo index --merge ./index.yaml . --url "https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}"
+  helm repo index --merge ./index.yaml . --url "https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC}"
 
   ###### Generate index.yaml file - End
 
   # Commit the artifacts
   svn add *
-  svn commit -m "Add artifacts for Helm Chart ${VERSION}"
+  svn commit -m "Add artifacts for Helm Chart ${VERSION_RC}"
   ```
 
 - Remove old Helm Chart versions from the dev repo
 
   ```shell
-  export PREVIOUS_VERSION=3.0.0-candidate-1
-  svn rm --username $APACHE_USER -m "Remove old Helm Chart release: ${PREVIOUS_VERSION}" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${PREVIOUS_VERSION}
+  export PREVIOUS_VERSION_RC=3.0.0-candidate-1
+  svn rm --username $APACHE_USER -m "Remove old Helm Chart release: ${PREVIOUS_VERSION_RC}" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${PREVIOUS_VERSION_RC}
   ```
 
 - Push Tag for the release candidate
 
   ```shell
   cd ${PULSAR_REPO_ROOT}
-  git push upstream tag pulsar-${VERSION}
+  git push upstream tag pulsar-${VERSION_RC}
   ```
 
 ## Prepare Vote email on the Apache Pulsar release candidate
@@ -186,7 +186,7 @@ Subject:
 
 ```shell
 cat <<EOF
-[VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION}
+[VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION_RC}
 EOF
 ```
 
@@ -199,7 +199,7 @@ Hello Apache Pulsar Community,
 This is a call for the vote to release the Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC}.
 
 The release candidate is available at:
-https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION/
+https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 
 pulsar-chart-${VERSION_WITHOUT_RC}-source.tar.gz - is the "main source release".
 pulsar-${VERSION_WITHOUT_RC}.tgz - is the binary Helm Chart release.
@@ -208,7 +208,7 @@ Public keys are available at: https://www.apache.org/dist/pulsar/KEYS
 
 For convenience "index.yaml" has been uploaded (though excluded from voting), so you can also run the below commands.
 
-helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION/
+helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 helm repo update
 helm install pulsar apache-pulsar-dist-dev/pulsar --set affinity.anti_affinity=false
 
@@ -367,8 +367,8 @@ Checking pulsar-chart-1.0.0-source.tar.gz.sha512
 Contributors can run below commands to test the Helm Chart
 
 ```shell
-export VERSION=3.0.0-candidate-1
-helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}/
+export VERSION_RC=3.0.0-candidate-1
+helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC}/
 helm repo update
 helm install pulsar apache-pulsar-dist-dev/pulsar --set affinity.anti_affinity=false
 ```
@@ -386,7 +386,7 @@ Subject:
 
 ```shell
 cat <<EOF
-[RESULT][VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION}
+[RESULT][VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION_RC}
 EOF
 ```
 
@@ -396,7 +396,7 @@ Message:
 cat <<EOF
 Hello all,
 
-The vote to release Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC} based on ${VERSION} is now closed.
+The vote to release Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC} based on ${VERSION_RC} is now closed.
 
 The vote PASSED with X binding "+1", Y non-binding "+1" and 0 "-1" votes:
 
@@ -425,12 +425,12 @@ The best way of doing this is to svn cp between the two repos (this avoids havin
 the binaries again, and gives a clearer history in the svn commit logs):
 
 ```shell
-export VERSION=3.0.0-candidate-1
-export VERSION_WITHOUT_RC=${VERSION%-candidate-*}
+export VERSION_RC=3.0.0-candidate-1
+export VERSION_WITHOUT_RC=${VERSION_RC%-candidate-*}
 APACHE_USER=<your ASF userid>
-svn rm --username $APACHE_USER -m "Remove temporary index.yaml file" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION}/index.yaml
-svn move --username $APACHE_USER -m "Release Pulsar Helm Chart ${VERSION_WITHOUT_RC} from ${VERSION}" \
-  https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION} \
+svn rm --username $APACHE_USER -m "Remove temporary index.yaml file" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC}/index.yaml
+svn move --username $APACHE_USER -m "Release Pulsar Helm Chart ${VERSION_WITHOUT_RC} from ${VERSION_RC}" \
+  https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC} \
   https://dist.apache.org/repos/dist/release/pulsar/helm-chart/${VERSION_WITHOUT_RC}
 ```
 
@@ -442,9 +442,9 @@ Create and push the release tag:
 
 ```shell
 cd "${PULSAR_REPO_ROOT}"
-git checkout pulsar-${RC}
-git tag -s pulsar-${VERSION} -m "Apache Pulsar Helm Chart ${VERSION}"
-git push upstream pulsar-${VERSION}
+git checkout pulsar-${VERSION_RC}
+git tag -s pulsar-${VERSION_WITHOUT_RC} -m "Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC}"
+git push upstream pulsar-${VERSION_WITHOUT_RC}
 ```
 
 ## Update index.yaml
@@ -457,15 +457,14 @@ Then, run the following command from within `github.com/apache/pulsar-site` in t
 ```shell
 # Run on a branch based on main branch
 cd site2/website-next/static/charts
-cp ${PULSAR_SVN_RELEASE_HELM}/${VERSION}/pulsar-${VERSION}.tgz .
-helm repo index --merge ./index.yaml . --url "https://downloads.apache.org/pulsar/helm-chart/${VERSION}"
+helm repo index --merge ./index.yaml . --url "https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}"
 ```
 
 Verify that the updated `index.yaml` file has the most recent version. Then run:
 
 ```shell
 git add index.yaml
-git commit -m "Adding Pulsar Helm Chart ${VERSION} to index.yaml"
+git commit -m "Adding Pulsar Helm Chart ${VERSION_WITHOUT_RC} to index.yaml"
 ```
 
 Then open a PR.
@@ -481,7 +480,7 @@ Subject:
 
 ```shell
 cat <<EOF
-[ANNOUNCE] Apache Pulsar Helm Chart version ${VERSION} Released
+[ANNOUNCE] Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC} Released
 EOF
 ```
 
@@ -492,14 +491,14 @@ cat <<EOF
 Dear Pulsar community,
 
 The Apache Pulsar team is pleased to announce the release of Apache Pulsar Helm
-Chart $VERSION.
+Chart $VERSION_WITHOUT_RC.
 
 The source release, as well as the "binary" Helm Chart release, are available:
 
 Official Sources: https://pulsar.apache.org/download/
-ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION
+ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION_WITHOUT_RC
 Docs: https://pulsar.apache.org/docs/helm-overview
-Release Notes: https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION
+Release Notes: https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION_WITHOUT_RC
 
 Thanks to all the contributors who made this possible.
 
@@ -527,29 +526,21 @@ Post this in the #announce channel:
 
 ```shell
 cat <<EOF
-We've just released Apache Pulsar Helm Chart ${VERSION} 🎉
+We've just released Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} 🎉
 
 Official Sources: https://pulsar.apache.org/download/
-ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION
+ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION_WITHOUT_RC
 Docs: https://pulsar.apache.org/docs/helm-overview
-Release Notes: https://pulsar.apache.org/docs/helm-chart/$VERSION/release_notes.html
+Release Notes: https://pulsar.apache.org/docs/helm-chart/$VERSION_WITHOUT_RC/release_notes.html
 
 Thanks to all the contributors who made this possible.
 EOF
 ```
 
-## Remove old releases
+## Maintaining svn https://dist.apache.org/repos/dist/release/pulsar/helm-chart/ content
 
-We should keep the old version a little longer than a day. We updated the `index.yaml` earlier so that it points to the
-older releases. The short delay will help avoid errors for users who haven't run ``helm repo update`` to get the latest
-`index.yaml`.
+The chart references the files in https://downloads.apache.org/pulsar/helm-chart/ which are maintained
+by SVN directory https://dist.apache.org/repos/dist/release/pulsar/helm-chart/.
 
-It is probably ok if we leave last 2 versions on release svn repo too.
-
-```shell
-# https://www.apache.org/legal/release-policy.html#when-to-archive
-cd pulsar-dist-release/helm-chart
-export PREVIOUS_VERSION=1.0.0
-svn rm ${PREVIOUS_VERSION}
-svn commit -m "Remove old Helm Chart release: ${PREVIOUS_VERSION}"
-```
+If you remove releases from this directory, the URLs in index.yaml should be updated point to the 
+https://archive.apache.org/dist/pulsar/helm-chart/ URL base instead of https://downloads.apache.org/pulsar/helm-chart/.
