@@ -486,6 +486,20 @@ git commit -m "Adding Pulsar Helm Chart ${VERSION_WITHOUT_RC} to index.yaml"
 
 Then open a PR.
 
+## Create release notes for the tag in GitHub UI
+
+```shell 
+# open this URL and create release notes by clicking "Create release from tag"
+echo https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-${VERSION_WITHOUT_RC}
+```
+
+1. Open the above URL in a browser and create release notes by clicking "Create release from tag".
+2. Find "Previous tag: auto" in the UI above the text box and choose the previous release there.
+3. Click "Generate release notes".
+4. Review the generated release notes.
+5. Click "Publish release".
+
+
 ## Notify developers of release
 
 Once the `index.yaml` is live on the website, it is time to announce the release.
