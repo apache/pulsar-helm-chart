@@ -39,6 +39,10 @@ spec:
       {{- if .Values.pulsar_metadata.nodeSelector }}
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
+      tolerations:
+      {{- if .Values.pulsar_metadata.tolerations }}
+{{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
+      {{- end }}
       initContainers:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"

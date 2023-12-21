@@ -667,17 +667,20 @@ pulsar_metadata:
   # configurationStore:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
-  ## optional you can specify a nodeSelector for all init jobs (pulsar-init & bookkeeper-init)
-  # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+
+  ## optional you can specify tolerations and nodeSelectors for all init jobs (pulsar-init & bookkeeper-init)
+  #tolerations: []
+  #  - key: "someKey"
+  #    operator: "Equal"
+  #    value: "someValue"
+  #    effect: "NoSchedule"
+  #nodeSelector: {}
+  #  cloud.google.com/gke-nodepool: default-pool
 
   ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
-
-  ## optional, you can specify where to run pulsar-cluster-initialize job
-  # nodeSelector:
 
 # Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
 extraInitCommand: ""

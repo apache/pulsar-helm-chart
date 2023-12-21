@@ -126,5 +126,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
+      {{- if .Values.pulsar_metadata.tolerations }}
+      tolerations:
+{{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
+      {{- end }}
 {{- end }}
 {{- end }}
