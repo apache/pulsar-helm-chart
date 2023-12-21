@@ -290,6 +290,9 @@ zookeeper:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -436,6 +439,9 @@ bookkeeper:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -617,6 +623,9 @@ autorecovery:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -704,6 +713,9 @@ broker:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -843,6 +855,9 @@ proxy:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
