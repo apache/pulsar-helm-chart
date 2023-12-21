@@ -376,6 +376,10 @@ zookeeper:
   # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces
   # Example value: "us-east1-pulsar-zookeeper-0.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-1.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-2.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-0.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-1.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-2.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888"
   externalZookeeperServerList: ""
+  ## Zookeeper service account
+  ## templates/zookeeper-service-account.yaml
+  service_account:
+    annotations: {}
   ## Zookeeper configmap
   ## templates/zookeeper-configmap.yaml
   ##
@@ -554,7 +558,10 @@ bookkeeper:
         # ...
       # selector:
         # ...
-
+  ## Bookkeeper service account
+  ## templates/bookkeeper-service-account.yaml
+  service_account:
+    annotations: {}
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
   ##
@@ -630,6 +637,10 @@ autorecovery:
     requests:
       memory: 64Mi
       cpu: 0.05
+  ## Bookkeeper auto-recovery service account
+  ## templates/autorecovery-service-account.yaml
+  service_account:
+    annotations: {}
   ## Bookkeeper auto-recovery configmap
   ## templates/autorecovery-configmap.yaml
   ##
@@ -805,6 +816,10 @@ functions:
   # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
   rbac:
     limit_to_namespace: false
+  ### Functions Worker service account
+  ## templates/broker-service-account.yaml
+  service_account:
+    annotations: {} 
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
@@ -881,6 +896,10 @@ proxy:
 #        fieldRef:
 #          apiVersion: v1
 #          fieldPath: status.podIP
+  ## Proxy service account
+  ## templates/proxy-service-account.yaml
+  service_account:
+    annotations: {}
   ## Proxy configmap
   ## templates/proxy-configmap.yaml
   ##
@@ -1016,8 +1035,12 @@ toolset:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  ## Bastion configmap
-  ## templates/bastion-configmap.yaml
+  ## Toolset service account
+  ## templates/toolset-service-account.yaml
+  service_account:
+    annotations: {}
+  ## Toolset configmap
+  ## templates/toolset-configmap.yaml
   ##
   configData:
     PULSAR_MEM: >

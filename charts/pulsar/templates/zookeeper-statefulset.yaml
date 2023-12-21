@@ -161,7 +161,7 @@ spec:
         {{- $zkConnectCommand = print "nc -q 1 localhost " .Values.zookeeper.ports.client -}}
         {{- end }}
         {{- if .Values.zookeeper.probe.readiness.enabled }}
-        {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+        {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
         {{- end}}
