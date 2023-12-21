@@ -180,12 +180,16 @@ official Apache releases must not include the rcN suffix.
 
 ## Prepare Vote email on the Apache Pulsar release candidate
 
+
 - Send out a vote to the dev@pulsar.apache.org mailing list:
+
+> [!TIP]
+> The template output will get copied to the clipboard using pbpaste. On Linux, you can install xsel and add `alias pbcopy='xsel --clipboard --input'` to the shell. 
 
 Subject:
 
 ```shell
-cat <<EOF
+tee >(pbcopy) <<EOF
 [VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION_RC}
 EOF
 ```
@@ -193,7 +197,7 @@ EOF
 Body:
 
 ```shell
-cat <<EOF
+tee >(pbcopy) <<EOF
 Hello Apache Pulsar Community,
 
 This is a call for the vote to release the Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC}.
@@ -385,7 +389,7 @@ Once the vote has been passed, you will need to send a result vote to [dev@pulsa
 Subject:
 
 ```shell
-cat <<EOF
+tee >(pbcopy) <<EOF
 [RESULT][VOTE] Release Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} based on ${VERSION_RC}
 EOF
 ```
@@ -393,7 +397,7 @@ EOF
 Message:
 
 ```shell
-cat <<EOF
+tee >(pbcopy) <<EOF
 Hello all,
 
 The vote to release Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC} based on ${VERSION_RC} is now closed.
@@ -510,7 +514,7 @@ the artifacts have been published:
 Subject:
 
 ```shell
-cat <<EOF
+tee >(pbcopy) <<EOF
 [ANNOUNCE] Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC} Released
 EOF
 ```
@@ -518,18 +522,23 @@ EOF
 Body:
 
 ```shell
-cat <<EOF
-Dear Pulsar community,
+tee >(pbcopy) <<EOF
+Dear community,
 
-The Apache Pulsar team is pleased to announce the release of Apache Pulsar Helm
-Chart $VERSION_WITHOUT_RC.
+The Apache Pulsar team is pleased to announce the release of the Apache
+Pulsar Helm Chart $VERSION_WITHOUT_RC.
 
-The source release, as well as the "binary" Helm Chart release, are available:
+The official source release, as well as the binary Helm Chart release,
+are available at
+https://downloads.apache.org/pulsar/helm-chart/$VERSION_WITHOUT_RC/.
 
-Official Sources: https://pulsar.apache.org/download/
+The helm chart index at https://pulsar.apache.org/charts/ has been
+updated and the release is also available directly via helm.
+
+Release Notes:
+https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION_WITHOUT_RC
+Docs: https://github.com/apache/pulsar-helm-chart#readme and https://pulsar.apache.org/docs/helm-overview
 ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION_WITHOUT_RC
-Docs: https://pulsar.apache.org/docs/helm-overview
-Release Notes: https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION_WITHOUT_RC
 
 Thanks to all the contributors who made this possible.
 
@@ -539,9 +548,10 @@ The Apache Pulsar Team
 EOF
 ```
 
-Send the same email to announce@apache.org, except change the opening line to `Dear community,`.
+
+Send the same email to announce@apache.org.
 It is more reliable to send it via the web ui at https://lists.apache.org/list.html?announce@apache.org
-(press "c" to compose a new thread)
+(press "c" to compose a new thread).
 
 ## Create release on GitHub
 
@@ -556,13 +566,20 @@ Close the milestone on GitHub. Create the next one if it hasn't been already.
 Post this in the #announce channel:
 
 ```shell
-cat <<EOF
+tee >(pbcopy) <<EOF
 We've just released Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} 🎉
 
-Official Sources: https://pulsar.apache.org/download/
+The official source release, as well as the binary Helm Chart release,
+are available at
+https://downloads.apache.org/pulsar/helm-chart/$VERSION_WITHOUT_RC/.
+
+The helm chart index at https://pulsar.apache.org/charts/ has been
+updated and the release is also available directly via helm.
+
+Release Notes:
+https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION_WITHOUT_RC
+Docs: https://github.com/apache/pulsar-helm-chart#readme and https://pulsar.apache.org/docs/helm-overview
 ArtifactHub: https://artifacthub.io/packages/helm/apache/pulsar/$VERSION_WITHOUT_RC
-Docs: https://pulsar.apache.org/docs/helm-overview
-Release Notes: https://pulsar.apache.org/docs/helm-chart/$VERSION_WITHOUT_RC/release_notes.html
 
 Thanks to all the contributors who made this possible.
 EOF
