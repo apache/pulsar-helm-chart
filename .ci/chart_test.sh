@@ -39,7 +39,7 @@ if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
 fi
 
 # install pulsar chart
-ci::install_pulsar_chart ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+ci::install_pulsar_chart ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
 
 # test producer/consumer
 ci::test_pulsar_producer_consumer

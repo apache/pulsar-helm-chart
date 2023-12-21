@@ -157,11 +157,8 @@ jobs:
             kind_image_tag: v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
         testScenario:
           - name: Basic
-            values_file: .ci/clusters/values-local-pv.yaml
+            values_file: .ci/clusters/values-basic.yaml
             shortname: basic
-          - name: Pulsar Function
-            values_file: .ci/clusters/values-function.yaml
-            shortname: function
           - name: Use Pulsar Image
             values_file: .ci/clusters/values-pulsar-image.yaml
             shortname: pulsar-image
