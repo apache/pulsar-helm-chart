@@ -237,19 +237,25 @@ Caused by: org.rocksdb.RocksDBException: while open a file for lock: /pulsar/dat
     at org.apache.bookkeeper.bookie.storage.ldb.KeyValueStorageRocksDB.<init>(KeyValueStorageRocksDB.java:196) ~[org.apache.bookkeeper-bookkeeper-server-4.14.4.jar:4.14.4]
     ... 13 more
 ```
-### PodDisruptionBudget Kind Not Found in Kubernetes During Helm Upgrade
 
-If you encounter issues with Helm upgrade, specifically Helm Upgrade Failure [#419](https://github.com/apache/pulsar-helm-chart/issues/419), Here is a sample error you can expect 
+### Recovering from `helm upgrade` error "unable to build kubernetes objects from current release manifest"
 
+Example of the error message:
 ```bash
-Error: UPGRADE FAILED: unable to build kubernetes objects from current release manifest: [resource mapping not found for name: "pulsar-bookie" namespace: "pulsar" from "": no matches for kind "PodDisruptionBudget" in version "policy/v1beta1"
-ensure CRDs are installed first, resource mapping not found for name: "pulsar-broker" namespace: "pulsar" from "": no matches for kind "PodDisruptionBudget" in version "policy/v1beta1"
-ensure CRDs are installed first, resource mapping not found for name: "pulsar-zookeeper" namespace: "pulsar" from "": no matches for kind "PodDisruptionBudget" in version "policy/v1beta1"
-ensure CRDs are installed first]
+Error: UPGRADE FAILED: unable to build kubernetes objects from current release manifest:
+[resource mapping not found for name: "pulsar-bookie" namespace: "pulsar" from "":
+no matches for kind "PodDisruptionBudget" in version "policy/v1beta1" ensure CRDs are installed first,
+resource mapping not found for name: "pulsar-broker" namespace: "pulsar" from "":
+no matches for kind "PodDisruptionBudget" in version "policy/v1beta1" ensure CRDs are installed first,
+resource mapping not found for name: "pulsar-zookeeper" namespace: "pulsar" from "":
+no matches for kind "PodDisruptionBudget" in version "policy/v1beta1" ensure CRDs are installed first]
 ```
-you can use the following workaround:
 
-1. Install the Helm plugin for mapping Kubernetes APIs:
+Helm documentation [explains issues with managing releases deployed using outdated APIs](https://helm.sh/docs/topics/kubernetes_apis/#helm-users) when the Kubernetes cluster has been upgraded
+to a version where these APIs are removed. This happens regardless of whether the chart in the upgrade includes supported API versions.
+In this case, you can use the following workaround:
+
+1. Install the [Helm mapkubeapis plugin](https://github.com/helm/helm-mapkubeapis):
 
     ```bash
     helm plugin install https://github.com/helm/helm-mapkubeapis
@@ -261,7 +267,7 @@ you can use the following workaround:
     helm mapkubeapis --namespace pulsar pulsar
     ```
 
-This workaround addresses the issue by mapping Kubernetes APIs and should allow for a successful Helm upgrade.
+This workaround addresses the issue by updating in-place Helm release metadata that contains deprecated or removed Kubernetes APIs to a new instance with supported Kubernetes APIs and should allow for a successful Helm upgrade.
 
 ## Uninstall
 
