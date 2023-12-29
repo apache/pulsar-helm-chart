@@ -956,6 +956,8 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
+    ## Optional. Leave it blank to get next available random IP.
+    loadBalancerIP: ""
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##
