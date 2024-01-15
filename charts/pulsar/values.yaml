@@ -677,6 +677,12 @@ pulsar_metadata:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
 
+  # resources for bin/pulsar initialize-cluster-metadata
+  resources:
+#    requests:
+#      memory: 512Mi
+#      cpu: 1
+
   ## optional you can specify tolerations and nodeSelectors for all init jobs (pulsar-init & bookkeeper-init)
   # tolerations: []
   #   - key: "someKey"
