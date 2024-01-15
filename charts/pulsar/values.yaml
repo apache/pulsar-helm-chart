@@ -1181,4 +1181,3 @@ initContainer_resources:
     requests:
       memory: 256Mi
       cpu: 0.1
-
