@@ -35,7 +35,6 @@ spec:
   template:
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
-    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
       nodeSelector:
       {{- if .Values.pulsar_metadata.nodeSelector }}
