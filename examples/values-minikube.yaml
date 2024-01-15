@@ -49,3 +49,9 @@ broker:
 
 proxy:
   replicaCount: 1
+
+pulsar_manager:
+  configData:
+    ENV_SPRING_CONFIGURATION_FILE: "/pulsar-manager/pulsar-manager/application.properties"
+    SPRING_CONFIGURATION_FILE: "/pulsar-manager/pulsar-manager/application.properties"
+    PULSAR_MANAGER_OPTS: " -Dlog4j2.formatMsgNoLookups=true"

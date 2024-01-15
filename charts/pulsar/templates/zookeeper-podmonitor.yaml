@@ -48,6 +48,9 @@ spec:
         - sourceLabels: [__meta_kubernetes_pod_name]
           action: replace
           targetLabel: kubernetes_pod_name
+    {{- if $.Values.zookeeper.podMonitor.metricRelabelings }}
+      metricRelabelings: {{ toYaml $.Values.zookeeper.podMonitor.metricRelabelings | nindent 8 }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}

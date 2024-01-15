@@ -284,7 +284,7 @@ zookeeper:
   # so the metrics are correctly rendered in grafana dashboard
   component: zookeeper
   # the number of zookeeper servers to run. it should be an odd number larger than or equal to 3.
-  replicaCount: 1
+  replicaCount: 3
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
@@ -293,6 +293,9 @@ zookeeper:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -379,6 +382,10 @@ zookeeper:
   # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces
   # Example value: "us-east1-pulsar-zookeeper-0.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-1.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-2.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-0.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-1.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-2.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888"
   externalZookeeperServerList: ""
+  ## Zookeeper service account
+  ## templates/zookeeper-service-account.yaml
+  service_account:
+    annotations: {}
   ## Zookeeper configmap
   ## templates/zookeeper-configmap.yaml
   ##
@@ -435,6 +442,9 @@ bookkeeper:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -557,7 +567,10 @@ bookkeeper:
         # ...
       # selector:
         # ...
-
+  ## Bookkeeper service account
+  ## templates/bookkeeper-service-account.yaml
+  service_account:
+    annotations: {}
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
   ##
@@ -613,6 +626,9 @@ autorecovery:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -633,6 +649,10 @@ autorecovery:
     requests:
       memory: 64Mi
       cpu: 0.05
+  ## Bookkeeper auto-recovery service account
+  ## templates/autorecovery-service-account.yaml
+  service_account:
+    annotations: {}
   ## Bookkeeper auto-recovery configmap
   ## templates/autorecovery-configmap.yaml
   ##
@@ -659,17 +679,26 @@ pulsar_metadata:
   # configurationStore:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
-  ## optional you can specify a nodeSelector for all init jobs (pulsar-init & bookkeeper-init)
-  # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
+
+  # resources for bin/pulsar initialize-cluster-metadata
+  resources:
+#    requests:
+#      memory: 512Mi
+#      cpu: 1
+
+  ## optional you can specify tolerations and nodeSelectors for all init jobs (pulsar-init & bookkeeper-init)
+  # tolerations: []
+  #   - key: "someKey"
+  #     operator: "Equal"
+  #     value: "someValue"
+  #     effect: "NoSchedule"
+  # nodeSelector: {}
+  #   cloud.google.com/gke-nodepool: default-pool
 
   ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
-
-  ## optional, you can specify where to run pulsar-cluster-initialize job
-  # nodeSelector:
 
 # Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
 extraInitCommand: ""
@@ -693,6 +722,9 @@ broker:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -808,6 +840,10 @@ functions:
   # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
   rbac:
     limit_to_namespace: false
+  ### Functions Worker service account
+  ## templates/broker-service-account.yaml
+  service_account:
+    annotations: {}
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
@@ -828,6 +864,9 @@ proxy:
     enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
@@ -884,6 +923,10 @@ proxy:
 #        fieldRef:
 #          apiVersion: v1
 #          fieldPath: status.podIP
+  ## Proxy service account
+  ## templates/proxy-service-account.yaml
+  service_account:
+    annotations: {}
   ## Proxy configmap
   ## templates/proxy-configmap.yaml
   ##
@@ -922,6 +965,8 @@ proxy:
   service:
     annotations: {}
     type: LoadBalancer
+    ## Optional. Leave it blank to get next available random IP.
+    loadBalancerIP: ""
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##
@@ -1019,8 +1064,12 @@ toolset:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  ## Bastion configmap
-  ## templates/bastion-configmap.yaml
+  ## Toolset service account
+  ## templates/toolset-service-account.yaml
+  service_account:
+    annotations: {}
+  ## Toolset configmap
+  ## templates/toolset-configmap.yaml
   ##
   configData:
     PULSAR_MEM: >
@@ -1111,3 +1160,27 @@ job:
   ttl:
     enabled: false
     secondsAfterFinished: 3600
+
+# This section is intended for cluster providers where all containers, including init containers,
+# need to provide the number of resources they are going to use.
+initContainer_resources:
+  zookeeper_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  cs_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  verify_cluster_id:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  broker_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  bookkeeper_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1

@@ -17,42 +17,35 @@
 # under the License.
 #
 
-{{- if and .Values.rbac.enabled .Values.rbac.psp }}
+{{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 rules:
   - apiGroups:
       - policy
     resourceNames:
-      - "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+      - "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
     resources:
       - podsecuritypolicies
     verbs:
       - use
 ---
 
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
----
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
 subjects:
 - kind: ServiceAccount
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
   namespace: {{ template "pulsar.namespace" . }}
 ---
 
@@ -60,9 +53,9 @@ apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
 {{- if .Values.rbac.limit_to_namespace }}
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}-{{ template "pulsar.namespace" . }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ template "pulsar.namespace" . }}"
 {{- else}}
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
 {{- end}}
 spec:
   readOnlyRootFilesystem: false
