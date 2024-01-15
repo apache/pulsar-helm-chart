@@ -64,7 +64,11 @@ data:
   # disable authorization on proxy and forward authorization credentials to broker
   authorizationEnabled: "false"
   forwardAuthorizationCredentials: "true"
+  {{- if .Values.auth.useProxyRoles }}
+  superUserRoles: {{ omit .Values.auth.superUsers "proxy" | values | sortAlpha | join "," }}
+  {{- else }}
   superUserRoles: {{ .Values.auth.superUsers | values | sortAlpha | join "," }}
+  {{- end }}
   {{- end }}
   {{- if eq .Values.auth.authentication.provider "jwt" }}
   # token authentication configuration
