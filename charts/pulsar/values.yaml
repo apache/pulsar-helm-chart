@@ -1163,22 +1163,22 @@ job:
 initContainer_resources:
   zookeeper_ready:
     requests:
-      memory: 128Mi
+      memory: 256Mi
       cpu: 0.1
   cs_ready:
     requests:
-      memory: 128Mi
+      memory: 256Mi
       cpu: 0.1
   verify_cluster_id:
     requests:
-      memory: 128Mi
+      memory: 256Mi
       cpu: 0.1
   broker_ready:
     requests:
-      memory: 128Mi
+      memory: 256Mi
       cpu: 0.1
   bookkeeper_ready:
     requests:
-      memory: 128Mi
+      memory: 256Mi
       cpu: 0.1
 
