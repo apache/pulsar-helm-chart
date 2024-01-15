@@ -150,6 +150,9 @@ defaultPulsarImageTag:
 ##
 ## Control what images to use for each component
 images:
+  # set imagePullSecrets
+  # imagePullSecrets:
+  #   - secretName
   zookeeper:
     repository: apachepulsar/pulsar-all
     # uses defaultPulsarImageTag when unspecified
