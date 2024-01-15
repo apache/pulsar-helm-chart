@@ -240,7 +240,14 @@ jobs:
             "jwt-symmetric")
               export SYMMETRIC=true
               ;;
+            "tls")
+              export PROXY_TLS=true
+              ;;
+            "broker-tls")
+              export PROXY_TLS=true
+              ;;
           esac
+          export TEST_SCENARIO=${{ matrix.testScenario.shortname }}
           .ci/chart_test.sh ${{ matrix.testScenario.values_file }}
 
       - name: Collect k8s logs on failure
