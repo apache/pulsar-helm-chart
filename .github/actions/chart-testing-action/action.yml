@@ -37,17 +37,17 @@ branding:
   icon: anchor
 inputs:
   version:
-    description: "The chart-testing version to install (default: v3.7.1)"
+    description: "The chart-testing version to install"
     required: false
-    default: v3.7.1
+    default: v3.10.1
   yamllint_version:
-    description: "The yamllint version to install (default: 1.27.1)"
+    description: "The yamllint version to install"
     required: false
-    default: '1.27.1'
+    default: '1.33.0'
   yamale_version:
-    description:  "The yamale version to install (default: 3.0.4)"
+    description:  "The yamale version to install"
     required: false
-    default: '3.0.4'
+    default: '4.0.4'
 runs:
   using: composite
   steps:

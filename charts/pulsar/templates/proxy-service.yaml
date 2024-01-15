@@ -32,6 +32,9 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.proxy.service.type }}
+  {{- with .Values.proxy.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
   {{- if .Values.proxy.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.proxy.service.externalTrafficPolicy }}
   {{- end }}

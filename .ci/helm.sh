@@ -100,8 +100,9 @@ function ci::collect_k8s_logs() {
 }
 
 function ci::install_pulsar_chart() {
-    local value_file=$1
-    local extra_opts=$2
+    local common_value_file=$1
+    local value_file=$2
+    local extra_opts=$3
 
     echo "Installing the pulsar chart"
     ${KUBECTL} create namespace ${NAMESPACE}
@@ -112,9 +113,9 @@ function ci::install_pulsar_chart() {
 
     echo ${HELM} dependency update ${CHARTS_HOME}/charts/pulsar
     ${HELM} dependency update ${CHARTS_HOME}/charts/pulsar
-    echo ${HELM} install --set initialize=true --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
-    ${HELM} template --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
-    ${HELM} install --set initialize=true --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
+    echo ${HELM} install --set initialize=true --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
+    ${HELM} template --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
+    ${HELM} install --set initialize=true --values ${common_value_file} --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
 
     echo "wait until broker is alive"
     WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-broker | wc -l)
