@@ -970,6 +970,7 @@ proxy:
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
     ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
     # externalTrafficPolicy: Local 
+    ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
     # loadBalancerSourceRanges:
     #   - 10.0.0.0/8
   ## Proxy ingress
@@ -1138,9 +1139,10 @@ pulsar_manager:
     annotations: {}
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
     ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
-    # externalTrafficPolicy: 
-    loadBalancerSourceRanges:
-    - a.b.c.d/32
+    # externalTrafficPolicy: Local
+    ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
+    # loadBalancerSourceRanges:
+    #   - 10.0.0.0/8
   ## Pulsar manager ingress
   ## templates/pulsar-manager-ingress.yaml
   ##
