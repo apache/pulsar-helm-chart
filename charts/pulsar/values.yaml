@@ -677,6 +677,12 @@ pulsar_metadata:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
 
+  # resources for bin/pulsar initialize-cluster-metadata
+  resources:
+#    requests:
+#      memory: 512Mi
+#      cpu: 1
+
   ## optional you can specify tolerations and nodeSelectors for all init jobs (pulsar-init & bookkeeper-init)
   # tolerations: []
   #   - key: "someKey"
@@ -1151,3 +1157,27 @@ job:
   ttl:
     enabled: false
     secondsAfterFinished: 3600
+
+# This section is intended for cluster providers where all containers, including init containers,
+# need to provide the number of resources they are going to use.
+initContainer_resources:
+  zookeeper_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  cs_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  verify_cluster_id:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  broker_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  bookkeeper_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1

@@ -44,6 +44,7 @@ spec:
       - name: wait-cs-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer_resources.cs_ready | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
@@ -54,6 +55,7 @@ spec:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer_resources.zookeeper_ready | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
@@ -72,6 +74,7 @@ spec:
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer_resources.verify_cluster_id | nindent 10 }}
         command: ["sh", "-c"]
         args:
         - >

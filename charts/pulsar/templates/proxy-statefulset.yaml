@@ -110,6 +110,7 @@ spec:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer_resources.zookeeper_ready | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
@@ -128,6 +129,7 @@ spec:
       - name: wait-broker-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer_resources.broker_ready | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
