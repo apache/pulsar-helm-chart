@@ -45,6 +45,8 @@ if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
     PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
     ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}    
     install_type="upgrade"
+    echo "Wait 10 seconds"
+    sleep 10
     # produce messages with old version of pulsar and consume with new version
     ci::test_pulsar_producer_consumer "produce"
     test_action="consume"
@@ -53,6 +55,9 @@ fi
 PULSAR_CHART_VERSION="local"
 # install (or upgrade) pulsar chart
 ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+
+echo "Wait 10 seconds"
+sleep 10
 
 # check pulsar environment
 ci::check_pulsar_environment
