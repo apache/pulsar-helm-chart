@@ -227,18 +227,20 @@ function ci::check_pulsar_environment() {
     echo "bookie-0 bookkeeper.conf"
     ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-bookie-0 -- cat conf/bookkeeper.conf
     echo "bookie-0 bookies list (rw)"
-    ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/bookkeeper shell listbookies -rw
+    ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/bookkeeper shell listbookies -rw | grep ListBookiesCommand
     echo "bookie-0 bookies list (ro)"
-    ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/bookkeeper shell listbookies -ro
+    ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/bookkeeper shell listbookies -ro | grep ListBookiesCommand
 }
 
 function ci::test_pulsar_producer_consumer() {
     action="${1:-"produce-consume"}"
+    echo "Testing with ${action}"
     if [[ "$(ci::helm_values_for_deployment | yq .tls.proxy.enabled)" == "true" ]]; then
       PROXY_URL="pulsar+ssl://pulsar-ci-proxy:6651"
     else
       PROXY_URL="pulsar://pulsar-ci-proxy:6650"
     fi
+    set -x
     if [[ "${action} == "produce" || "${action}" == "produce-consume" ]]; then
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin tenants create pulsar-ci
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin namespaces create pulsar-ci/test
@@ -252,6 +254,7 @@ function ci::test_pulsar_producer_consumer() {
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client consume -s test pulsar-ci/test/test-topic
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client --url "${PROXY_URL}" consume -s test2 pulsar-ci/test/test-topic
     fi
+    set +x
 }
 
 function ci::wait_function_running() {
