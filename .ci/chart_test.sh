@@ -39,19 +39,26 @@ if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
 fi
 
 install_type="install"
+test_action="produce-consume"
 if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
     # install older version of pulsar chart
     PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
     ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}    
     install_type="upgrade"
+    # produce messages with old version of pulsar and consume with new version
+    ci::test_pulsar_producer_consumer "produce"
+    test_action="consume"
 fi
 
 PULSAR_CHART_VERSION="local"
 # install (or upgrade) pulsar chart
 ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
 
+# check pulsar environment
+ci::check_pulsar_environment
+
 # test producer/consumer
-ci::test_pulsar_producer_consumer
+ci::test_pulsar_producer_consumer "${test_action}"
 
 if [[ "x${FUNCTION}" == "xtrue" ]]; then
     # test functions
