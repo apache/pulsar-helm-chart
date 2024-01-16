@@ -20,13 +20,15 @@
 BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PULSAR_HOME="$(cd "${BINDIR}/.." && pwd)"
 CHARTS_HOME=${PULSAR_HOME}
+PULSAR_CHART_LOCAL=${CHARTS_HOME}/charts/pulsar
+PULSAR_CHART_VERSION=${PULSAR_CHART_VERSION:-"local"}
 OUTPUT_BIN=${CHARTS_HOME}/output/bin
 KIND_BIN=$OUTPUT_BIN/kind
 HELM=${OUTPUT_BIN}/helm
 KUBECTL=${OUTPUT_BIN}/kubectl
 NAMESPACE=pulsar
 CLUSTER=pulsar-ci
-CLUSTER_ID=$(uuidgen)
+: ${CLUSTER_ID:=$(uuidgen)}
 K8S_LOGS_DIR="${K8S_LOGS_DIR:-/tmp/k8s-logs}"
 export PATH="$OUTPUT_BIN:$PATH"
 
@@ -100,68 +102,96 @@ function ci::collect_k8s_logs() {
 }
 
 function ci::install_pulsar_chart() {
-    local common_value_file=$1
-    local value_file=$2
-    local extra_opts=$3
+    local install_type=$1
+    local common_value_file=$2
+    local value_file=$3
+    local extra_opts=$4
+    local install_args
 
-    echo "Installing the pulsar chart"
-    ${KUBECTL} create namespace ${NAMESPACE}
-    ci::install_cert_manager
-    echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
-    ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
-    sleep 10
+    if [[ "${install_type}" == "install" ]]; then
+      echo "Installing the pulsar chart"
+      ${KUBECTL} create namespace ${NAMESPACE}
+      ci::install_cert_manager
+      echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
+      ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
+      sleep 10
+      install_args=""
+    else 
+      install_args="--wait --wait-for-jobs --timeout 300s --debug"
+    fi
 
-    echo ${HELM} dependency update ${CHARTS_HOME}/charts/pulsar
-    ${HELM} dependency update ${CHARTS_HOME}/charts/pulsar
-    echo ${HELM} install --set initialize=true --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
-    ${HELM} template --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
-    ${HELM} install --set initialize=true --values ${common_value_file} --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHARTS_HOME}/charts/pulsar
-
-    echo "wait until broker is alive"
-    WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-broker | wc -l)
-    counter=1
-    while [[ ${WC} -lt 1 ]]; do
-      ((counter++))
-      echo ${WC};
-      sleep 15
-      ${KUBECTL} get pods,jobs -n ${NAMESPACE}
-      ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
-      if [[ $((counter % 20)) -eq 0 ]]; then
-        ci::print_pod_logs
-        if [[ $counter -gt 100 ]]; then
-          echo >&2 "Timeout waiting..."
-          exit 1
-        fi
+    CHART_ARGS=""
+    if [[ "${PULSAR_CHART_VERSION}" == "local" ]]; then
+      set -x
+      ${HELM} dependency update ${PULSAR_CHART_LOCAL}
+      set +x
+      CHART_ARGS="${PULSAR_CHART_LOCAL}"
+    else
+      set -x
+      ${HELM} repo add apache https://pulsar.apache.org/charts
+      set +x
+      CHART_ARGS="apache/pulsar --dependency-update"
+      if [[ "${PULSAR_CHART_VERSION}" != "latest" ]]; then
+        CHART_ARGS="${CHART_ARGS} --version ${PULSAR_CHART_VERSION}"
       fi
-      WC=$(${KUBECTL} get pods -n ${NAMESPACE} | grep ${CLUSTER}-broker | wc -l)
-      if [[ ${WC} -gt 1 ]]; then
-        ${KUBECTL} describe pod -n ${NAMESPACE} pulsar-ci-broker-0
-        ${KUBECTL} logs -n ${NAMESPACE} pulsar-ci-broker-0
-      fi
+    fi
+    set -x
+    ${HELM} template --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHART_ARGS}
+    ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
+    set +x
+
+    if [[ "${install_type}" == "install" ]]; then
+      echo "wait until broker is alive"
       WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-broker | wc -l)
-    done
-    timeout 300s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-    timeout 120s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until [ "$(curl -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-
-    WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-proxy | wc -l)
-    counter=1
-    while [[ ${WC} -lt 1 ]]; do
-      ((counter++))
-      echo ${WC};
-      sleep 15
-      ${KUBECTL} get pods,jobs -n ${NAMESPACE}
-      ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
-      if [[ $((counter % 8)) -eq 0 ]]; then
-        ci::print_pod_logs
-        if [[ $counter -gt 16 ]]; then
-          echo >&2 "Timeout waiting..."
-          exit 1
+      counter=1
+      while [[ ${WC} -lt 1 ]]; do
+        ((counter++))
+        echo ${WC};
+        sleep 15
+        ${KUBECTL} get pods,jobs -n ${NAMESPACE}
+        ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+        if [[ $((counter % 20)) -eq 0 ]]; then
+          ci::print_pod_logs
+          if [[ $counter -gt 100 ]]; then
+            echo >&2 "Timeout waiting..."
+            exit 1
+          fi
         fi
-      fi
+        WC=$(${KUBECTL} get pods -n ${NAMESPACE} | grep ${CLUSTER}-broker | wc -l)
+        if [[ ${WC} -gt 1 ]]; then
+          ${KUBECTL} describe pod -n ${NAMESPACE} pulsar-ci-broker-0
+          ${KUBECTL} logs -n ${NAMESPACE} pulsar-ci-broker-0
+        fi
+        WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-broker | wc -l)
+      done
+      timeout 300s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      timeout 120s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until [ "$(curl -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+
       WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-proxy | wc -l)
-    done
-    timeout 300s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-    # ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until [ "$(curl -L http://pulsar-ci-proxy:8080/status.html)" == "OK" ]; do sleep 3; done'
+      counter=1
+      while [[ ${WC} -lt 1 ]]; do
+        ((counter++))
+        echo ${WC};
+        sleep 15
+        ${KUBECTL} get pods,jobs -n ${NAMESPACE}
+        ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+        if [[ $((counter % 8)) -eq 0 ]]; then
+          ci::print_pod_logs
+          if [[ $counter -gt 16 ]]; then
+            echo >&2 "Timeout waiting..."
+            exit 1
+          fi
+        fi
+        WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-proxy | wc -l)
+      done
+      timeout 300s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+    else
+      echo "wait until broker is alive"
+      timeout 300s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      timeout 120s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until [ "$(curl -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      echo "wait until proxy is alive"
+      timeout 300s ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+    fi
 }
 
 helm_values_cached=""

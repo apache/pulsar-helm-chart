@@ -38,14 +38,23 @@ if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"
 fi
 
-# install pulsar chart
-ci::install_pulsar_chart ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+install_type="install"
+if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
+    # install older version of pulsar chart
+    PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
+    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}    
+    install_type="upgrade"
+fi
+
+PULSAR_CHART_VERSION="local"
+# install (or upgrade) pulsar chart
+ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
 
 # test producer/consumer
 ci::test_pulsar_producer_consumer
 
 if [[ "x${FUNCTION}" == "xtrue" ]]; then
-    # install cert manager
+    # test functions
     ci::test_pulsar_function
 fi
 
