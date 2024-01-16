@@ -115,6 +115,18 @@ function ci::install_pulsar_chart() {
       echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
       ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
       sleep 10
+
+      # install metallb for loadbalancer support
+      # following instructions from https://kind.sigs.k8s.io/docs/user/loadbalancer/
+      ${KUBECTL} apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+      # wait until metallb is ready
+      ${KUBECTL} wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+      # configure metallb
+      ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
+
       install_args=""
     else 
       install_args="--wait --wait-for-jobs --timeout 300s --debug"
