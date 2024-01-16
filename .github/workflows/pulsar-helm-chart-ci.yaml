@@ -136,7 +136,7 @@ jobs:
           action: wait
 
   install-chart-tests:
-    name: ${{ matrix.testScenario.name }} - k8s ${{ matrix.k8sVersion.version }} - Install
+    name: ${{ matrix.testScenario.name }} - k8s ${{ matrix.k8sVersion.version }} - ${{ matrix.testScenario.type || 'install' }}
     runs-on: ubuntu-22.04
     timeout-minutes: ${{ matrix.testScenario.timeout || 45 }}
     needs: ['preconditions', 'ct-lint']
@@ -154,6 +154,7 @@ jobs:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
             shortname: upgrade
+            type: upgrade
           - name: Use Pulsar Image
             values_file: .ci/clusters/values-pulsar-image.yaml
             shortname: pulsar-image
@@ -181,6 +182,23 @@ jobs:
           - name: PSP
             values_file: .ci/clusters/values-psp.yaml
             shortname: psp
+        include:
+          - k8sVersion:
+              version: "1.21.14"
+              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+            testScenario:
+              name: "Upgrade TLS"
+              values_file: .ci/clusters/values-tls.yaml
+              shortname: tls
+              type: upgrade
+          - k8sVersion:
+              version: "1.21.14"
+              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+            testScenario:
+              name: "Upgrade PSP"
+              values_file: .ci/clusters/values-psp.yaml
+              shortname: psp
+              type: upgrade
     env:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
@@ -234,16 +252,16 @@ jobs:
         with:
           limit-access-to-actor: true
 
-      - name: Run chart-testing (install)
+      - name: Run chart-testing (${{ matrix.testScenario.type || 'install' }})
         run: |
           case "${{ matrix.testScenario.shortname }}" in
             "jwt-symmetric")
               export SYMMETRIC=true
               ;;
-            "upgrade")
-              export UPGRADE_FROM_VERSION=latest
-              ;;
           esac
+          if [[ "${{ matrix.testScenario.type || 'install' }}" == "upgrade" ]]; then
+            export UPGRADE_FROM_VERSION=latest
+          fi
           .ci/chart_test.sh ${{ matrix.testScenario.values_file }}
 
       - name: Collect k8s logs on failure
