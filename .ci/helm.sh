@@ -241,7 +241,7 @@ function ci::test_pulsar_producer_consumer() {
       PROXY_URL="pulsar://pulsar-ci-proxy:6650"
     fi
     set -x
-    if [[ "${action} == "produce" || "${action}" == "produce-consume" ]]; then
+    if [[ "${action}" == "produce" || "${action}" == "produce-consume" ]]; then
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin tenants create pulsar-ci
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin namespaces create pulsar-ci/test
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin topics create pulsar-ci/test/test-topic
@@ -250,7 +250,7 @@ function ci::test_pulsar_producer_consumer() {
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin topics create-subscription -s test2 pulsar-ci/test/test-topic
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client --url "${PROXY_URL}" produce -m "test-message2" pulsar-ci/test/test-topic
     fi
-    if [[ "${action} == "consume" || "${action}" == "produce-consume" ]]; then
+    if [[ "${action}" == "consume" || "${action}" == "produce-consume" ]]; then
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client consume -s test pulsar-ci/test/test-topic
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client --url "${PROXY_URL}" consume -s test2 pulsar-ci/test/test-topic
     fi
