@@ -232,6 +232,28 @@ function ci::check_pulsar_environment() {
     ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/bookkeeper shell listbookies -ro | grep ListBookiesCommand
 }
 
+# function to retry a given commend 3 times with a backoff of 10 seconds in between
+function ci::retry() {
+  local n=1
+  local max=3
+  local delay=10
+  while true; do
+    "$@" && break || {
+      if [[ $n -lt $max ]]; then
+        ((n++))
+        echo "::warning::Command failed. Attempt $n/$max:"
+        sleep $delay
+      else
+        fail "::error::The command has failed after $n attempts."
+      fi
+    }
+  done
+}
+
+function ci::test_pulsar_admin_api_access() {
+  ci::retry ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin tenants list
+}
+
 function ci::test_pulsar_producer_consumer() {
     action="${1:-"produce-consume"}"
     echo "Testing with ${action}"

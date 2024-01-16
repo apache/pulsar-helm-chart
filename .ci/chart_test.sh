@@ -47,6 +47,8 @@ if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
     install_type="upgrade"
     echo "Wait 10 seconds"
     sleep 10
+    # test that we can access the admin api
+    ci::test_pulsar_admin_api_access
     # produce messages with old version of pulsar and consume with new version
     ci::test_pulsar_producer_consumer "produce"
     test_action="consume"
@@ -62,6 +64,8 @@ sleep 10
 # check pulsar environment
 ci::check_pulsar_environment
 
+# test that we can access the admin api
+ci::test_pulsar_admin_api_access
 # test producer/consumer
 ci::test_pulsar_producer_consumer "${test_action}"
 
