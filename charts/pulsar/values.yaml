@@ -249,6 +249,9 @@ auth:
     proxy: "proxy-admin"
     # pulsar-admin client to broker/proxy communication
     client: "admin"
+  # omits the above proxy role from superusers on the proxy
+  # and configures it as a proxy role on the broker in addition to the superusers
+  useProxyRoles: true
 
 ######################################################################
 # External dependencies
