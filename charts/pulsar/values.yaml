@@ -90,7 +90,7 @@ volumes:
 rbac:
   enabled: false
   psp: false
-  limit_to_namespace: false
+  limit_to_namespace: true
 
 
 ## AntiAffinity
@@ -842,7 +842,7 @@ functions:
   # Default is false which deploys functions with ClusterRole and ClusterRoleBinding at the cluster level
   # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
   rbac:
-    limit_to_namespace: false
+    limit_to_namespace: true
   ### Functions Worker service account
   ## templates/broker-service-account.yaml
   service_account:
