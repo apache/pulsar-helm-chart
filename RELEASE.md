@@ -79,6 +79,7 @@ official Apache releases must not include the rcN suffix.
     ```shell
     git add charts/pulsar/Chart.yaml
     git commit -m "Chart: Bump version to $VERSION_WITHOUT_RC"
+    git push origin master
     ```
 
   Note: You will tag this commit, you do not need to open a PR for it.
@@ -186,6 +187,20 @@ official Apache releases must not include the rcN suffix.
   cd ${PULSAR_REPO_ROOT}
   git push origin tag pulsar-${VERSION_RC}
   ```
+
+## Create release notes for the release candidate in GitHub UI
+
+```shell 
+# open this URL and create release notes by clicking "Create release from tag"
+echo https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-${VERSION_RC}
+```
+
+1. Open the above URL in a browser and create release notes by clicking "Create release from tag".
+2. Find "Previous tag: auto" in the UI above the text box and choose the previous release there.
+3. Click "Generate release notes".
+4. Review the generated release notes.
+5. Select "Set as a pre-release"
+6. Click "Publish release".  
 
 ## Prepare Vote email on the Apache Pulsar release candidate
 
