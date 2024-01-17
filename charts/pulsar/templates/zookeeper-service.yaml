@@ -45,6 +45,7 @@ spec:
       port: {{ .Values.zookeeper.ports.clientTls }}
     {{- end }}
   clusterIP: None
+  publishNotReadyAddresses: true
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}

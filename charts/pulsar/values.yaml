@@ -90,7 +90,7 @@ volumes:
 rbac:
   enabled: false
   psp: false
-  limit_to_namespace: false
+  limit_to_namespace: true
 
 
 ## AntiAffinity
@@ -127,19 +127,6 @@ components:
   # pulsar manager
   pulsar_manager: false
 
-## Monitoring Components
-##
-## Control what components of the monitoring stack to deploy for the cluster
-monitoring:
-  # monitoring - prometheus
-  prometheus: true
-  # monitoring - grafana
-  grafana: true
-  # monitoring - node_exporter
-  node_exporter: true
-  # alerting - alert-manager
-  alert_manager: true
-
 ## which extra components to deploy (Deprecated)
 extra:
   # Pulsar proxy
@@ -152,49 +139,52 @@ extra:
   dashboard: false
   # pulsar manager
   pulsar_manager: false
-  # Monitoring stack (prometheus and grafana)
-  monitoring: false
   # Configure Kubernetes runtime for Functions
   functionsAsPods: false
+
+# default image tag for pulsar images
+# uses chart's appVersion when unspecified
+defaultPulsarImageTag:
 
 ## Images
 ##
 ## Control what images to use for each component
 images:
+  # set imagePullSecrets
+  # imagePullSecrets:
+  #   - secretName
   zookeeper:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   bookie:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   autorecovery:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   broker:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   proxy:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   functions:
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
-  prometheus:
-    repository: prom/prometheus
-    tag: v2.17.2
-    pullPolicy: IfNotPresent
-  grafana:
-    repository: streamnative/apache-pulsar-grafana-dashboard-k8s
-    tag: 0.0.16
-    pullPolicy: IfNotPresent
+    # uses defaultPulsarImageTag when unspecified
+    tag:
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
-    tag: v0.2.0
+    tag: v0.3.0
     pullPolicy: IfNotPresent
     hasCommand: false
 
@@ -215,8 +205,8 @@ tls:
     organization:
       - pulsar
     keySize: 4096
-    keyAlgorithm: rsa
-    keyEncoding: pkcs8
+    keyAlgorithm: RSA
+    keyEncoding: PKCS8
   # settings for generating certs for proxy
   proxy:
     enabled: false
@@ -259,6 +249,9 @@ auth:
     proxy: "proxy-admin"
     # pulsar-admin client to broker/proxy communication
     client: "admin"
+  # omits the above proxy role from superusers on the proxy
+  # and configures it as a proxy role on the broker in addition to the superusers
+  useProxyRoles: true
 
 ######################################################################
 # External dependencies
@@ -298,12 +291,14 @@ zookeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  # If using Prometheus-Operator enable this PodMonitor to discover zookeeper scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -335,13 +330,12 @@ zookeeper:
       timeoutSeconds: 30
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "8000"
+  annotations: {}
   tolerations: []
   gracePeriod: 30
   resources:
@@ -361,6 +355,10 @@ zookeeper:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  # Ensures 2.10.0 non-root docker image works correctly.
+  securityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: "OnRootMismatch"
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -379,6 +377,18 @@ zookeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selector:
+        # matchLabels:
+        # app: pulsar-zookeeper
+      selector: {}
+  # External zookeeper server list in case of global-zk list to create zk cluster across zk deployed on different clusters/namespaces
+  # Example value: "us-east1-pulsar-zookeeper-0.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-1.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-east1-pulsar-zookeeper-2.us-east1-pulsar-zookeeper.us-east1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-0.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-1.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888,us-west1-pulsar-zookeeper-2.us-west1-pulsar-zookeeper.us-west1.svc.cluster.local:2888:3888"
+  externalZookeeperServerList: ""
+  ## Zookeeper service account
+  ## templates/zookeeper-service-account.yaml
+  service_account:
+    annotations: {}
   ## Zookeeper configmap
   ## templates/zookeeper-configmap.yaml
   ##
@@ -402,8 +412,7 @@ zookeeper:
   ## templates/zookeeper-service.yaml
   ##
   service:
-    annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    annotations: {}
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
@@ -432,17 +441,20 @@ bookkeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  # If using Prometheus-Operator enable this PodMonitor to discover bookie scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
     http: 8000
     bookie: 3181
+    statestore: 4181
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -466,6 +478,7 @@ bookkeeper:
       timeoutSeconds: 5
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -490,6 +503,10 @@ bookkeeper:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  # Ensures 2.10.0 non-root docker image works correctly.
+  securityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: "OnRootMismatch"
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -508,6 +525,11 @@ bookkeeper:
         # type: pd-ssd
         # fsType: xfs
         # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selector:
+        # matchLabels:
+        # app: pulsar-bookkeeper-journal
+      selector: {}
       useMultiVolumes: false
       multiVolumes:
         - name: journal0
@@ -524,6 +546,8 @@ bookkeeper:
       local_storage: true
       # storageClassName:
       # storageClass:
+        # ...
+      # selector:
         # ...
       useMultiVolumes: false
       multiVolumes:
@@ -545,7 +569,12 @@ bookkeeper:
       # storageClassName:
       # storageClass: ## this is common too
         # ...
-
+      # selector:
+        # ...
+  ## Bookkeeper service account
+  ## templates/bookkeeper-service-account.yaml
+  service_account:
+    annotations: {}
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
   ##
@@ -568,12 +597,6 @@ bookkeeper:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-      -Xlog:gc*
-      -Xlog:gc::utctime
-      -Xlog:safepoint
-      -Xlog:gc+heap=trace
-      -verbosegc
-      -Xlog:gc:/var/log/bookie-gc.log
     # configure the memory settings based on jvm memory settings
     dbStorage_writeCacheMaxSizeMb: "32"
     dbStorage_readAheadCacheMaxSizeMb: "32"
@@ -602,12 +625,14 @@ autorecovery:
   # so the metrics are correctly rendered in grafana dashboard
   component: recovery
   replicaCount: 1
-  # If using Prometheus-Operator enable this PodMonitor to discover autorecovery scrape targets
-  # # Prometheus-Operator does not add scrape targets based on k8s annotations
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -616,6 +641,7 @@ autorecovery:
     # cloud.google.com/gke-nodepool: default-pool
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -627,6 +653,10 @@ autorecovery:
     requests:
       memory: 64Mi
       cpu: 0.05
+  ## Bookkeeper auto-recovery service account
+  ## templates/autorecovery-service-account.yaml
+  service_account:
+    annotations: {}
   ## Bookkeeper auto-recovery configmap
   ## templates/autorecovery-configmap.yaml
   ##
@@ -646,12 +676,28 @@ pulsar_metadata:
   image:
     # the image used for running `pulsar-cluster-initialize` job
     repository: apachepulsar/pulsar-all
-    tag: 2.9.2
+    # uses defaultPulsarImageTag when unspecified
+    tag:
     pullPolicy: IfNotPresent
   ## set an existing configuration store
   # configurationStore:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
+
+  # resources for bin/pulsar initialize-cluster-metadata
+  resources:
+#    requests:
+#      memory: 512Mi
+#      cpu: 1
+
+  ## optional you can specify tolerations and nodeSelectors for all init jobs (pulsar-init & bookkeeper-init)
+  # tolerations: []
+  #   - key: "someKey"
+  #     operator: "Equal"
+  #     value: "someValue"
+  #     effect: "NoSchedule"
+  # nodeSelector: {}
+  #   cloud.google.com/gke-nodepool: default-pool
 
   ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
@@ -674,12 +720,15 @@ broker:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
-  # If using Prometheus-Operator enable this PodMonitor to discover broker scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+    behavior: ~
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   ports:
@@ -710,6 +759,7 @@ broker:
       timeoutSeconds: 5
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -734,6 +784,12 @@ broker:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  extreEnvs: []
+#    - name: POD_NAME
+#      valueFrom:
+#        fieldRef:
+#          apiVersion: v1
+#          fieldPath: metadata.name
   ## Broker configmap
   ## templates/broker-configmap.yaml
   ##
@@ -755,9 +811,9 @@ broker:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-    managedLedgerDefaultEnsembleSize: "2"
-    managedLedgerDefaultWriteQuorum: "2"
-    managedLedgerDefaultAckQuorum: "2"
+    managedLedgerDefaultEnsembleSize: "1"
+    managedLedgerDefaultWriteQuorum: "1"
+    managedLedgerDefaultAckQuorum: "1"
   ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Broker service
@@ -868,6 +924,17 @@ broker:
 ##
 functions:
   component: functions-worker
+  useBookieAsStateStore: false
+  ## Pulsar: Functions Worker ClusterRole or Role
+  ## templates/broker-rbac.yaml
+  # Default is false which deploys functions with ClusterRole and ClusterRoleBinding at the cluster level
+  # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
+  rbac:
+    limit_to_namespace: true
+  ### Functions Worker service account
+  ## templates/broker-service-account.yaml
+  service_account:
+    annotations: {}
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
@@ -882,12 +949,15 @@ proxy:
     minReplicas: 1
     maxReplicas: 3
     metrics: ~
-  # If using Prometheus-Operator enable this PodMonitor to discover proxy scrape targets
-  # Prometheus-Operator does not add scrape targets based on k8s annotations
+    behavior: ~
+  # This is how prometheus discovers this component
   podMonitor:
-    enabled: false
+    enabled: true
     interval: 10s
     scrapeTimeout: 10s
+    metricRelabelings:
+      # - action: labeldrop
+      #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
@@ -913,6 +983,7 @@ proxy:
       timeoutSeconds: 5
   affinity:
     anti_affinity: true
+    anti_affinity_topology_key: kubernetes.io/hostname
     # Set the anti affinity type. Valid values:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
@@ -937,6 +1008,16 @@ proxy:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
+  extreEnvs: []
+#    - name: POD_IP
+#      valueFrom:
+#        fieldRef:
+#          apiVersion: v1
+#          fieldPath: status.podIP
+  ## Proxy service account
+  ## templates/proxy-service-account.yaml
+  service_account:
+    annotations: {}
   ## Proxy configmap
   ## templates/proxy-configmap.yaml
   ##
@@ -958,6 +1039,7 @@ proxy:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
+    httpNumThreads: "8"
   ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Proxy service
@@ -968,15 +1050,27 @@ proxy:
     https: 443
     pulsar: 6650
     pulsarssl: 6651
+    containerPorts:
+      http: 8080
+      https: 8443
   service:
     annotations: {}
     type: LoadBalancer
+    ## Optional. Leave it blank to get next available random IP.
+    loadBalancerIP: ""
+    ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
+    ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
+    # externalTrafficPolicy: Local
+    ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
+    # loadBalancerSourceRanges:
+    #   - 10.0.0.0/8
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -1023,6 +1117,7 @@ dashboard:
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -1066,8 +1161,12 @@ toolset:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  ## Bastion configmap
-  ## templates/bastion-configmap.yaml
+  ## Toolset service account
+  ## templates/toolset-service-account.yaml
+  service_account:
+    annotations: {}
+  ## Toolset configmap
+  ## templates/toolset-configmap.yaml
   ##
   configData:
     PULSAR_MEM: >
@@ -1078,109 +1177,22 @@ toolset:
   additionalCommand:
 
 #############################################################
-### Monitoring Stack : Prometheus / Grafana
+### Monitoring Stack : kube-prometheus-stack chart
 #############################################################
 
-## Monitoring Stack: Prometheus
-## templates/prometheus-deployment.yaml
-##
-
-## Deprecated in favor of using `prometheus.rbac.enabled`
-prometheus_rbac: false
-prometheus:
-  component: prometheus
-  rbac:
+## Prometheus, Grafana, and the rest of the kube-prometheus-stack are managed by the dependent chart here:
+## https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+## For sample values, please see their documentation.
+kube-prometheus-stack:
+  enabled: true
+  prometheus:
     enabled: true
-  replicaCount: 1
-  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
-  restartPodsOnConfigMapChange: false
-  # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
-  annotations: {}
-  tolerations: []
-  gracePeriod: 5
-  port: 9090
-  enableAdminApi: false
-  resources:
-    requests:
-      memory: 256Mi
-      cpu: 0.1
-  volumes:
-    # use a persistent volume or emptyDir
-    persistence: true
-    data:
-      name: data
-      size: 10Gi
-      local_storage: true
-      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-      ##
-      # storageClassName: existent-storage-class
-      #
-      ## Instead if you want to create a new storage class define it below
-      ## If left undefined no storage class will be defined along with PVC
-      ##
-      # storageClass:
-        # type: pd-standard
-        # fsType: xfs
-        # provisioner: kubernetes.io/gce-pd
-  ## Prometheus service
-  ## templates/prometheus-service.yaml
-  ##
-  service:
-    annotations: {}
-
-## Monitoring Stack: Grafana
-## templates/grafana-deployment.yaml
-##
-grafana:
-  component: grafana
-  replicaCount: 1
-  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
-  restartPodsOnConfigMapChange: false
-  # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
-  annotations: {}
-  tolerations: []
-  gracePeriod: 30
-  resources:
-    requests:
-      memory: 250Mi
-      cpu: 0.1
-  ## Grafana service
-  ## templates/grafana-service.yaml
-  ##
-  service:
-    type: LoadBalancer
-    port: 3000
-    targetPort: 3000
-    annotations: {}
-  plugins: []
-  ## Grafana configMap
-  ## templates/grafana-configmap.yaml
-  ##
-  configData: {}
-  ## Grafana ingress
-  ## templates/grafana-ingress.yaml
-  ##
-  ingress:
+  grafana:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+  alertmanager:
     enabled: false
-    annotations: {}
-    labels: {}
-
-    tls: []
-
-    ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
-    ## - secretName: ""
-
-    ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
-    extraPaths: []
-    hostname: ""
-    protocol: http
-    path: /grafana
-    port: 80
-  admin:
-    user: pulsar
-    password: pulsar
 
 ## Components Stack: pulsar_manager
 ## templates/pulsar-manager.yaml
@@ -1216,12 +1228,19 @@ pulsar_manager:
     port: 9527
     targetPort: 9527
     annotations: {}
+    ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
+    ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
+    # externalTrafficPolicy: Local
+    ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
+    # loadBalancerSourceRanges:
+    #   - 10.0.0.0/8
   ## Pulsar manager ingress
   ## templates/pulsar-manager-ingress.yaml
   ##
   ingress:
     enabled: false
     annotations: {}
+    ingressClassName: ""
     tls:
       enabled: false
 
@@ -1244,3 +1263,27 @@ job:
   ttl:
     enabled: false
     secondsAfterFinished: 3600
+
+# This section is intended for cluster providers where all containers, including init containers,
+# need to provide the number of resources they are going to use.
+initContainer_resources:
+  zookeeper_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  cs_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  verify_cluster_id:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  broker_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1
+  bookkeeper_ready:
+    requests:
+      memory: 256Mi
+      cpu: 0.1

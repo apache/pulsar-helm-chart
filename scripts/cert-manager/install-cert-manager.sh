@@ -19,9 +19,13 @@
 
 #!/usr/bin/env bash
 
+# If installation fails, the build should fail
+set -e
+
 NAMESPACE=cert-manager
 NAME=cert-manager
-VERSION=v1.5.4
+# check compatibility with k8s versions from https://cert-manager.io/docs/installation/supported-releases/
+VERSION=v1.11.4
 
 # Install cert-manager CustomResourceDefinition resources
 echo "Installing cert-manager CRD resources ..."

@@ -22,7 +22,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: {{ template "pulsar.name" . }}-broker
+  name: {{ template "pulsar.fullname" . }}-broker
   labels:
     app: {{ template "pulsar.name" . }}
     chart: {{ template "pulsar.chart" . }}
@@ -48,6 +48,9 @@ spec:
         - sourceLabels: [__meta_kubernetes_pod_name]
           action: replace
           targetLabel: kubernetes_pod_name
+    {{- if $.Values.broker.podMonitor.metricRelabelings }}
+      metricRelabelings: {{ toYaml $.Values.broker.podMonitor.metricRelabelings | nindent 8 }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}

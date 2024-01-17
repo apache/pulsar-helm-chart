@@ -32,22 +32,35 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.proxy.service.type }}
+  {{- with .Values.proxy.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- if .Values.proxy.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.proxy.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if .Values.proxy.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.proxy.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
   ports:
     {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
     - name: http
       port: {{ .Values.proxy.ports.http }}
       protocol: TCP
+      targetPort: sts-http
     - name: "{{ .Values.tcpPrefix }}pulsar"
       port: {{ .Values.proxy.ports.pulsar }}
       protocol: TCP
+      targetPort: "sts-{{ .Values.tcpPrefix }}pulsar"
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
       port: {{ .Values.proxy.ports.https }}
       protocol: TCP
+      targetPort: sts-https
     - name: "{{ .Values.tlsPrefix }}pulsarssl"
       port: {{ .Values.proxy.ports.pulsarssl }}
       protocol: TCP
+      targetPort: "sts-{{ .Values.tlsPrefix }}pulsarssl"
     {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
