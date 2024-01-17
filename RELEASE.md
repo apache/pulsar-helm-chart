@@ -46,7 +46,7 @@ official Apache releases must not include the rcN suffix.
     export VERSION_WITHOUT_RC=${VERSION_RC%-candidate-*}
 
     # Clone and set PULSAR_REPO_ROOT
-    git clone https://github.com/apache/pulsar-helm-chart.git pulsar
+    git clone https://github.com/apache/pulsar-helm-chart.git
     cd pulsar-helm-chart
     export PULSAR_REPO_ROOT=$(pwd)
     ```
