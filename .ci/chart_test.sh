@@ -69,7 +69,7 @@ ci::test_pulsar_admin_api_access
 # test producer/consumer
 ci::test_pulsar_producer_consumer "${test_action}"
 
-if [[ "x${FUNCTION}" == "xtrue" ]]; then
+if [[ "$(ci::helm_values_for_deployment | yq .components.functions)" == "true" ]]; then
     # test functions
     ci::test_pulsar_function
 fi
