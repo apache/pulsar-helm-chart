@@ -838,7 +838,7 @@ broker:
   storageOffload: {}
     ## General
     ## =======
-    # maxBlockSizeInBytes: "64000000" 
+    # maxBlockSizeInBytes: "64000000"
     # readBufferSizeInBytes: "1000000"
     ## The following are default values for the cluster. They can be changed
     ## on each namespace.
@@ -847,7 +847,7 @@ broker:
 
     ## For AWS S3
     ## ======
-    ## Either you must create an IAM account with access to the bucket and 
+    ## Either you must create an IAM account with access to the bucket and
     ## generate keys for that account, or use IAM Roles for Service Accounts (IRSA)
     ## (example on `.Value.broker.service_account.annotations` section above)
     ##
@@ -879,10 +879,10 @@ broker:
     ##   <aws secret name>
     ## ```
     # secret: <aws secret name> # [k8s secret name that stores AWS credentials]
-  
+
     ## For Azure Blob
     ## =================
-    ## Need to create an Azure storage account and a blob containter (bucket) 
+    ## Need to create an Azure storage account and a blob containter (bucket)
     ## To retrieve key, see https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage?tabs=azure-portal#code-try-1
     #
     # driver: azureblob
@@ -901,18 +901,18 @@ broker:
     ## ====================
     ## You must create a service account that has access to the objects in GCP buckets
     ## and upload its key as a JSON file to a secret.
-    ## 
+    ##
     ## 1. Go to https://console.cloud.google.com/iam-admin/serviceaccounts
     ## 2. Select your project.
     ## 3. Create a new service account.
-    ## 4. Give the service account permission to access the bucket. For example, 
+    ## 4. Give the service account permission to access the bucket. For example,
     ##    the "Storage Object Admin" role.
     ## 5. Create a key for the service account and save it as a JSON file.
     ## 6. Save the JSON file in a secret:
     ##       kubectl create secret generic pulsar-gcp-sa-secret \
     ##          --from-file=google-service-account-key.json \
     ##          --namespace pulsar
-    ## 
+    ##
     # driver: google-cloud-storage
     # bucket: <bucket>
     # region: <region>
