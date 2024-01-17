@@ -274,10 +274,10 @@ This workaround addresses the issue by updating in-place Helm release metadata t
 To uninstall the Pulsar Chart, run the following command:
 
 ```bash
-helm delete <pulsar-release-name>
+helm uninstall <pulsar-release-name>
 ```
 
-For the purposes of continuity, these charts have some Kubernetes objects that are not removed when performing `helm delete`.
+For the purposes of continuity, these charts have some Kubernetes objects that are not removed when performing `helm uninstall`.
 These items we require you to *conciously* remove them, as they affect re-deployment should you choose to.
 
 * PVCs for stateful data, which you must *consciously* remove
