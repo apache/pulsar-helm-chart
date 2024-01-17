@@ -285,20 +285,44 @@ function ci::test_pulsar_producer_consumer() {
 
 function ci::wait_function_running() {
     num_running=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function' | jq .numRunning)
+    counter=1
     while [[ ${num_running} -lt 1 ]]; do
+      ((counter++))
+      if [[ $counter -gt 6 ]]; then
+        echo >&2 "Timeout waiting..."
+        return 1
+      fi
       echo "Waiting 15 seconds for function to be running"
       sleep 15
-      ${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running
+      ${KUBECTL} get pods -n ${NAMESPACE} -l component=function || true
       ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+      podname=$(${KUBECTL} get pods -l component=function -n ${NAMESPACE} --no-headers -o custom-columns=":metadata.name") || true
+      if [[ -n "$podname" ]]; then
+        echo "Function pod is $podname"
+        ${KUBECTL} describe pod -n ${NAMESPACE} $podname
+        echo "Function pod logs"
+        ${KUBECTL} logs -n ${NAMESPACE} $podname
+      fi
       num_running=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function' | jq .numRunning)
     done
 }
 
 function ci::wait_message_processed() {
     num_processed=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function' | jq .processedSuccessfullyTotal)
+    podname=$(${KUBECTL} get pods -l component=function -n ${NAMESPACE} --no-headers -o custom-columns=":metadata.name")
+    counter=1
     while [[ ${num_processed} -lt 1 ]]; do
+      ((counter++))
+      if [[ $counter -gt 6 ]]; then
+        echo >&2 "Timeout waiting..."
+        return 1
+      fi
       echo "Waiting 15 seconds for message to be processed"
       sleep 15
+      echo "Function pod is $podname"
+      ${KUBECTL} describe pod -n ${NAMESPACE} $podname
+      echo "Function pod logs"
+      ${KUBECTL} logs -n ${NAMESPACE} $podname
       ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function
       num_processed=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function' | jq .processedSuccessfullyTotal)
     done
