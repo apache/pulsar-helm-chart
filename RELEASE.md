@@ -66,6 +66,10 @@ official Apache releases must not include the rcN suffix.
 - Update Helm Chart version in `Chart.yaml`, example: `version: 1.0.0` (without
   the RC tag). Verify that the `appVersion` matches the `values.yaml` versions for Pulsar components.
 
+    ```shell
+    yq -i '.version=strenv(VERSION_WITHOUT_RC)' charts/pulsar/Chart.yaml
+    ```
+
 - Add and commit the version change.
 
     ```shell
