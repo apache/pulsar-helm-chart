@@ -399,9 +399,10 @@ Contributors can run below commands to test the Helm Chart
 
 ```shell
 export VERSION_RC=3.0.0-candidate-1
-helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC}/
+export VERSION_WITHOUT_RC=${VERSION_RC%-candidate-*}
+helm repo add --force-update apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 helm repo update
-helm install pulsar apache-pulsar-dist-dev/pulsar --set affinity.anti_affinity=false
+helm install pulsar apache-pulsar-dist-dev/pulsar --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false
 ```
 
 You can then perform any other verifications to check that it works as you expected by
