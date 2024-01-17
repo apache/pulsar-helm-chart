@@ -44,23 +44,27 @@ official Apache releases must not include the rcN suffix.
     # Set Version
     export VERSION_RC=3.0.0-candidate-1
     export VERSION_WITHOUT_RC=${VERSION_RC%-candidate-*}
+    # set your ASF user id
+    export APACHE_USER=<your ASF userid>
+    ```
 
-    # Clone and set PULSAR_REPO_ROOT
+- Clone clean repository and set PULSAR_REPO_ROOT
+
+    ```shell
     git clone https://github.com/apache/pulsar-helm-chart.git
     cd pulsar-helm-chart
     export PULSAR_REPO_ROOT=$(pwd)
     ```
 
-- We currently release Helm Chart from `master` branch:
+- Alternatively (not recommended), go to your already checked out pulsar-helm-chart directory and ensure that it's clean
 
     ```shell
     git checkout master
-    ```
-
-- Clean the checkout: the sdist step below will
-
-    ```shell
+    git fetch origin
+    git reset --hard origin/master
+    # clean the checkout
     git clean -fdX .
+    export PULSAR_REPO_ROOT=$(pwd)
     ```
 
 - Update Helm Chart version in `Chart.yaml`, example: `version: 1.0.0` (without
@@ -110,7 +114,7 @@ official Apache releases must not include the rcN suffix.
     http://www.apache.org/dev/openpgp.html#key-gen-generate-key)
 
     ```shell
-    helm gpg sign -u <apache_id>@apache.org pulsar-${VERSION_WITHOUT_RC}.tgz
+    helm gpg sign -u $APACHE_USER@apache.org pulsar-${VERSION_WITHOUT_RC}.tgz
     ```
 
     Warning: you need the `helm gpg` plugin to sign the chart. It can be found at: https://github.com/technosophos/helm-gpg
@@ -139,7 +143,6 @@ official Apache releases must not include the rcN suffix.
 - Move the artifacts to ASF dev dist repo, generate convenience `index.yaml` & publish them
 
   ```shell
-  APACHE_USER=<your ASF userid>
   # Create new folder for the release
   svn mkdir --username $APACHE_USER -m "Add directory for pulsar-helm-chart $VERSION_RC release" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC
   # checkout the directory
@@ -168,7 +171,9 @@ official Apache releases must not include the rcN suffix.
   svn commit -m "Add artifacts for Helm Chart ${VERSION_RC}"
   ```
 
-- Remove old Helm Chart versions from the dev repo
+- Remove old Helm Chart versions from the dev repo 
+
+  First check if this is required by viewing the versions available at https://dist.apache.org/repos/dist/dev/pulsar/helm-chart
 
   ```shell
   export PREVIOUS_VERSION_RC=3.0.0-candidate-1
@@ -179,7 +184,7 @@ official Apache releases must not include the rcN suffix.
 
   ```shell
   cd ${PULSAR_REPO_ROOT}
-  git push upstream tag pulsar-${VERSION_RC}
+  git push origin tag pulsar-${VERSION_RC}
   ```
 
 ## Prepare Vote email on the Apache Pulsar release candidate
@@ -216,9 +221,9 @@ Public keys are available at: https://www.apache.org/dist/pulsar/KEYS
 
 For convenience "index.yaml" has been uploaded (though excluded from voting), so you can also run the below commands.
 
-helm repo add apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
+helm repo add --force-update apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 helm repo update
-helm install pulsar apache-pulsar-dist-dev/pulsar --set affinity.anti_affinity=false
+helm install pulsar apache-pulsar-dist-dev/pulsar --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false
 
 pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though it is not strictly required for releasing the artifact based on ASF Guidelines. 
 
@@ -425,17 +430,19 @@ EOF
 
 ## Publish release to SVN
 
-You need to migrate the RC artifacts that passed to this repository:
-https://dist.apache.org/repos/dist/release/pulsar/helm-chart/
-(The migration should include renaming the files so that they no longer have the RC number in their filenames.)
-
-The best way of doing this is to svn cp between the two repos (this avoids having to upload
-the binaries again, and gives a clearer history in the svn commit logs):
-
+Set environment variables
 ```shell
 export VERSION_RC=3.0.0-candidate-1
 export VERSION_WITHOUT_RC=${VERSION_RC%-candidate-*}
-APACHE_USER=<your ASF userid>
+export APACHE_USER=<your ASF userid>
+```
+
+Migrating the approved RC artifacts to the release directory:
+https://dist.apache.org/repos/dist/release/pulsar/helm-chart/
+
+svn commands for handling this:
+
+```shell
 svn rm --username $APACHE_USER -m "Remove temporary index.yaml file" https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC}/index.yaml
 svn move --username $APACHE_USER -m "Release Pulsar Helm Chart ${VERSION_WITHOUT_RC} from ${VERSION_RC}" \
   https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/${VERSION_RC} \
