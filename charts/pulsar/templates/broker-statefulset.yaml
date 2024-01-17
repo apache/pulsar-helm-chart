@@ -251,6 +251,13 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
+          {{- if .Values.broker.storageOffload.driver }}
+          {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
+          - name: gcp-service-account
+            readOnly: true
+            mountPath: /pulsar/gcp-service-account
+          {{- end }}
+          {{- end }}
           {{- if .Values.broker.extraVolumeMounts }}
 {{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
           {{- end }}
@@ -259,6 +266,31 @@ spec:
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
+      env:
+        {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3") }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AWS_SECRET_ACCESS_KEY
+        {{- end }}
+        {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "azureblob") }}
+        - name: AZURE_STORAGE_ACCOUNT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AZURE_STORAGE_ACCOUNT
+        - name: AZURE_STORAGE_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.broker.storageOffload.secret }}
+              key: AZURE_STORAGE_ACCESS_KEY
+        {{- end }}
       volumes:
       {{- if .Values.broker.extraVolumes }}
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
@@ -289,6 +321,13 @@ spec:
               path: broker/token
       {{- end}}
       {{- end}}
+      {{- if .Values.broker.storageOffload.driver }}
+      {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
+      - name: gcp-service-account
+        secret:
+          secretName: {{ .Values.broker.storageOffload.gcsServiceAccountSecret }}
+      {{- end }}
+      {{- end }}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}

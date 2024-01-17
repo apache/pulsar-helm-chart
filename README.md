@@ -64,7 +64,7 @@ It includes support for:
     - [x] Non-persistence storage
     - [x] Persistence Volume
     - [x] Local Persistent Volumes
-    - [ ] Tiered Storage
+    - [x] Tiered Storage
 - [x] Functions
     - [x] Kubernetes Runtime
     - [x] Process Runtime

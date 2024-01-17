@@ -43,6 +43,58 @@ data:
   zooKeeperSessionTimeoutMillis: "30000"
   statusFilePath: "{{ template "pulsar.home" . }}/status"
 
+  # Tiered storage settings
+  {{- if .Values.broker.storageOffload.driver }}
+  {{- if eq .Values.broker.storageOffload.driver "aws-s3" }}
+  managedLedgerOffloadDriver: "{{ .Values.broker.storageOffload.driver }}" 
+  s3ManagedLedgerOffloadBucket: "{{ .Values.broker.storageOffload.bucket }}" 
+  s3ManagedLedgerOffloadRegion: "{{ .Values.broker.storageOffload.region }}" 
+  {{- if .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
+  PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
+  {{- end }} 
+  {{- if .Values.broker.storageOffload.managedLedgerOffloadDeletionLagMs }}
+  PULSAR_PREFIX_managedLedgerOffloadDeletionLagInMillis: "{{ .Values.broker.storageOffload.managedLedgerOffloadDeletionLagMs }}" 
+  {{- end }}
+  {{- if .Values.broker.storageOffload.maxBlockSizeInBytes }}
+  s3ManagedLedgerOffloadMaxBlockSizeInBytes: "{{ .Values.broker.storageOffload.maxBlockSizeInBytes }}" 
+  {{- end }}
+  {{- if .Values.broker.storageOffload.readBufferSizeInBytes }}
+  s3ManagedLedgerOffloadReadBufferSizeInBytes: "{{ .Values.broker.storageOffload.readBufferSizeInBytes }}" 
+  {{- end }}
+  {{- end }}
+  {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
+  managedLedgerOffloadDriver: "{{ .Values.broker.storageOffload.driver }}" 
+  gcsManagedLedgerOffloadBucket: "{{ .Values.broker.storageOffload.bucket }}"
+  gcsManagedLedgerOffloadRegion: "{{ .Values.broker.storageOffload.region }}"
+  gcsManagedLedgerOffloadServiceAccountKeyFile: "/pulsar/gcp-service-account/{{ .Values.broker.storageOffload.gcsServiceAccountJsonFile }}"
+  {{- if .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
+  PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
+  {{- end }} 
+  {{- if .Values.broker.storageOffload.managedLedgerOffloadDeletionLagMs }}
+  PULSAR_PREFIX_managedLedgerOffloadDeletionLagInMillis: "{{ .Values.broker.storageOffload.managedLedgerOffloadDeletionLagMs }}" 
+  {{- end }}
+  {{- if .Values.broker.storageOffload.maxBlockSizeInBytes }}
+  gcsManagedLedgerOffloadMaxBlockSizeInBytes: "{{ .Values.broker.storageOffload.maxBlockSizeInBytes }}" 
+  {{- end }}
+  {{- if .Values.broker.storageOffload.readBufferSizeInBytes }}
+  gcsManagedLedgerOffloadReadBufferSizeInBytes: "{{ .Values.broker.storageOffload.readBufferSizeInBytes }}" 
+  {{- end }}
+  {{- end }}
+  {{- if eq .Values.broker.storageOffload.driver "azureblob" }}
+  managedLedgerOffloadDriver: "{{ .Values.broker.storageOffload.driver }}" 
+  managedLedgerOffloadBucket: "{{ .Values.broker.storageOffload.bucket }}"
+  {{- if .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}
+  PULSAR_PREFIX_managedLedgerOffloadThresholdInBytes: "{{ .Values.broker.storageOffload.managedLedgerOffloadAutoTriggerSizeThresholdBytes }}" 
+  {{- end }} 
+  {{- if .Values.broker.storageOffload.managedLedgerOffloadDeletionLagMs }}
+  PULSAR_PREFIX_managedLedgerOffloadDeletionLagInMillis: "{{ .Values.broker.storageOffload.managedLedgerOffloadDeletionLagMs }}" 
+  {{- end }}
+  {{- if .Values.broker.storageOffload.maxBlockSizeInBytes }}
+  managedLedgerOffloadMaxBlockSizeInBytes: "{{ .Values.broker.storageOffload.maxBlockSizeInBytes }}" 
+  {{- end }}
+  {{- end }}
+  {{- end }}
+
   # Function Worker Settings
   # function worker configuration
   {{- if not (or .Values.components.functions .Values.extra.functionsAsPods) }}
