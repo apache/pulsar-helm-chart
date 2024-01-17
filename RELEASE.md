@@ -211,6 +211,9 @@ Hello Apache Pulsar Community,
 
 This is a call for the vote to release the Apache Pulsar Helm Chart version ${VERSION_WITHOUT_RC}.
 
+Release notes for $VERSION_RC:
+https://github.com/apache/pulsar-helm-chart/releases/tag/pulsar-$VERSION_RC
+
 The release candidate is available at:
 https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 
