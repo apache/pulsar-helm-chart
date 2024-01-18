@@ -18,5 +18,5 @@
 #
 
 {{- if semverCompare "<3.10.0-0" .Capabilities.HelmVersion.Version -}}
-{{- fail "Your Helm version is not supported. Please upgrade to Helm 3.10.0 or later." -}}
+{{- fail "Your Helm version is not supported. Please upgrade to Helm 3.10.0 or later. The recommended version is currently 3.12.3 or newer. You can find more about Helm releases and installation at https://github.com/helm/helm/releases. " -}}
 {{- end -}}
