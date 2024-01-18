@@ -199,9 +199,19 @@ jobs:
               values_file: .ci/clusters/values-psp.yaml
               shortname: psp
               type: upgrade
+          - k8sVersion:
+              version: "1.21.14"
+              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+            testScenario:
+              name: "TLS with helm 3.10.0"
+              values_file: .ci/clusters/values-tls.yaml
+              shortname: tls
+              type: install
+            helmVersion: 3.10.0
     env:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
+      HELM_VERSION: ${{ matrix.helmVersion || '3.12.3' }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -252,7 +262,7 @@ jobs:
         with:
           limit-access-to-actor: true
 
-      - name: Run chart-testing (${{ matrix.testScenario.type || 'install' }})
+      - name: Run chart-testing (${{ matrix.testScenario.type || 'install' }}) with helm ${{ env.HELM_VERSION }}
         run: |
           case "${{ matrix.testScenario.shortname }}" in
             "jwt-symmetric")
