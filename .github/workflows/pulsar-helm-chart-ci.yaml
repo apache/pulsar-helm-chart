@@ -204,7 +204,7 @@ jobs:
               kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
             testScenario:
               name: "TLS with helm 3.10.0"
-              values_file: .ci/clusters/tls.yaml
+              values_file: .ci/clusters/values-tls.yaml
               shortname: tls
               type: install
             helmVersion: 3.10.0
