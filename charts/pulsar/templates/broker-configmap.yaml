@@ -118,11 +118,10 @@ data:
   PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
   PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
   PF_functionRuntimeFactoryConfigs_expectedMetricsCollectionInterval: "30"
-  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
+  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled .Values.tls.function_instance.enabled) }}
   PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
   PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}/"
-  {{- end }}
-  {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
+  {{- else }}
   PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
   PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
@@ -134,11 +133,10 @@ data:
   PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
   PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}
   PF_kubernetesContainerFactory_expectedMetricsCollectionInterval: "30"
-  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
+  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled .Values.tls.function_instance.enabled) }}
   PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}/"
-  {{- end }}
-  {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
+  {{- else }}
   PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}

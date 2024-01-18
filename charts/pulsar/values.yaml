@@ -229,6 +229,10 @@ tls:
   # settings for generating certs for toolset
   toolset:
     cert_name: tls-toolset
+  # TLS setting for function runtime instance
+  function_instance:
+    # controls the use of TLS for function runtime connections towards brokers
+    enabled: false
 
 # Enable or disable broker authentication and authorization.
 auth:
