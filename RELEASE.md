@@ -23,7 +23,7 @@ This document details the steps for releasing the Apache Pulsar Helm Chart.
 
 ## Prerequisites
 
-- Helm version >= 3.0.2
+- Helm version >= 3.10.0
 - Helm gpg plugin (one option: https://github.com/technosophos/helm-gpg)
 
 ## Build Release Notes
