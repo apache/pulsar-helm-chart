@@ -135,4 +135,64 @@ spec:
 {{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
       {{- end }}
 {{- end }}
+
+{{- if or .Values.components.pulsar_manager .Values.extra.pulsar_manager }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-init"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}-init
+spec:
+  # This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
+  # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+  {{- if .Values.job.ttl.enabled }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished }}
+  {{- end }}
+  template:
+    spec:
+      nodeSelector:
+      {{- if .Values.pulsar_metadata.nodeSelector }}
+      {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.pulsar_metadata.tolerations }}
+      {{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
+      {{- end }}
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-pulsar-manager-ready
+          image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+          imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+          resources: {{ toYaml .Values.initContainer_resources.nslookup | nindent 12 }}
+          command: [ "sh", "-c" ]
+          args:
+            - >-
+              until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}; do
+                sleep 3;
+              done;
+              sleep 30 # wait for pulsar-manager to be completely ready
+      containers:
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-init"
+          image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+          imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+          {{- if .Values.pulsar_metadata.resources }}
+          resources: {{ toYaml .Values.pulsar_metadata.resources | nindent 12 }}
+          {{- end }}
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              CSRF_TOKEN=$(curl http://{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}:7750/pulsar-manager/csrf-token)
+              curl \
+                -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+                -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN;" \
+                -H 'Content-Type: application/json' \
+                -X PUT http://{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}:7750/pulsar-manager/users/superuser \
+                -d '{"name": "'"${USERNAME}"'", "password": "'"${PASSWORD}"'", "description": "Helm-managed Admin Account", "email": "'"${USERNAME}"'@pulsar.org"}'
+          env:
+            {{- include "pulsar.manager-secrets" . | nindent 10}}
 {{- end }}
+{{- end }}
+
