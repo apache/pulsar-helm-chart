@@ -18,8 +18,7 @@
 #
 
 # deploy bookkeeper PodMonitor only when `$.Values.bookkeeper.podMonitor.enabled` is true
-# index? see: https://github.com/helm/helm/issues/2192#issuecomment-293739257
-{{- if and .Values.bookkeeper.podMonitor.enabled (index .Values "kube-prometheus-stack").enabled }}
+{{- if $.Values.bookkeeper.podMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
