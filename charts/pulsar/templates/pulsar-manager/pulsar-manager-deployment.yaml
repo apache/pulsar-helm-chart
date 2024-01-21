@@ -97,5 +97,4 @@ spec:
       volumes:
         - name: pulsar-manager-data
           emptyDir: {}
-
 {{- end }}
