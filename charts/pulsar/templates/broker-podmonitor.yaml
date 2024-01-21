@@ -18,7 +18,8 @@
 #
 
 # deploy broker PodMonitor only when `$.Values.broker.podMonitor.enabled` is true
-{{- if $.Values.broker.podMonitor.enabled }}
+# index? see: https://github.com/helm/helm/issues/2192#issuecomment-293739257
+{{- if and .Values.broker.podMonitor.enabled (index .Values "kube-prometheus-stack").enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
