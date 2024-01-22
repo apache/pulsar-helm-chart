@@ -1270,24 +1270,8 @@ job:
 
 # This section is intended for cluster providers where all containers, including init containers,
 # need to provide the number of resources they are going to use.
-initContainer_resources:
-  zookeeper_ready:
-    requests:
-      memory: 256Mi
-      cpu: 0.1
-  cs_ready:
-    requests:
-      memory: 256Mi
-      cpu: 0.1
-  verify_cluster_id:
-    requests:
-      memory: 256Mi
-      cpu: 0.1
-  broker_ready:
-    requests:
-      memory: 256Mi
-      cpu: 0.1
-  bookkeeper_ready:
+initContainer:
+  resources:
     requests:
       memory: 256Mi
       cpu: 0.1
