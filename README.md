@@ -162,12 +162,29 @@ verified in some [tests](./.ci/clusters).
 
 ## Grafana Dashboards
 
-The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana. Dashboards are loaded via a Kubernetes `ConfigMap`. Please see their documentation for loading those dashboards.
+The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana.
 
-The `apache/pulsar` GitHub repo contains some dashboards [here](https://github.com/apache/pulsar/tree/master/grafana).
+There are several ways to configure Grafana dashboards. The default `values.yaml` comes examples of Pulsar dashboards which 
+get downloaded from https://github.com/streamnative/apache-pulsar-grafana-dashboard by URL.
 
-### Third Party Dashboards
+Dashboards can be configured in `values.yaml` or by adding `ConfigMap` items with label `grafana_dashboard: "1"`.
+In `values.yaml`, it's possible to include dashboards by URL or by grafana.com dashboard id (`gnetId` and `revision`).
+Please see the [Grafana Helm chart documentation for importing dashboards](https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md#import-dashboards).
 
+You can connect to Grafana by forwarding port 3000
+```
+kubectl port-forward $(kubectl get pods -l app.kubernetes.io/name=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000
+```
+And then opening the browser to http://localhost:3000 . The default user is `admin`.
+
+You can find out the password with this command
+```
+kubectl get secret -l app.kubernetes.io/name=grafana -o=jsonpath="{.items[0].data.admin-password}" | base64 --decode
+```
+
+### Pulsar Grafana Dashboards
+
+* The `apache/pulsar` GitHub repo contains some Grafana dashboards [here](https://github.com/apache/pulsar/tree/master/grafana).
 * StreamNative provides Grafana Dashboards for Apache Pulsar in this [GitHub repository](https://github.com/streamnative/apache-pulsar-grafana-dashboard).
 * DataStax provides Grafana Dashboards for Apache Pulsar in this [GitHub repository](https://github.com/datastax/pulsar-helm-chart/tree/master/helm-chart-sources/pulsar/grafana-dashboards).
 
