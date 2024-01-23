@@ -1229,8 +1229,12 @@ pulsar_manager:
   ##
   service:
     type: LoadBalancer
+
     port: 9527
     targetPort: 9527
+    adminPort: 7750
+    adminTargetPort: 7750
+
     annotations: {}
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
     ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
