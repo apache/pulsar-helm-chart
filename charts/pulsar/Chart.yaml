@@ -22,6 +22,7 @@ appVersion: "3.0.2"
 description: Apache Pulsar Helm chart for Kubernetes
 name: pulsar
 version: 3.2.0
+kubeVersion: ">=1.21.0-0"
 home: https://pulsar.apache.org
 sources:
   - https://github.com/apache/pulsar
