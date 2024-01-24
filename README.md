@@ -164,10 +164,9 @@ verified in some [tests](./.ci/clusters).
 
 The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana.
 
-There are several ways to configure Grafana dashboards. The default `values.yaml` comes examples of Pulsar dashboards which 
-get downloaded from https://github.com/streamnative/apache-pulsar-grafana-dashboard by URL.
+There are several ways to configure Grafana dashboards. The default `values.yaml` comes with examples of Pulsar dashboards which get downloaded from the Apache-2.0 licensed [streamnative/apache-pulsar-grafana-dashboard OSS project](https://github.com/streamnative/apache-pulsar-grafana-dashboard) by URL.
 
-Dashboards can be configured in `values.yaml` or by adding `ConfigMap` items with label `grafana_dashboard: "1"`.
+Dashboards can be configured in `values.yaml` or by adding `ConfigMap` items with the label `grafana_dashboard: "1"`.
 In `values.yaml`, it's possible to include dashboards by URL or by grafana.com dashboard id (`gnetId` and `revision`).
 Please see the [Grafana Helm chart documentation for importing dashboards](https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md#import-dashboards).
 
