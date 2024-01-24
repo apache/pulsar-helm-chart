@@ -1212,7 +1212,7 @@ kube-prometheus-stack:
             path: /var/lib/grafana/dashboards/pulsar
     dashboards:
       pulsar:
-        # Download the maintained dashboards from ASL 2.0 licenced repo https://github.com/streamnative/apache-pulsar-grafana-dashboard
+        # Download the maintained dashboards from AL 2.0 licenced repo https://github.com/streamnative/apache-pulsar-grafana-dashboard
         bookkeeper:
           url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/bookkeeper.json
           datasource: Prometheus
