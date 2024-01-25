@@ -204,6 +204,19 @@ helm upgrade -f pulsar.yaml \
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
+## Upgrading from Helm Chart version 3.0.0-3.2.x to 3.3.0 version and above
+
+The kube-prometheus-stack version has been upgraded to 56.x.x in Pulsar Helm Chart version 3.3.0 .
+Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-55x-to-56x). 
+
+There's a script to run the required commands:
+```shell
+./scripts/kube-prometheus-stack/upgrade_prometeheus_operator_crds.sh
+```
+
+After, this you can proceed with `helm upgrade`.
+
 ## Upgrading to Apache Pulsar 2.10.0 and above (or Helm Chart version 3.0.0 and above)
 
 The 2.10.0+ Apache Pulsar docker image is a non-root container, by default. That complicates an upgrade to 2.10.0
