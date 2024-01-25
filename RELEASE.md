@@ -123,10 +123,14 @@ official Apache releases must not include the rcN suffix.
     This should also generate a provenance file (Example: `pulsar-1.0.0.tgz.prov`) as described in
     https://helm.sh/docs/topics/provenance/, which can be used to verify integrity of the Helm chart.
 
-    Verify the signed chart (with example output shown):
+    Verify the signed chart:
 
     ```shell
-    $ helm gpg verify pulsar-${VERSION_WITHOUT_RC}.tgz
+    helm gpg verify pulsar-${VERSION_WITHOUT_RC}.tgz
+    ```
+
+    Example output:
+    ```
     gpg: Signature made Thu Oct 20 16:36:24 2022 CDT
     gpg:                using RSA key BD4291E509D771B79E7BD1F5C5724B3F5588C4EB
     gpg:                issuer "mmarshall@apache.org"
@@ -478,7 +482,7 @@ Create and push the release tag:
 cd "${PULSAR_REPO_ROOT}"
 git checkout pulsar-${VERSION_RC}
 git tag -s pulsar-${VERSION_WITHOUT_RC} -m "Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC}"
-git push upstream pulsar-${VERSION_WITHOUT_RC}
+git push origin pulsar-${VERSION_WITHOUT_RC}
 ```
 
 ## Update index.yaml
