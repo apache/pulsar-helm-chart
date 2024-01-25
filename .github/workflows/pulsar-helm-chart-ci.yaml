@@ -203,6 +203,15 @@ jobs:
               version: "1.21.14"
               kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
             testScenario:
+              name: "Upgrade kube-prometheus-stack"
+              values_file: .ci/clusters/values-prometheus-grafana.yaml
+              shortname: prometheus-grafana
+              type: upgrade
+              upgradeFromVersion: 3.2.0
+          - k8sVersion:
+              version: "1.21.14"
+              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+            testScenario:
               name: "TLS with helm 3.10.0"
               values_file: .ci/clusters/values-tls.yaml
               shortname: tls
@@ -270,7 +279,7 @@ jobs:
               ;;
           esac
           if [[ "${{ matrix.testScenario.type || 'install' }}" == "upgrade" ]]; then
-            export UPGRADE_FROM_VERSION=latest
+            export UPGRADE_FROM_VERSION="${{ matrix.testScenario.upgradeFromVersion || 'latest' }}"
           fi
           .ci/chart_test.sh ${{ matrix.testScenario.values_file }}
 

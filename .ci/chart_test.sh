@@ -52,6 +52,11 @@ if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
     # produce messages with old version of pulsar and consume with new version
     ci::test_pulsar_producer_consumer "produce"
     test_action="consume"
+
+    if [[ "$(ci::helm_values_for_deployment | yq .kube-prometheus-stack.enabled)" == "true" ]]; then
+        echo "Upgrade Prometheus Operator CRDs before upgrading the deployment"
+        ${PULSAR_HOME}/scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh
+    fi
 fi
 
 PULSAR_CHART_VERSION="local"
