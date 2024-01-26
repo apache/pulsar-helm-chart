@@ -112,7 +112,7 @@ spec:
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
-        resources: {{ toYaml .Values.initContainer_resources.verify_cluster_id | nindent 10 }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
