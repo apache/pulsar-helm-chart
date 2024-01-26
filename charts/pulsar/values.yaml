@@ -1249,9 +1249,6 @@ kube-prometheus-stack:
         proxy:
           url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/proxy.json
           datasource: Prometheus
-        pulsar_detector:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/pulsar_detector.json
-          datasource: Prometheus
         recovery:
           url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/recovery.json
           datasource: Prometheus
