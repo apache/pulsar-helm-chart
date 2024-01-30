@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.components.broker }}
+{{- if and .Values.components.broker .Values.rbac.enabled }}
 ## TODO create our own cluster role with less privledges than admin
 apiVersion: rbac.authorization.k8s.io/v1
 {{- if .Values.rbac.limit_to_namespace }}
