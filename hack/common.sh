@@ -33,6 +33,8 @@ HELM_BIN=$OUTPUT_BIN/helm
 KIND_BIN=$OUTPUT_BIN/kind
 CR_BIN=$OUTPUT_BIN/cr
 : "${CR_VERSION:=1.6.0}"
+KUBECONFORM_BIN=$OUTPUT_BIN/kubeconform
+: "${KUBECONFORM_VERSION:=0.6.4}"
 export PATH="$OUTPUT_BIN:$PATH"
 
 test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
@@ -133,4 +135,10 @@ function hack::ensure_cr() {
     mv $tmpfile $CR_BIN
     chmod +x $CR_BIN
     $CR_BIN version
+}
+
+function hack::ensure_kubeconform() {
+    echo "Installing kubeconform v$KUBECONFORM_VERSION..."
+    curl -s --retry 10 -L https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-${OS}-${ARCH}.tar.gz | tar -xzO kubeconform > $KUBECONFORM_BIN
+    chmod +x $KUBECONFORM_BIN
 }

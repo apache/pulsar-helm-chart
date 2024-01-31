@@ -127,6 +127,23 @@ jobs:
             --validate-maintainers=false \
             --target-branch ${{ github.event.repository.default_branch }}
 
+      - name: Run kubeconform check
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: |
+          PULSAR_CHART_HOME=$(pwd)
+          source ${PULSAR_CHART_HOME}/hack/common.sh
+          hack::ensure_kubeconform
+          validate_helm_template_with_k8s_version() {
+            local kube_version=$1
+            echo "Validating helm template with kubeconform for k8s version $kube_version"
+            helm template charts/pulsar --set kube-prometheus-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version | \
+              kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
+          }
+          helm dependency build charts/pulsar
+          set -o pipefail
+          validate_helm_template_with_k8s_version 1.21.0
+          validate_helm_template_with_k8s_version 1.27.0
+
       - name: Wait for ssh connection when build fails
         # ssh access is enabled for builds in own forks
         uses: ./.github/actions/ssh-access
