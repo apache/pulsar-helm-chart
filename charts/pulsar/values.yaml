@@ -623,7 +623,7 @@ bookkeeper:
     # disk utilization configuration
     # https://bookkeeper.apache.org/docs/reference/config#disk-utilization
     # Make sure that diskUsageLwmThreshold <= diskUsageWarnThreshold <= diskUsageThreshold
-    diskUsageLwmThreshold: "0.85"   # default 0.90 
+    diskUsageLwmThreshold: "0.85"   # default 0.90
     diskUsageWarnThreshold: "0.9"   # default 0.95
     diskUsageThreshold: "0.95"      # default 0.95 (use default)
     diskCheckInterval: "1800"       # default 10000
