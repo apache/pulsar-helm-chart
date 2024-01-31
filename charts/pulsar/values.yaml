@@ -930,7 +930,7 @@ functions:
   component: functions-worker
   useBookieAsStateStore: false
   ## Pulsar: Functions Worker ClusterRole or Role
-  ## templates/function-worker-rbac.yaml
+  ## templates/broker-function-worker-rbac.yaml
   # Default is false which deploys functions with ClusterRole and ClusterRoleBinding at the cluster level
   # Set to true to deploy functions with Role and RoleBinding inside the specified namespace
   rbac:
