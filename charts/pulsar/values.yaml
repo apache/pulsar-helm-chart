@@ -601,11 +601,33 @@ bookkeeper:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-    # configure the memory settings based on jvm memory settings
-    dbStorage_writeCacheMaxSizeMb: "32"
-    dbStorage_readAheadCacheMaxSizeMb: "32"
-    dbStorage_rocksDB_writeBufferSizeMB: "8"
-    dbStorage_rocksDB_blockCacheSize: "8388608"
+    #
+    # Bookkeeper configuration reference: https://bookkeeper.apache.org/docs/reference/config
+    #
+    # https://bookkeeper.apache.org/docs/reference/config#db-ledger-storage-settings
+    # You could use the below example settings for a minimal configuration
+    # dbStorage_writeCacheMaxSizeMb: "32"
+    # dbStorage_readAheadCacheMaxSizeMb: "32"
+    # dbStorage_rocksDB_writeBufferSizeMB: "8"
+    # dbStorage_rocksDB_blockCacheSize: "8388608"
+    #
+    # configure the data compaction (bookie entry log compaction and gc) settings
+    # https://bookkeeper.apache.org/docs/reference/config#garbage-collection-settings
+    # https://bookkeeper.apache.org/docs/reference/config#entry-log-compaction-settings
+    minorCompactionThreshold: "0.2"     # default 0.2 (use default)
+    minorCompactionInterval: "360"      # default 3600 seconds (6 minutes vs default 1 hour)
+    majorCompactionThreshold: "0.8"     # default 0.5
+    majorCompactionInterval: "10800"    # default 86400 seconds (3 hours vs default 1 day)
+    gcWaitTime: "300000"                # default 900000 milli-seconds (5 minutes vs default 15 minutes)
+    isForceGCAllowWhenNoSpace: "true"   # default false
+    # disk utilization configuration
+    # https://bookkeeper.apache.org/docs/reference/config#disk-utilization
+    # Make sure that diskUsageLwmThreshold <= diskUsageWarnThreshold <= diskUsageThreshold
+    diskUsageLwmThreshold: "0.85"   # default 0.90 
+    diskUsageWarnThreshold: "0.9"   # default 0.95
+    diskUsageThreshold: "0.95"      # default 0.95 (use default)
+    diskCheckInterval: "1800"       # default 10000
+
   ## Add a custom command to the start up process of the bookie pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Bookkeeper Service
