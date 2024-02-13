@@ -33,6 +33,8 @@ source ${PULSAR_HOME}/.ci/helm.sh
 # create cluster
 ci::create_cluster
 
+ci::helm_repo_add
+
 extra_opts=""
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"
