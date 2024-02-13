@@ -81,6 +81,13 @@ function ci::install_cert_manager() {
     echo "Successfully installed the cert manager."
 }
 
+function ci::helm_repo_add() {
+    echo "Adding the helm repo ..."
+    ${HELM} repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    ${HELM} repo update
+    echo "Successfully added the helm repo."
+}
+
 function ci::print_pod_logs() {
     echo "Logs for all pulsar containers:"
     for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
