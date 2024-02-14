@@ -133,9 +133,8 @@ function ci::install_pulsar_chart() {
                 --timeout=90s
       # configure metallb
       ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
-
       install_args=""
-    else 
+    else
       install_args="--wait --wait-for-jobs --timeout 300s --debug"
     fi
 
@@ -351,3 +350,43 @@ function ci::test_pulsar_function() {
     echo "Consuming output message"
     ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-client consume -s test pulsar-ci/test/test_output
 }
+
+function ci::test_pulsar_manager() {
+  echo "Testing pulsar manager"
+
+  until ${KUBECTL} get jobs -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-init -o json | jq -r '.status.conditions[] | select (.type | test("Complete")).status' | grep True; do sleep 3; done
+
+
+  echo "Checking Podname"
+  podname=$(${KUBECTL} get pods -n ${NAMESPACE} -l component=pulsar-manager --no-headers -o custom-columns=":metadata.name")
+  echo "Getting pulsar manager UI password"
+  PASSWORD=$(${KUBECTL} get secret -n ${NAMESPACE} -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode)
+
+  echo "Getting CSRF_TOKEN"
+  CSRF_TOKEN=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl http://127.0.0.1:7750/pulsar-manager/csrf-token)
+
+  echo "Performing login"
+  ${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X POST http://127.0.0.1:9527/pulsar-manager/login \
+                                                 -H 'Accept: application/json, text/plain, */*' \
+                                                 -H 'Content-Type: application/json' \
+                                                 -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+                                                 -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN" \
+                                                 -sS -D headers.txt \
+                                                 -d '{"username": "pulsar", "password": "'${PASSWORD}'"}'
+  LOGIN_TOKEN=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- grep "token:" headers.txt | sed 's/^.*: //')
+  LOGIN_JSESSSIONID=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- grep -o "JSESSIONID=[a-zA-Z0-9_]*" headers.txt | sed 's/^.*=//')
+
+  echo "Checking environment"
+  envs=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://localhost:9527/pulsar-manager/environments \
+                  -H 'Content-Type: application/json' \
+                  -H "token: $LOGIN_TOKEN" \
+                  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+                  -H "username: pulsar" \
+                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSSIONID;")
+  number_of_envs=$(echo $envs | jq '.total')
+  if [ "$number_of_envs" -ne 1 ]; then
+    echo "Error: Did not find expected environment"
+    exit 1
+  fi
+}
+

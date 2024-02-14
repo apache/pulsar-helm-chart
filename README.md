@@ -160,6 +160,26 @@ Otherwise, the helm chart installation will attempt to install the CRDs for the 
 you'll need to disable each of the component's `PodMonitors`. This is shown in some [examples](./examples) and is
 verified in some [tests](./.ci/clusters).
 
+## Pulsar Manager
+
+The Pulsar Manager can be deployed alongside the pulsar cluster instance.
+Depending on the given settings it uses an existing Secret within the given namespace or creates a new one, with random
+passwords for both, the UI and the internal database.
+
+To forward the UI use (assumes you did not change the namespace):
+
+```
+kubectl port-forward $(kubectl get pods -l component=pulsar-manager -o jsonpath='{.items[0].metadata.name}') 9527:9527
+```
+
+And then opening the browser to http://localhost:9527
+
+The default user is `pulsar` and you can find out the password with this command
+
+```
+kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
+```
+
 ## Grafana Dashboards
 
 The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana.

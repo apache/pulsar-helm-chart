@@ -64,7 +64,7 @@ spec:
         {{- end }}
           ports:
           - containerPort: {{ .Values.pulsar_manager.service.targetPort }}
-          - containerPort: {{ .Values.pulsar_manager.service.adminTargetPort }}
+          - containerPort: {{ .Values.pulsar_manager.adminService.targetPort }}
           volumeMounts:
           - name: pulsar-manager-data
             mountPath: /data
@@ -77,21 +77,13 @@ spec:
           - name: USERNAME
             valueFrom:
               secretKeyRef:
-                key: PULSAR_MANAGER_ADMIN_USER
-                {{- if .Values.pulsar_manager.existingSecretName }}
-                name: "{{ .Values.pulsar_manager.existingSecretName }}"
-                {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
-                {{- end }}
+                key: DB_USERNAME
           - name: PASSWORD
             valueFrom:
               secretKeyRef:
-                key: PULSAR_MANAGER_ADMIN_PASSWORD
-                {{- if .Values.pulsar_manager.existingSecretName }}
-                name: "{{ .Values.pulsar_manager.existingSecretName }}"
-                {{- else }}
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
-                {{- end }}
+                key: DB_PASSWORD
           - name: PULSAR_MANAGER_OPTS
             value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
