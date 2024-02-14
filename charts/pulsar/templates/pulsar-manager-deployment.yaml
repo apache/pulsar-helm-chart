@@ -49,6 +49,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.pulsar_manager.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.pulsar_manager.priorityClassName }}
+      priorityClassName: {{ .Values.pulsar_manager.priorityClassName }}
+    {{- end }}
     {{- if .Values.pulsar_manager.tolerations }}
       tolerations:
 {{ toYaml .Values.pulsar_manager.tolerations | indent 8 }}

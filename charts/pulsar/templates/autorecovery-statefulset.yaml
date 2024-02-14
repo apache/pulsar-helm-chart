@@ -56,6 +56,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.autorecovery.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.autorecovery.priorityClassName }}
+      priorityClassName: {{ .Values.autorecovery.priorityClassName }}
+    {{- end }}
     {{- if .Values.autorecovery.tolerations }}
       tolerations:
 {{- with .Values.autorecovery.tolerations }}

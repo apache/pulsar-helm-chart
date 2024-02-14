@@ -55,6 +55,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.bookkeeper.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.bookkeeper.priorityClassName }}
+      priorityClassName: {{ .Values.bookkeeper.priorityClassName }}
+    {{- end }}
     {{- if .Values.bookkeeper.tolerations }}
       tolerations:
 {{ toYaml .Values.bookkeeper.tolerations | indent 8 }}
