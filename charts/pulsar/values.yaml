@@ -1323,7 +1323,7 @@ pulsar_manager:
   ## templates/pulsar-manager-service.yaml
   ##
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 9527
     targetPort: 9527
     annotations: {}
