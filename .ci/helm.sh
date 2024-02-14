@@ -133,9 +133,10 @@ function ci::install_pulsar_chart() {
                 --timeout=90s
       # configure metallb
       ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
+      install_args=""
+    else
+      install_args="--wait --wait-for-jobs --timeout 300s --debug"
     fi
-
-    install_args="--wait --wait-for-jobs --timeout 300s --debug"
 
     CHART_ARGS=""
     if [[ "${PULSAR_CHART_VERSION}" == "local" ]]; then
@@ -352,6 +353,10 @@ function ci::test_pulsar_function() {
 
 function ci::test_pulsar_manager() {
   echo "Testing pulsar manager"
+
+  until ${KUBECTL} get jobs -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-init -o json | jq -r '.status.conditions[] | select (.type | test("Complete")).status' | grep True; do sleep 3; done
+
+
   echo "Checking Podname"
   podname=$(${KUBECTL} get pods -n ${NAMESPACE} -l component=pulsar-manager --no-headers -o custom-columns=":metadata.name")
   echo "Getting pulsar manager UI password"
