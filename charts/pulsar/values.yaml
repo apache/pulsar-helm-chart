@@ -1314,6 +1314,11 @@ pulsar_manager:
     ## If you enabled authentication support
     ## JWT_TOKEN: <token>
     ## SECRET_KEY: data:base64,<secret key>
+
+    # the pulsar manager image relies on these variables, if they are not set the backend will keep crashing
+    # however, feel free to overwrite them
+    SPRING_CONFIGURATION_FILE: "/pulsar-manager/pulsar-manager/application.properties"
+    PULSAR_MANAGER_OPTS: " -Dlog4j2.formatMsgNoLookups=true"
   ## Pulsar manager service
   ## templates/pulsar-manager-service.yaml
   ##
