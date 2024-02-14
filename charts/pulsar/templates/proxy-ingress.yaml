@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.proxy.ingress.enabled }}
+{{- if and .Values.proxy.ingress.enabled .Values.proxy.ingress.hostname }}
 {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
 {{- else }}
@@ -73,4 +73,4 @@ spec:
       {{- if .Values.proxy.ingress.hostname }}
       host: {{ .Values.proxy.ingress.hostname }}
       {{- end }}
-{{- end }}
+{{- end }} # End if ingress enabled 

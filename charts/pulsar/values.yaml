@@ -1103,8 +1103,20 @@ proxy:
       ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
       secretName: ""
 
+    # Deprecated Approach - only one host/path supported
     hostname: ""
     path: "/"
+    # New approach - multiple hosts supported
+    hosts: []
+    # - host: foo.bar.com
+    #   excludePaths: []
+    #   includePaths: []
+    #   tls:
+    #     enabled: true
+    #     secretName:
+    paths:
+      root:
+        path: /
   ## Proxy PodDisruptionBudget
   ## templates/proxy-pdb.yaml
   ##
@@ -1150,9 +1162,21 @@ dashboard:
       ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
       secretName: ""
 
+    # Deprecated Approach - only one host/path supported
     ## Required if ingress is enabled
     hostname: ""
     path: "/"
+    # New approach - multiple hosts supported
+    hosts: []
+    # - host: foo.bar.com
+    #   excludePaths: []
+    #   includePaths: []
+    #   tls:
+    #     enabled: true
+    #     secretName:
+    paths:
+      root:
+        path: /
     port: 80
 
 
@@ -1351,8 +1375,20 @@ pulsar_manager:
       ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
       secretName: ""
 
+    # Deprecated Approach - only one host/path supported
     hostname: ""
     path: "/"
+    # New approach - multiple hosts supported
+    hosts: []
+    # - host: foo.bar.com
+    #   excludePaths: []
+    #   includePaths: []
+    #   tls:
+    #     enabled: true
+    #     secretName:
+    paths:
+      root:
+        path: /
 
   ## On first install, the helm chart tries to reuse an existing secret with matching name by default
   ## if this should fail it uses the given username and password to create a new secret

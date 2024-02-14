@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.pulsar_manager.ingress.enabled }}
+{{- if and .Values.pulsar_manager.ingress.enabled .Values.pulsar_manager.ingress.hostname }}
 {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
 {{- else }}
