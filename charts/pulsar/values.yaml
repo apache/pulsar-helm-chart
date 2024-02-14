@@ -1319,12 +1319,8 @@ pulsar_manager:
   ##
   service:
     type: LoadBalancer
-
     port: 9527
     targetPort: 9527
-    adminPort: 7750
-    adminTargetPort: 7750
-
     annotations: {}
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
     ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
@@ -1332,6 +1328,11 @@ pulsar_manager:
     ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
     # loadBalancerSourceRanges:
     #   - 10.0.0.0/8
+  adminService:
+    type: ClusterIP
+    port: 7750
+    targetPort: 7750
+    annotations: {}
   ## Pulsar manager ingress
   ## templates/pulsar-manager-ingress.yaml
   ##
@@ -1348,15 +1349,21 @@ pulsar_manager:
     hostname: ""
     path: "/"
 
-  ## If set use existing secret with specified name to set pulsar admin credentials.
-  existingSecretName:
+  ## On first install, the helm chart tries to reuse an existing secret with matching name by default
+  ## if this should fail it uses the given username and password to create a new secret
+  ## if either are missing the default value of "pulsar" is used for the username or a random password is generated
+  ## And decode any key by using:
+  ## kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
   admin:
-    user: pulsar
-    password: pulsar
+    ui_username: "pulsar"
+    ui_password: ""  # leave empty for random password
+    db_username: "pulsar"
+    db_password: ""  # leave empty for random password
 
 # These are jobs where job ttl configuration is used
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml
 # pulsar-helm-chart/charts/pulsar/templates/bookkeeper-cluster-initialize.yaml
+# pulsar-helm-chart/charts/pulsar/templates/pulsar-manager-cluster-initialize.yaml
 job:
   ttl:
     enabled: false

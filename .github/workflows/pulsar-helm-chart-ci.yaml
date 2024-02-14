@@ -205,6 +205,9 @@ jobs:
           - name: PSP
             values_file: .ci/clusters/values-psp.yaml
             shortname: psp
+          - name: Pulsar Manager
+            values_file: .ci/clusters/values-pulsar-manager.yaml
+            shortname: pulsar-manager
         include:
           - k8sVersion:
               version: "1.21.14"

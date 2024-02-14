@@ -41,10 +41,6 @@ spec:
       port: {{ .Values.pulsar_manager.service.port }}
       targetPort: {{ .Values.pulsar_manager.service.targetPort }}
       protocol: TCP
-    - name: admin
-      port: {{ .Values.pulsar_manager.service.adminPort }}
-      targetPort: {{ .Values.pulsar_manager.service.adminTargetPort }}
-      protocol: TCP
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_manager.component }}
@@ -52,4 +48,28 @@ spec:
   loadBalancerSourceRanges:
 {{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | indent 4 }}
 {{- end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-admin"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}
+  annotations:
+{{ toYaml .Values.pulsar_manager.adminService.annotations | indent 4 }}
+spec:
+  type: {{ .Values.pulsar_manager.adminService.type }}
+  ports:
+    - port: {{ .Values.pulsar_manager.adminService.port }}
+      targetPort: {{ .Values.pulsar_manager.adminService.targetPort }}
+      protocol: TCP
+  selector:
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
+    component: {{ .Values.pulsar_manager.component }}
+
 {{- end }}
+
