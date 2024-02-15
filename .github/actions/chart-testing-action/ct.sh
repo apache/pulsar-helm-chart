@@ -39,6 +39,17 @@ DEFAULT_CHART_TESTING_VERSION=v3.10.1
 DEFAULT_YAMLLINT_VERSION=1.33.0
 DEFAULT_YAMALE_VERSION=4.0.4
 
+ARCH=$(uname -m)
+case $ARCH in
+    x86) ARCH="386";;
+    x86_64) ARCH="amd64";;
+    i686) ARCH="386";;
+    i386) ARCH="386";;
+    arm64) ARCH="arm64";;
+    aarch64) ARCH="arm64";;
+esac
+OS=$(uname|tr '[:upper:]' '[:lower:]')
+
 show_help() {
 cat << EOF
 Usage: $(basename "$0") <options>
@@ -109,16 +120,14 @@ install_chart_testing() {
         exit 1
     fi
 
-    local arch
-    arch=$(uname -m)
-    local cache_dir="$RUNNER_TOOL_CACHE/ct/$version/$arch"
+    local cache_dir="$RUNNER_TOOL_CACHE/ct/$version/${ARCH}"
     local venv_dir="$cache_dir/venv"
 
     if [[ ! -d "$cache_dir" ]]; then
         mkdir -p "$cache_dir"
 
         echo "Installing chart-testing..."
-        curl -sSLo ct.tar.gz "https://github.com/helm/chart-testing/releases/download/$version/chart-testing_${version#v}_linux_amd64.tar.gz"
+        curl -sSLo ct.tar.gz "https://github.com/helm/chart-testing/releases/download/$version/chart-testing_${version#v}_${OS}_${ARCH}.tar.gz"
         tar -xzf ct.tar.gz -C "$cache_dir"
         rm -f ct.tar.gz
 

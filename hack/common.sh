@@ -47,11 +47,13 @@ hack::discoverArch() {
     x86_64) ARCH="amd64";;
     i686) ARCH="386";;
     i386) ARCH="386";;
+    arm64) ARCH="arm64";;
+    aarch64) ARCH="arm64";;
   esac
 }
 
 hack::discoverArch
-OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+OS=$(uname|tr '[:upper:]' '[:lower:]')
 
 function hack::verify_kubectl() {
     if test -x "$KUBECTL_BIN"; then
@@ -105,7 +107,7 @@ function hack::ensure_kind() {
     echo "Installing kind v$KIND_VERSION..."
     tmpfile=$(mktemp)
     trap "test -f $tmpfile && rm $tmpfile" RETURN
-    curl --retry 10 -L -o $tmpfile https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-$(uname)-amd64
+    curl --retry 10 -L -o $tmpfile https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
     mv $tmpfile $KIND_BIN
     chmod +x $KIND_BIN
 }

@@ -29,20 +29,6 @@ PULSARCTL_VERSION=v3.0.2.6
 PULSARCTL_BIN=${HOME}/.pulsarctl/pulsarctl
 export PATH=${HOME}/.pulsarctl/plugins:${PATH}
 
-discoverArch() {
-  ARCH=$(uname -m)
-  case $ARCH in
-    x86) ARCH="386";;
-    x86_64) ARCH="amd64";;
-    i686) ARCH="386";;
-    i386) ARCH="386";;
-    arm64) ARCH="arm64";;
-  esac
-}
-
-discoverArch
-OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
-
 test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
 
 function pulsar::verify_pulsarctl() {
@@ -63,5 +49,3 @@ function pulsar::ensure_pulsarctl() {
     chmod +x $install_script
     $install_script --user --version ${PULSARCTL_VERSION}
 }
-
-
