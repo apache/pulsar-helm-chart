@@ -184,7 +184,7 @@ images:
     tag:
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
-    tag: v0.3.0
+    tag: v0.4.0
     pullPolicy: IfNotPresent
     hasCommand: false
 
@@ -1319,6 +1319,21 @@ pulsar_manager:
     # however, feel free to overwrite them
     SPRING_CONFIGURATION_FILE: "/pulsar-manager/pulsar-manager/application.properties"
     PULSAR_MANAGER_OPTS: " -Dlog4j2.formatMsgNoLookups=true"
+  volumes:
+    # use a persistent volume or emptyDir
+    persistence: true
+    data:
+      name: data
+      size: 128Mi
+      local_storage: true
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class,
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selector:
+        # matchLabels:
+        # app: pulsar-bookkeeper-journal
+      selector: {}
   ## Pulsar manager service
   ## templates/pulsar-manager-service.yaml
   ##

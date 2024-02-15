@@ -19,7 +19,7 @@
 
 {{- if or .Values.components.pulsar_manager .Values.extra.pulsar_manager }}
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
   namespace: {{ template "pulsar.namespace" . }}
@@ -27,6 +27,7 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_manager.component }}
 spec:
+  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
   replicas: 1
   selector:
     matchLabels:
@@ -66,7 +67,7 @@ spec:
           - containerPort: {{ .Values.pulsar_manager.service.targetPort }}
           - containerPort: {{ .Values.pulsar_manager.adminService.targetPort }}
           volumeMounts:
-          - name: pulsar-manager-data
+          - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
             mountPath: /data
           envFrom:
           - configMapRef:
@@ -86,9 +87,30 @@ spec:
                 key: DB_PASSWORD
           - name: PULSAR_MANAGER_OPTS
             value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
-        {{- include "pulsar.imagePullSecrets" . | nindent 6}}
+        {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       volumes:
-        - name: pulsar-manager-data
-          emptyDir: {}
+      {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.pulsar_manager.volumes.persistence) }}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
+        emptyDir: {}
+      {{- end }}
+{{- if and (and .Values.persistence .Values.volumes.persistence) .Values.pulsar_manager.volumes.persistence }}
+  volumeClaimTemplates:
+  - metadata:
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.pulsar_manager.volumes.data.size }}
+    {{- if .Values.pulsar_manager.volumes.data.storageClassName }}
+      storageClassName: "{{ .Values.pulsar_manager.volumes.data.storageClassName }}"
+    {{- else if and .Values.volumes.local_storage .Values.pulsar_manager.volumes.data.local_storage }}
+      storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.pulsar_manager.volumes.data.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}
 
 {{- end }}
