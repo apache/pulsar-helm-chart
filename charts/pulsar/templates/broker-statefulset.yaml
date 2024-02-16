@@ -28,7 +28,9 @@ metadata:
     component: {{ .Values.broker.component }}
 spec:
   serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  {{- if not .Values.broker.autoscaling.enabled }}
   replicas: {{ .Values.broker.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
@@ -79,7 +81,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.broker.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.broker.affinity.type }}:
             - weight: 100
@@ -98,7 +100,7 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.broker.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
@@ -106,12 +108,14 @@ spec:
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
+            export BOOKIE_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
             until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
@@ -120,7 +124,7 @@ spec:
             {{- end }}
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
@@ -129,13 +133,15 @@ spec:
       # This init container will wait for bookkeeper to be ready before
       # deploying the broker
       - name: wait-bookkeeper-ready
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             bin/apply-config-from-env.py conf/bookkeeper.conf;
+            export BOOKIE_MEM="-Xmx128M";
             until bin/bookkeeper shell whatisinstanceid; do
               echo "bookkeeper cluster is not initialized yet. backoff for 3 seconds ...";
               sleep 3;
@@ -151,7 +157,7 @@ spec:
         envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
@@ -159,7 +165,7 @@ spec:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
-        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
         {{- if .Values.broker.probe.liveness.enabled }}
         livenessProbe:
@@ -227,6 +233,10 @@ spec:
         - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
+{{- if .Values.broker.extreEnvs }}
+        env:
+{{ toYaml .Values.broker.extreEnvs | indent 8 }}
+{{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
@@ -241,14 +251,46 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
+          {{- if .Values.broker.storageOffload.driver }}
+          {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
+          - name: gcp-service-account
+            readOnly: true
+            mountPath: /pulsar/gcp-service-account
+          {{- end }}
+          {{- end }}
           {{- if .Values.broker.extraVolumeMounts }}
 {{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
           {{- end }}
           {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
+        env:
+          {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3") }}
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.broker.storageOffload.secret }}
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.broker.storageOffload.secret }}
+                key: AWS_SECRET_ACCESS_KEY
+          {{- end }}
+          {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "azureblob") }}
+          - name: AZURE_STORAGE_ACCOUNT
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.broker.storageOffload.secret }}
+                key: AZURE_STORAGE_ACCOUNT
+          - name: AZURE_STORAGE_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.broker.storageOffload.secret }}
+                key: AZURE_STORAGE_ACCESS_KEY
+          {{- end }}
       volumes:
       {{- if .Values.broker.extraVolumes }}
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
@@ -279,6 +321,13 @@ spec:
               path: broker/token
       {{- end}}
       {{- end}}
+      {{- if .Values.broker.storageOffload.driver }}
+      {{- if eq .Values.broker.storageOffload.driver "google-cloud-storage" }}
+      - name: gcp-service-account
+        secret:
+          secretName: {{ .Values.broker.storageOffload.gcsServiceAccountSecret }}
+      {{- end }}
+      {{- end }}
       {{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}

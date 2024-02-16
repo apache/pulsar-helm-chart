@@ -81,7 +81,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.autorecovery.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.autorecovery.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.autorecovery.affinity.type }}:
             - weight: 100
@@ -100,19 +100,18 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.autorecovery.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.autorecovery.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
-    {{- if and .Values.rbac.enabled  .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-    {{- end}}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
         - >
@@ -124,13 +123,13 @@ spec:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
       {{- if .Values.autorecovery.resources }}
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end}}

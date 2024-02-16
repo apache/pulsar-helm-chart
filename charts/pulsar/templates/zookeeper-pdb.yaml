@@ -20,7 +20,12 @@
 # deploy zookeeper only when `components.zookeeper` is true
 {{- if .Values.components.zookeeper }}
 {{- if .Values.zookeeper.pdb.usePolicy }}
+# pdb version detection
+{{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}
 apiVersion: policy/v1beta1
+{{- else }}
+apiVersion: policy/v1
+{{- end }}
 kind: PodDisruptionBudget
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"

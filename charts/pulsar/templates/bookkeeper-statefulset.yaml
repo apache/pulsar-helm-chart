@@ -78,7 +78,7 @@ spec:
                 operator: In
                 values:
                 - {{ .Values.bookkeeper.component }}
-            topologyKey: "kubernetes.io/hostname"
+            topologyKey: {{ .Values.bookkeeper.affinity.anti_affinity_topology_key }}
         {{ else }}
           {{ .Values.bookkeeper.affinity.type }}:
             - weight: 100
@@ -97,19 +97,22 @@ spec:
                       operator: In
                       values:
                       - {{ .Values.bookkeeper.component }}
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: {{ .Values.bookkeeper.affinity.anti_affinity_topology_key }}
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
-    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-    {{- end}}
+      {{- if .Values.bookkeeper.securityContext }}
+      securityContext:
+{{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
+      {{- end }}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
@@ -118,7 +121,7 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end}}
@@ -126,7 +129,7 @@ spec:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
         {{- if .Values.bookkeeper.probe.liveness.enabled }}
         livenessProbe:
@@ -171,7 +174,7 @@ spec:
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end}}
@@ -185,8 +188,8 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
-          - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
-            mountPath: /pulsar/data/bookkeeper
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
+          mountPath: /pulsar/data/bookkeeper
         {{- else }}
           {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
             {{- $fullname := include "pulsar.fullname" . -}}
@@ -244,6 +247,10 @@ spec:
         {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.common.local_storage }}
         storageClassName: "local-storage"
         {{- end }}
+        {{- with .Values.bookkeeper.volumes.common.selector }}
+        selector:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
   {{- else }}
   {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
   {{- $fullname := include "pulsar.fullname" . -}}
@@ -258,6 +265,10 @@ spec:
           storage: {{ .size }}
     {{- if .storageClassName }}
       storageClassName: "{{ .storageClassName }}"
+    {{- end }}
+    {{- with $.Values.bookkeeper.volumes.journal.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- else }}
@@ -275,6 +286,10 @@ spec:
     {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage }}
       storageClassName: "local-storage"
     {{- end }}
+    {{- with .Values.bookkeeper.volumes.journal.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
   {{- end }}
   {{- if .Values.bookkeeper.volumes.ledgers.useMultiVolumes }}
   {{- $fullname := include "pulsar.fullname" . -}}
@@ -289,6 +304,10 @@ spec:
           storage: {{ .size }}
     {{- if .storageClassName }}
       storageClassName: "{{ .storageClassName }}"
+    {{- end }}
+    {{- with $.Values.bookkeeper.volumes.ledgers.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- end }}
   {{- else }}
@@ -305,6 +324,10 @@ spec:
       storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
     {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.ledgers.local_storage }}
       storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.bookkeeper.volumes.ledgers.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- end }}

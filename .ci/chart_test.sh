@@ -34,6 +34,8 @@ source ${PULSAR_HOME}/.ci/helm.sh
 # create cluster
 ci::create_cluster
 
+ci::helm_repo_add
+
 extra_opts=""
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"
@@ -43,19 +45,50 @@ if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
     extra_opts="${extra_opts} --pulsar-superusers proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}"
 fi
 
-# install pulsar chart
-ci::install_pulsar_chart ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+install_type="install"
+test_action="produce-consume"
+if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
+    # install older version of pulsar chart
+    PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
+    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}    
+    install_type="upgrade"
+    echo "Wait 10 seconds"
+    sleep 10
+    # test that we can access the admin api
+    ci::test_pulsar_admin_api_access
+    # produce messages with old version of pulsar and consume with new version
+    ci::test_pulsar_producer_consumer "produce"
+    test_action="consume"
 
-# test producer
-ci::test_pulsar_producer
+    if [[ "$(ci::helm_values_for_deployment | yq .kube-prometheus-stack.enabled)" == "true" ]]; then
+        echo "Upgrade Prometheus Operator CRDs before upgrading the deployment"
+        ${PULSAR_HOME}/scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh
+    fi
+fi
 
-if [[ "x${FUNCTION}" == "xtrue" ]]; then
-    # install cert manager
+PULSAR_CHART_VERSION="local"
+# install (or upgrade) pulsar chart
+ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+
+echo "Wait 10 seconds"
+sleep 10
+
+# check pulsar environment
+ci::check_pulsar_environment
+
+# test that we can access the admin api
+ci::test_pulsar_admin_api_access
+# test producer/consumer
+ci::test_pulsar_producer_consumer "${test_action}"
+
+if [[ "$(ci::helm_values_for_deployment | yq .components.functions)" == "true" ]]; then
+    # test functions
     ci::test_pulsar_function
 fi
 
-if [[ "x${MANAGER}" == "xtrue" ]]; then
-    ci::test_pulsar_manager ${TLS}
+if [[ "$(ci::helm_values_for_deployment | yq .components.pulsar_manager)" == "true" ]]; then
+    # test manager
+    ci::test_pulsar_manager
 fi
 
 # delete the cluster

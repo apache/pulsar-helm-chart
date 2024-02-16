@@ -19,23 +19,17 @@
 
 #!/usr/bin/env bash
 
+# If installation fails, the build should fail
+set -e
+
 NAMESPACE=cert-manager
 NAME=cert-manager
-VERSION=v1.5.4
+# check compatibility with k8s versions from https://cert-manager.io/docs/installation/supported-releases/
+VERSION=v1.11.4
 
 # Install cert-manager CustomResourceDefinition resources
 echo "Installing cert-manager CRD resources ..."
 kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/${VERSION}/cert-manager.crds.yaml
-
-# Create the namespace 
-kubectl get ns ${NAMESPACE}
-if [ $? == 0 ]; then
-    echo "Namespace '${NAMESPACE}' already exists."
-else
-    echo "Creating namespace '${NAMESPACE}' ..."
-    kubectl create namespace ${NAMESPACE}
-    echo "Successfully created namespace '${NAMESPACE}'."
-fi
 
 # Add the Jetstack Helm repository.
 echo "Adding Jetstack Helm repository."
@@ -49,6 +43,7 @@ helm repo update
 echo "Installing cert-manager ${VERSION} to namespace ${NAMESPACE} as '${NAME}' ..."
 helm install \
   --namespace ${NAMESPACE} \
+  --create-namespace \
   --version ${VERSION} \
   ${NAME} \
   jetstack/cert-manager
