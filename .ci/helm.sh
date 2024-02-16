@@ -388,4 +388,21 @@ function ci::test_pulsar_manager() {
     echo "Error: Did not find expected environment"
     exit 1
   fi
+
+  # Force manager to query broker for tenant info. This will require use of the manager's JWT, if JWT authentication is enabled.
+  pulsar_env=$(echo $envs | jq '.data[0].name')
+  tenants=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://localhost:9527/pulsar-manager/admin/v2/tenants \
+                  -H 'Content-Type: application/json' \
+                  -H "token: $LOGIN_TOKEN" \
+                  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+                  -H "username: pulsar" \
+                  -H "tenant: pulsar" \
+                  -H "environment: ${pulsar_env}" \
+                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSSIONID;")
+
+  number_of_tenants=$(echo $tenants | jq '.total')
+  if [ "$number_of_tenants" -lt 1 ]; then
+    echo "Error: Found no tenants!"
+    exit 1
+  fi
 }

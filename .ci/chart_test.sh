@@ -28,7 +28,6 @@ TLS=${TLS:-"false"}
 SYMMETRIC=${SYMMETRIC:-"false"}
 FUNCTION=${FUNCTION:-"false"}
 MANAGER=${MANAGER:-"false"}
-EXTRA_SUPERUSERS=${EXTRA_SUPERUSERS:-""}
 
 source ${PULSAR_HOME}/.ci/helm.sh
 
