@@ -1310,21 +1310,9 @@ pulsar_manager:
   configData:
     REDIRECT_HOST: "http://127.0.0.1"
     REDIRECT_PORT: "9527"
-    ## DRIVER_CLASS_NAME, URL, USERNAME, and PASSWORD set the datasource connection parameters, the values
-    ## of which have been effectively hardcoded by the container's startup procedure. Changing them
-    ## will probably break pulsar manager, unless you've also customized the image, database, and/or
-    ## database init script.
     DRIVER_CLASS_NAME: org.postgresql.Driver
     URL: jdbc:postgresql://127.0.0.1:5432/pulsar_manager
-    USERNAME: pulsar
-    PASSWORD: pulsar
     LOG_LEVEL: DEBUG
-    ## If you enabled authentication support
-    ## JWT_TOKEN: <token>
-    ## SECRET_KEY: data:base64,<secret key>
-
-    # the pulsar manager image relies on these variables, if they are not set the backend will keep crashing
-    # however, feel free to overwrite them
     SPRING_CONFIGURATION_FILE: "/pulsar-manager/pulsar-manager/application.properties"
     PULSAR_MANAGER_OPTS: " -Dlog4j2.formatMsgNoLookups=true"
   volumes:
