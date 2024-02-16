@@ -38,3 +38,7 @@ auth:
     client: "admin"
     # pulsar-manager to broker communication
     manager: "manager-admin"
+
+components:
+  pulsar_manager: true
+
