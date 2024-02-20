@@ -112,7 +112,7 @@ function ci::install_pulsar_chart() {
     local install_type=$1
     local common_value_file=$2
     local value_file=$3
-    local extra_opts=$4 $5 $6 $7 $8
+    local extra_opts="$4 $5 $6 $7 $8"
     local install_args
 
     if [[ "${install_type}" == "install" ]]; then
