@@ -383,6 +383,7 @@ function ci::test_pulsar_manager() {
                   -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
                   -H "username: pulsar" \
                   -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSIONID;")
+  echo "$envs"
   number_of_envs=$(echo $envs | jq '.total')
   if [ "$number_of_envs" -ne 1 ]; then
     echo "Error: Did not find expected environment"
@@ -400,7 +401,7 @@ function ci::test_pulsar_manager() {
                   -H "tenant: pulsar" \
                   -H "environment: ${pulsar_env}" \
                   -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSIONID;")
-
+  echo "$tenants"
   number_of_tenants=$(echo $tenants | jq '.total')
   if [ "$number_of_tenants" -lt 1 ]; then
     echo "Error: Found no tenants!"
