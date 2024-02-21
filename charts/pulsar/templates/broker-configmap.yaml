@@ -125,8 +125,6 @@ data:
   PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
   PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
-  PF_functionRuntimeFactoryConfigs_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
-  PF_functionRuntimeFactoryConfigs_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
   # support version < 2.5.0
   PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
   PF_kubernetesContainerFactory_submittingInsidePod: "true"
@@ -140,8 +138,6 @@ data:
   PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
-  PF_kubernetesContainerFactory_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
-  PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
   {{- end }}
 
   # prometheus needs to access /metrics endpoint
