@@ -17,6 +17,7 @@
 # under the License.
 #
 
+
 auth:
   authentication:
     enabled: true
@@ -35,3 +36,8 @@ auth:
     proxy: "proxy-admin"
     # pulsar-admin client to broker/proxy communication
     client: "admin"
+    # pulsar manager to broker
+    manager: "manager-admin"
+
+components:
+  pulsar_manager: true

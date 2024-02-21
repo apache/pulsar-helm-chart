@@ -253,6 +253,8 @@ auth:
     proxy: "proxy-admin"
     # pulsar-admin client to broker/proxy communication
     client: "admin"
+    # pulsar-manager to broker communication. If left empty, no jwt setup will be performed in the manager
+    manager: ""
   # omits the above proxy role from superusers on the proxy
   # and configures it as a proxy role on the broker in addition to the superusers
   useProxyRoles: true
@@ -1311,12 +1313,6 @@ pulsar_manager:
     DRIVER_CLASS_NAME: org.postgresql.Driver
     URL: jdbc:postgresql://127.0.0.1:5432/pulsar_manager
     LOG_LEVEL: DEBUG
-    ## If you enabled authentication support
-    ## JWT_TOKEN: <token>
-    ## SECRET_KEY: data:base64,<secret key>
-
-    # the pulsar manager image relies on these variables, if they are not set the backend will keep crashing
-    # however, feel free to overwrite them
     SPRING_CONFIGURATION_FILE: "/pulsar-manager/pulsar-manager/application.properties"
     PULSAR_MANAGER_OPTS: " -Dlog4j2.formatMsgNoLookups=true"
   volumes:

@@ -302,6 +302,10 @@ jobs:
           case "${{ matrix.testScenario.shortname }}" in
             "jwt-symmetric")
               export SYMMETRIC=true
+              export EXTRA_SUPERUSERS=manager-admin
+              ;;
+            "jwt-asymmetric")
+              export EXTRA_SUPERUSERS=manager-admin
               ;;
           esac
           if [[ "${{ matrix.testScenario.type || 'install' }}" == "upgrade" ]]; then

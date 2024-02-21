@@ -69,6 +69,12 @@ spec:
           volumeMounts:
           - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
             mountPath: /data
+        {{- if .Values.auth.authentication.enabled }}
+        {{- if eq .Values.auth.authentication.provider "jwt" }}
+          - name: pulsar-manager-keys
+            mountPath: /pulsar-manager/keys
+        {{- end }}
+        {{- end }}
           envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
@@ -87,8 +93,50 @@ spec:
                 key: DB_PASSWORD
           - name: PULSAR_MANAGER_OPTS
             value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
-        {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
+        {{- if .Values.auth.authentication.enabled }}
+        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.superUsers.manager }}
+          - name: JWT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: TOKEN
+                name: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.manager }}"
+        {{- end }}
+        {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+          - name: SECRET_KEY
+            value: file:///pulsar-manager/keys/token/secret.key
+        {{- else }}
+          - name: PRIVATE_KEY
+            value: file:///pulsar-manager/keys/token/private.key
+          - name: PUBLIC_KEY
+            value: file:///pulsar-manager/keys/token/public.key
+        {{- end }}        
+        {{- end }}
+        {{- end }}          
+        {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       volumes:
+      {{- if .Values.auth.authentication.enabled }}
+      {{- if eq .Values.auth.authentication.provider "jwt" }}
+        - name: pulsar-manager-keys
+          secret:
+            defaultMode: 420
+          {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            secretName: "{{ .Release.Name }}-token-symmetric-key"
+          {{- else }}
+            secretName: "{{ .Release.Name }}-token-asymmetric-key"          
+          {{- end }}
+            items:
+          {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            - key: SECRETKEY
+              path: token/secret.key
+          {{- else }}
+            - key: PRIVATEKEY
+              path: token/private.key
+            - key: PUBLICKEY
+              path: token/public.key
+          {{- end }}
+      {{- end }}
+      {{- end }}
       {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.pulsar_manager.volumes.persistence) }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
         emptyDir: {}

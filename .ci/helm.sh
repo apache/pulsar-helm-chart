@@ -112,7 +112,7 @@ function ci::install_pulsar_chart() {
     local install_type=$1
     local common_value_file=$2
     local value_file=$3
-    local extra_opts=$4
+    local extra_opts="$4 $5 $6 $7 $8"
     local install_args
 
     if [[ "${install_type}" == "install" ]]; then
@@ -374,7 +374,7 @@ function ci::test_pulsar_manager() {
                                                  -sS -D headers.txt \
                                                  -d '{"username": "pulsar", "password": "'${PASSWORD}'"}'
   LOGIN_TOKEN=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- grep "token:" headers.txt | sed 's/^.*: //')
-  LOGIN_JSESSSIONID=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- grep -o "JSESSIONID=[a-zA-Z0-9_]*" headers.txt | sed 's/^.*=//')
+  LOGIN_JSESSIONID=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- grep -o "JSESSIONID=[a-zA-Z0-9_]*" headers.txt | sed 's/^.*=//')
 
   echo "Checking environment"
   envs=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://localhost:9527/pulsar-manager/environments \
@@ -382,11 +382,29 @@ function ci::test_pulsar_manager() {
                   -H "token: $LOGIN_TOKEN" \
                   -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
                   -H "username: pulsar" \
-                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSSIONID;")
+                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSIONID;")
+  echo "$envs"
   number_of_envs=$(echo $envs | jq '.total')
   if [ "$number_of_envs" -ne 1 ]; then
     echo "Error: Did not find expected environment"
     exit 1
   fi
-}
 
+  # Force manager to query broker for tenant info. This will require use of the manager's JWT, if JWT authentication is enabled.
+  echo "Checking tenants"
+  pulsar_env=$(echo $envs | jq -r '.data[0].name')
+  tenants=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://localhost:9527/pulsar-manager/admin/v2/tenants \
+                  -H 'Content-Type: application/json' \
+                  -H "token: $LOGIN_TOKEN" \
+                  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+                  -H "username: pulsar" \
+                  -H "tenant: pulsar" \
+                  -H "environment: ${pulsar_env}" \
+                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSIONID;")
+  echo "$tenants"
+  number_of_tenants=$(echo $tenants | jq '.total')
+  if [ "$number_of_tenants" -lt 1 ]; then
+    echo "Error: Found no tenants!"
+    exit 1
+  fi
+}

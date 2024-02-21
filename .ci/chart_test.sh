@@ -27,6 +27,7 @@ VALUES_FILE=$1
 TLS=${TLS:-"false"}
 SYMMETRIC=${SYMMETRIC:-"false"}
 FUNCTION=${FUNCTION:-"false"}
+MANAGER=${MANAGER:-"false"}
 
 source ${PULSAR_HOME}/.ci/helm.sh
 
@@ -38,6 +39,10 @@ ci::helm_repo_add
 extra_opts=""
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
     extra_opts="-s"
+fi
+
+if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
+    extra_opts="${extra_opts} --pulsar-superusers proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}"
 fi
 
 install_type="install"

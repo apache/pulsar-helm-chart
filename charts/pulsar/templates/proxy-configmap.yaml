@@ -65,9 +65,9 @@ data:
   authorizationEnabled: "false"
   forwardAuthorizationCredentials: "true"
   {{- if .Values.auth.useProxyRoles }}
-  superUserRoles: {{ omit .Values.auth.superUsers "proxy" | values | sortAlpha | join "," }}
+  superUserRoles: {{ omit .Values.auth.superUsers "proxy" | values | compact | sortAlpha | join "," }}
   {{- else }}
-  superUserRoles: {{ .Values.auth.superUsers | values | sortAlpha | join "," }}
+  superUserRoles: {{ .Values.auth.superUsers | values | compact | sortAlpha | join "," }}
   {{- end }}
   {{- end }}
   {{- if eq .Values.auth.authentication.provider "jwt" }}
