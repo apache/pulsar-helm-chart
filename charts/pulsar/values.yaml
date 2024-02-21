@@ -805,6 +805,8 @@ broker:
 #          fieldPath: metadata.name
   ## Broker configmap
   ## templates/broker-configmap.yaml
+  ## Keys in broker.conf can be overridden here. Use PULSAR_PREFIX_ to add keys to broker.conf.
+  ## In addition, keys in function_worker.yml can be overridden using the PF_ prefix, with _ serving as the key path separator.
   ##
   configData:
     PULSAR_MEM: >
@@ -827,6 +829,7 @@ broker:
     managedLedgerDefaultEnsembleSize: "1"
     managedLedgerDefaultWriteQuorum: "1"
     managedLedgerDefaultAckQuorum: "1"
+
   ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Broker service
@@ -933,8 +936,8 @@ broker:
     # gcsServiceAccountJsonFile: google-service-account-key.json
 
 ## Pulsar: Functions Worker
-## templates/function-worker-configmap.yaml
-##
+## The Function Worker component runs embedded with the broker
+## Configuration for the function worker is set in the broker configmap with keys prefixed by `PF_`.
 functions:
   component: functions-worker
   useBookieAsStateStore: false
