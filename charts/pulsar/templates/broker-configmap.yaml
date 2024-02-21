@@ -97,10 +97,10 @@ data:
 
   # Function Worker Settings
   # function worker configuration
-  {{- if not (or .Values.components.functions .Values.extra.functionsAsPods) }}
+  {{- if not .Values.components.functions }}
   functionsWorkerEnabled: "false"
   {{- end }}
-  {{- if or .Values.components.functions .Values.extra.functionsAsPods }}
+  {{- if .Values.components.functions }}
   functionsWorkerEnabled: "true"
   {{- if .Values.functions.useBookieAsStateStore }}
   PF_stateStorageServiceUrl: "bk://{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}:{{ .Values.bookkeeper.ports.statestore }}"
