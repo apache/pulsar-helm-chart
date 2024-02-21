@@ -127,21 +127,6 @@ components:
   # pulsar manager
   pulsar_manager: false
 
-## which extra components to deploy (Deprecated)
-extra:
-  # Pulsar proxy
-  proxy: false
-  # Bookkeeper auto-recovery
-  autoRecovery: false
-  # Pulsar dashboard
-  # Deprecated
-  # Replace pulsar-dashboard with pulsar-manager
-  dashboard: false
-  # pulsar manager
-  pulsar_manager: false
-  # Configure Kubernetes runtime for Functions
-  functionsAsPods: false
-
 # default image tag for pulsar images
 # uses chart's appVersion when unspecified
 defaultPulsarImageTag:
@@ -1113,50 +1098,6 @@ proxy:
   pdb:
     usePolicy: true
     maxUnavailable: 1
-
-## Pulsar Extra: Dashboard
-## templates/dashboard-deployment.yaml
-## Deprecated
-##
-dashboard:
-  component: dashboard
-  replicaCount: 1
-  # nodeSelector:
-    # cloud.google.com/gke-nodepool: default-pool
-  annotations: {}
-  tolerations: []
-  gracePeriod: 0
-  image:
-    repository: apachepulsar/pulsar-dashboard
-    tag: latest
-    pullPolicy: IfNotPresent
-  resources:
-    requests:
-      memory: 1Gi
-      cpu: 250m
-  ## Dashboard service
-  ## templates/dashboard-service.yaml
-  ##
-  service:
-    annotations: {}
-    ports:
-    - name: server
-      port: 80
-  ingress:
-    enabled: false
-    annotations: {}
-    ingressClassName: ""
-    tls:
-      enabled: false
-
-      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
-      secretName: ""
-
-    ## Required if ingress is enabled
-    hostname: ""
-    path: "/"
-    port: 80
-
 
 ## Pulsar ToolSet
 ## templates/toolset-deployment.yaml

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if or .Values.components.autorecovery .Values.extra.autoRecovery }}
+{{- if .Values.components.autorecovery }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
