@@ -355,8 +355,10 @@ function ci::test_pulsar_manager() {
   echo "Testing pulsar manager"
 
   until ${KUBECTL} get jobs -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-init -o json | jq -r '.status.conditions[] | select (.type | test("Complete")).status' | grep True; do sleep 3; done
-
-
+  ${KUBECTL} describe job -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-init
+  ${KUBECTL} logs -n ${NAMESPACE} job.batch/${CLUSTER}-pulsar-manager-init
+  # this line errors in some tests? -  i do not know why, but is really useful for debugging, try: cat ./pulsar-manager.log otherwise
+  # ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-0 -- cat /pulsar-manager/pulsar-manager/pulsar-manager.log
   echo "Checking Podname"
   podname=$(${KUBECTL} get pods -n ${NAMESPACE} -l component=pulsar-manager --no-headers -o custom-columns=":metadata.name")
   echo "Getting pulsar manager UI password"
@@ -377,7 +379,7 @@ function ci::test_pulsar_manager() {
   LOGIN_JSESSIONID=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- grep -o "JSESSIONID=[a-zA-Z0-9_]*" headers.txt | sed 's/^.*=//')
 
   echo "Checking environment"
-  envs=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://localhost:9527/pulsar-manager/environments \
+  envs=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://127.0.0.1:9527/pulsar-manager/environments \
                   -H 'Content-Type: application/json' \
                   -H "token: $LOGIN_TOKEN" \
                   -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
@@ -393,7 +395,7 @@ function ci::test_pulsar_manager() {
   # Force manager to query broker for tenant info. This will require use of the manager's JWT, if JWT authentication is enabled.
   echo "Checking tenants"
   pulsar_env=$(echo $envs | jq -r '.data[0].name')
-  tenants=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://localhost:9527/pulsar-manager/admin/v2/tenants \
+  tenants=$(${KUBECTL} exec -n ${NAMESPACE} ${podname} -- curl -X GET http://127.0.0.1:9527/pulsar-manager/admin/v2/tenants \
                   -H 'Content-Type: application/json' \
                   -H "token: $LOGIN_TOKEN" \
                   -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
