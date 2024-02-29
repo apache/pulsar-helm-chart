@@ -27,6 +27,27 @@ Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/deploy-kuber
 
 > :warning: This helm chart is updated outside of the regular Pulsar release cycle and might lag behind a bit. It only supports basic Kubernetes features now. Currently, it can be used as no more than a template and starting point for a Kubernetes deployment. In many cases, it would require some customizations.
 
+## Important Security Disclaimer for Helm Chart Usage
+
+### Notice of Default Configuration
+This Helm chart is provided with a default configuration that does not meet the security requirements for production environments or sensitive data handling. Users are strongly advised to thoroughly review and customize the security settings to ensure a secure deployment that aligns with their specific operational and security policies.
+
+### Pulsar Proxy Security Considerations
+As per the [Pulsar Proxy documentation](https://pulsar.apache.org/docs/3.1.x/administration-proxy/), it is explicitly stated that the Pulsar proxy is not designed for exposure to the public internet. The design assumes that deployments will be protected by network perimeter security measures. It is crucial to understand that relying solely on the default configuration can expose your deployment to significant security vulnerabilities.
+
+#### Recommendations:
+- **Network Perimeter Security:** It is imperative to implement robust network perimeter security to safeguard your deployment. The absence of such security measures can lead to unauthorized access and potential data breaches.
+- **Restricted Access:** For environments where security is less critical, such as certain development or testing scenarios, the use of `loadBalancerSourceRanges` may be employed to restrict access to specified IP addresses or ranges. This, however, should not be considered a substitute for comprehensive security measures in production environments.
+
+### User Responsibility
+The user assumes full responsibility for the security and integrity of their deployment. This includes, but is not limited to, the proper configuration of security features and adherence to best practices for securing network access. The providers of this Helm chart disclaim all warranties, whether express or implied, including any warranties of merchantability, fitness for a particular purpose, and non-infringement of third-party rights.
+
+### No Security Guarantees
+The providers of this Helm chart make no guarantees regarding the security of the chart under any circumstances. It is the user's responsibility to ensure that their deployment is secure and complies with all relevant security standards and regulations.
+
+By using this Helm chart, the user acknowledges the risks associated with its default configuration and the necessity for proper security customization. The user further agrees that the providers of the Helm chart shall not be liable for any security breaches or incidents resulting from the use of the chart.
+
+
 ## Features
 
 This Helm Chart includes all the components of Apache Pulsar for a complete experience.
