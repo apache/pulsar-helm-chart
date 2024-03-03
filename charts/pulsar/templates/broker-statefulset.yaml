@@ -267,7 +267,7 @@ spec:
           readOnlyRootFilesystem: false
       {{- end }}
         env:
-          {{- if and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3") }}
+          {{- if and (and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3")) .Values.broker.storageOffload.secret }}
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
