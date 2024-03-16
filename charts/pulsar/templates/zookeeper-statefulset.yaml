@@ -59,6 +59,18 @@ spec:
 {{ toYaml .Values.zookeeper.tolerations | indent 8 }}
     {{- end }}
       affinity:
+        {{- if .Values.zookeeper.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.zookeeper.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.zookeeper.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.zookeeper.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
         podAntiAffinity:
           {{ if eq .Values.zookeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
