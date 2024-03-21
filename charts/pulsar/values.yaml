@@ -45,6 +45,11 @@ initialize: false
 #   environment: dev
 #   customer: apache
 
+## Global metric scraping settings
+podMonitor:
+  # Add custom labels to the podMonitor resources
+  customLabels: {}
+
 ## Pulsar Metadata Prefix
 ##
 ## By default, pulsar stores all the metadata at root path.
