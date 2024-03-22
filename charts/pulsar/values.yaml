@@ -36,7 +36,8 @@ clusterDomain: cluster.local
 
 ## Set to true on install
 initialize: false
-
+## Set useReleaseStatus to false if you're deploying this chart using a system that doesn't track .Release.IsInstall or .Release.IsUpgrade (like argocd)
+useReleaseStatus: true
 ## Set cluster name
 # clusterName:
 

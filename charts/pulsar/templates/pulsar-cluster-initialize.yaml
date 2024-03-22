@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if or .Release.IsInstall .Values.initialize }}
+{{- if or (and .Values.useReleaseStatus (or .Release.IsInstall .Values.initialize)) .Values.initialize }}
 {{- if .Values.components.broker }}
 apiVersion: batch/v1
 kind: Job
