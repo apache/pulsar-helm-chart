@@ -37,7 +37,11 @@ spec:
       component: {{ .Values.broker.component }}
   updateStrategy:
     type: RollingUpdate
+  {{- if not .Values.components.functions }}
   podManagementPolicy: Parallel
+  {{- else }}
+  podManagementPolicy: OrderedReady
+  {{- end }}
   template:
     metadata:
       labels:
