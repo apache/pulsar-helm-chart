@@ -1315,6 +1315,13 @@ pulsar_manager:
   ## And decode any key by using:
   ## kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
   admin:
+    ## Setting a value at existingSecret disables automatic creation of the secret for pulsar_manager admin credentials and instead uses an existing secret to initialize pulsar-manager
+    ## The existing secret should have the following keys:
+    ## DB_PASSWORD: <database password>
+    ## DB_USERNAME: <database username>
+    ## UI_PASSWORD: <UI password>
+    ## UI_USERNAME: <UI username>
+    existingSecret: ""
     ui_username: "pulsar"
     ui_password: ""  # leave empty for random password
     db_username: "pulsar"
