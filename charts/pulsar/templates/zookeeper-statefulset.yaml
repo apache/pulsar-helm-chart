@@ -209,6 +209,10 @@ spec:
         volumeMounts:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
           mountPath: /pulsar/data
+        {{- if .Values.zookeeper.volumes.useSeparateDiskForTxlog }}
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
+          mountPath: /pulsar/data-log
+        {{- end }}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
         - mountPath: "/pulsar/certs/zookeeper"
           name: zookeeper-certs
@@ -272,5 +276,25 @@ spec:
       selector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+  {{- if .Values.zookeeper.volumes.useSeparateDiskForTxlog }}
+  - metadata:
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.zookeeper.volumes.datalog.size }}
+    {{- if .Values.zookeeper.volumes.datalog.storageClassName }}
+      storageClassName: "{{ .Values.zookeeper.volumes.datalog.storageClassName }}"
+    {{- else if and (not (and .Values.volumes.local_storage .Values.zookeeper.volumes.datalog.local_storage)) .Values.zookeeper.volumes.datalog.storageClass }}
+      storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
+    {{- else if and .Values.volumes.local_storage .Values.zookeeper.volumes.datalog.local_storage }}
+      storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.zookeeper.volumes.datalog.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 {{- end }}

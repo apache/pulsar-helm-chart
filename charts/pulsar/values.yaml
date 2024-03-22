@@ -351,10 +351,32 @@ zookeeper:
     fsGroup: 0
     fsGroupChangePolicy: "OnRootMismatch"
   volumes:
+    useSeparateDiskForTxlog: false
     # use a persistent volume or emptyDir
     persistence: true
     data:
       name: data
+      size: 20Gi
+      local_storage: true
+      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
+      ##
+      # storageClassName: existent-storage-class
+      #
+      ## Instead if you want to create a new storage class define it below
+      ## If left undefined no storage class will be defined along with PVC
+      ##
+      # storageClass:
+        # type: pd-ssd
+        # fsType: xfs
+        # provisioner: kubernetes.io/gce-pd
+      ## If you want to bind static persistent volumes via selectors, e.g.:
+      # selector:
+        # matchLabels:
+        # app: pulsar-zookeeper
+      selector: {}
+    ## If you set useSeparateDiskForTxlog to true, this section configures the extra volume for the zookeeper transaction log.
+    datalog:
+      name: datalog
       size: 20Gi
       local_storage: true
       ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
