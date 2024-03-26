@@ -1,0 +1,18 @@
+Thank you for installing Apache Pulsar Helm chart version {{ .Chart.Version }}.
+
+!! WARNING !!
+
+Important Security Disclaimer for Apache Pulsar Helm Chart Usage:
+
+This Helm chart is provided with a default configuration that does not
+meet the security requirements for production environments or sensitive
+data handling. Users are strongly advised to thoroughly review and
+customize the security settings to ensure a secure deployment that
+aligns with their specific operational and security policies.
+
+Go to https://github.com/apache/pulsar-helm-chart for more details.
+
+Ask usage questions at https://github.com/apache/pulsar/discussions/categories/q-a
+Report issues to https://github.com/apache/pulsar-helm-chart/issues
+Please contribute improvements to https://github.com/apache/pulsar-helm-chart
+
