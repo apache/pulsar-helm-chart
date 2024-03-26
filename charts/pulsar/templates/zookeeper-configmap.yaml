@@ -30,7 +30,7 @@ metadata:
 data:
   dataDir: /pulsar/data/zookeeper
   {{- if .Values.zookeeper.volumes.useSeparateDiskForTxlog }}
-  PULSAR_PREFIX_dataLogDir: data-log
+  PULSAR_PREFIX_dataLogDir: /pulsar/data-log
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
   # enable zookeeper tls
