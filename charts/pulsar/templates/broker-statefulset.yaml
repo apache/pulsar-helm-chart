@@ -44,7 +44,7 @@ spec:
   for the function worker to connect to.
   Since podManagementPolicy is immutable, this rule is only applied when the broker is first installed.
   */}}
-  {{- $stsObj := lookup "v1" "StatefulSet" $namespace $stsName }}
+  {{- $stsObj := lookup "apps/v1" "StatefulSet" $namespace $stsName }}
   {{- if $stsObj }}
   podManagementPolicy: {{ $stsObj.spec.podManagementPolicy }}
   {{- else }}
