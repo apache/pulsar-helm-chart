@@ -21,9 +21,9 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  {{- $stsName := printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component -}}
+  {{- $stsName := printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component }}
   name: {{ $stsName | quote }}
-  {{- $namespace := include "pulsar.namespace" . -}}
+  {{- $namespace := include "pulsar.namespace" . }}
   namespace: {{ $namespace | quote }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
