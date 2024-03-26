@@ -30,8 +30,8 @@ metadata:
 spec:
 # This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
 # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
-{{- if .Values.job.ttl.enabled }}
-  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished }}
+{{- if and .Values.job.ttl.enabled (semverCompare ">=1.23-0" .Capabilities.KubeVersion.Version) }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished | default 600 }}
 {{- end }}
   template:
     spec:
