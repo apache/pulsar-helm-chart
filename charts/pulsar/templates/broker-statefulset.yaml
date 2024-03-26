@@ -21,8 +21,10 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
+  {{- $stsName := printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component }}
+  name: {{ $stsName | quote }}
+  {{- $namespace := include "pulsar.namespace" . }}
+  namespace: {{ $namespace | quote }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
@@ -37,7 +39,21 @@ spec:
       component: {{ .Values.broker.component }}
   updateStrategy:
     type: RollingUpdate
+  {{- /*
+  When functions are enabled, podManagementPolicy must be OrderedReady to ensure that other started brokers are available via DNS
+  for the function worker to connect to.
+  Since podManagementPolicy is immutable, this rule is only applied when the broker is first installed.
+  */}}
+  {{- $stsObj := lookup "apps/v1" "StatefulSet" $namespace $stsName }}
+  {{- if $stsObj }}
+  podManagementPolicy: {{ $stsObj.spec.podManagementPolicy }}
+  {{- else }}
+  {{- if not .Values.components.functions }}
   podManagementPolicy: Parallel
+  {{- else }}
+  podManagementPolicy: OrderedReady
+  {{- end }}
+  {{- end }}
   template:
     metadata:
       labels:
