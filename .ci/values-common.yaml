@@ -36,6 +36,8 @@ affinity:
 components:
   autorecovery: false
   pulsar_manager: false
+  # enable functions by default in CI
+  functions: true
 
 zookeeper:
   replicaCount: 1
