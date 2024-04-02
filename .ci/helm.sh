@@ -130,12 +130,12 @@ function ci::install_pulsar_chart() {
       ${KUBECTL} wait --namespace metallb-system \
                 --for=condition=ready pod \
                 --selector=app=metallb \
-                --timeout=90s
+                --timeout=120s
       # configure metallb
       ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
       install_args=""
     else
-      install_args="--wait --wait-for-jobs --timeout 300s --debug"
+      install_args="--wait --wait-for-jobs --timeout 360s --debug"
     fi
 
     CHART_ARGS=""
