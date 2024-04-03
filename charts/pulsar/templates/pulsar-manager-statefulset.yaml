@@ -79,8 +79,6 @@ spec:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
           env:
-          - name: PULSAR_CLUSTER
-            value: {{ template "pulsar.fullname" . }}
           - name: USERNAME
             valueFrom:
               secretKeyRef:
@@ -99,8 +97,6 @@ spec:
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-secret"
                 {{- end }}
                 key: DB_PASSWORD
-          - name: PULSAR_MANAGER_OPTS
-            value: "$(PULSAR_MANAGER_OPTS) -Dlog4j2.formatMsgNoLookups=true"
         {{- if .Values.auth.authentication.enabled }}
         {{- if eq .Values.auth.authentication.provider "jwt" }}
         {{- if .Values.auth.superUsers.manager }}
@@ -110,15 +106,6 @@ spec:
                 key: TOKEN
                 name: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.manager }}"
         {{- end }}
-        {{- if .Values.auth.authentication.jwt.usingSecretKey }}
-          - name: SECRET_KEY
-            value: file:///pulsar-manager/keys/token/secret.key
-        {{- else }}
-          - name: PRIVATE_KEY
-            value: file:///pulsar-manager/keys/token/private.key
-          - name: PUBLIC_KEY
-            value: file:///pulsar-manager/keys/token/public.key
-        {{- end }}        
         {{- end }}
         {{- end }}          
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
@@ -146,8 +133,8 @@ spec:
       {{- end }}
       {{- end }}
       {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.pulsar_manager.volumes.persistence) }}
-      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
-        emptyDir: {}
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
+          emptyDir: {}
       {{- end }}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.pulsar_manager.volumes.persistence }}
   volumeClaimTemplates:

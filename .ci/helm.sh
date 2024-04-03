@@ -357,8 +357,7 @@ function ci::test_pulsar_manager() {
   until ${KUBECTL} get jobs -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-init -o json | jq -r '.status.conditions[] | select (.type | test("Complete")).status' | grep True; do sleep 3; done
   ${KUBECTL} describe job -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-init
   ${KUBECTL} logs -n ${NAMESPACE} job.batch/${CLUSTER}-pulsar-manager-init
-  # this line errors in some tests? -  i do not know why, but is really useful for debugging, try: cat ./pulsar-manager.log otherwise
-  # ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-0 -- cat /pulsar-manager/pulsar-manager/pulsar-manager.log
+  ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-pulsar-manager-0 -- cat /pulsar-manager/pulsar-manager.log
   echo "Checking Podname"
   podname=$(${KUBECTL} get pods -n ${NAMESPACE} -l component=pulsar-manager --no-headers -o custom-columns=":metadata.name")
   echo "Getting pulsar manager UI password"
