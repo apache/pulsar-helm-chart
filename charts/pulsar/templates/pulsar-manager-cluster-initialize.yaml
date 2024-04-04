@@ -56,6 +56,7 @@ spec:
               done;
         # This init container will wait for at least one broker to be ready before
         # initializing the pulsar-manager
+        {{- if .Values.components.broker }}
         - name: wait-broker-ready
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
           imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
@@ -70,6 +71,7 @@ spec:
                 sleep 10;
                 brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
               done;
+        {{- end }}
       containers:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-init"
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
@@ -118,6 +120,7 @@ spec:
                 echo "$LOGIN_REPLY"
               fi
 
+              {{- if .Values.components.broker }}
               LOGIN_TOKEN=$(grep "token:" headers.txt | sed 's/^.*: //')
               LOGIN_JSESSSIONID=$(grep -o "JSESSIONID=[a-zA-Z0-9_]*" headers.txt | sed 's/^.*=//')
 
@@ -147,6 +150,15 @@ spec:
                 echo "Error creating environment"
                 exit 1
               fi
+              {{- else }}
+              if [ -n "$(echo "$LOGIN_REPLY" | grep 'success')" ]; then
+                echo "Successfully created / found existing account"
+                exit 0
+              else
+                echo "Error creating account"
+                exit 1
+              fi
+              {{- end }}
           env:
             - name: USERNAME
               valueFrom:
