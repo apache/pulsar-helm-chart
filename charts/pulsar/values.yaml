@@ -1283,6 +1283,8 @@ pulsar_manager:
     # DB
     URL: "jdbc:postgresql://127.0.0.1:5432/pulsar_manager"
     DRIVER_CLASS_NAME: "org.postgresql.Driver"
+    # enables the "message peeking" feature
+    PULSAR_PEEK_MESSAGE: "true"
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
