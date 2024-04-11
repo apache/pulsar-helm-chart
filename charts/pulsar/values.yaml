@@ -1256,7 +1256,7 @@ kube-prometheus-stack:
           datasource: Prometheus
   prometheus-node-exporter:
     enabled: true
-    hostRootFsMount: 
+    hostRootFsMount:
       enabled: false
   alertmanager:
     enabled: false
