@@ -288,8 +288,8 @@ zookeeper:
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
-    interval: 10s
-    scrapeTimeout: 10s
+    interval: 60s
+    scrapeTimeout: 60s
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
@@ -460,8 +460,8 @@ bookkeeper:
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
-    interval: 10s
-    scrapeTimeout: 10s
+    interval: 60s
+    scrapeTimeout: 60s
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
@@ -666,8 +666,8 @@ autorecovery:
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
-    interval: 10s
-    scrapeTimeout: 10s
+    interval: 60s
+    scrapeTimeout: 60s
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
@@ -762,8 +762,8 @@ broker:
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
-    interval: 10s
-    scrapeTimeout: 10s
+    interval: 60s
+    scrapeTimeout: 60s
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
@@ -994,8 +994,8 @@ proxy:
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
-    interval: 10s
-    scrapeTimeout: 10s
+    interval: 60s
+    scrapeTimeout: 60s
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
