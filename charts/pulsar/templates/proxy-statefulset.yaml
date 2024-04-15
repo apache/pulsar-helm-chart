@@ -185,7 +185,7 @@ spec:
           {{ .Values.proxy.additionalCommand }}
         {{- end }}
           bin/apply-config-from-env.py conf/proxy.conf &&
-          echo "OK" > status &&
+          echo "OK" > "${statusFilePath:-status}" &&
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar proxy
         ports:
         # prometheus needs to access /metrics endpoint
