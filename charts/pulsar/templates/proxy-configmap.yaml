@@ -28,7 +28,7 @@ metadata:
     component: {{ .Values.proxy.component }}
 data:
   clusterName: {{ template "pulsar.cluster.name" . }}
-  statusFilePath: "{{ template "pulsar.home" . }}/status"
+  statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.proxy.ports.containerPorts.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}

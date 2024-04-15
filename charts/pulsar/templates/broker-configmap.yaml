@@ -41,7 +41,7 @@ data:
   exposeTopicLevelMetricsInPrometheus: "true"
   numHttpServerThreads: "8"
   zooKeeperSessionTimeoutMillis: "30000"
-  statusFilePath: "{{ template "pulsar.home" . }}/status"
+  statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
 
   # Tiered storage settings
   {{- if .Values.broker.storageOffload.driver }}
