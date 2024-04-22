@@ -63,6 +63,18 @@ spec:
 {{- end }}
     {{- end }}
       affinity:
+        {{- if .Values.autorecovery.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.autorecovery.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.autorecovery.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.autorecovery.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.autorecovery.affinity.anti_affinity}}
         podAntiAffinity:
           {{ if eq .Values.autorecovery.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}

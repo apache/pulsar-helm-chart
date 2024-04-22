@@ -62,6 +62,18 @@ spec:
 {{ toYaml .Values.proxy.tolerations | indent 8 }}
     {{- end }}
       affinity:
+        {{- if .Values.proxy.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.proxy.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.proxy.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.proxy.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.proxy.affinity.anti_affinity}}
         podAntiAffinity:
         {{ if eq .Values.proxy.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
