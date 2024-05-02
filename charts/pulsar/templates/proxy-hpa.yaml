@@ -26,6 +26,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   maxReplicas: {{ .Values.proxy.autoscaling.maxReplicas }}
   {{- with .Values.proxy.autoscaling.metrics }}
