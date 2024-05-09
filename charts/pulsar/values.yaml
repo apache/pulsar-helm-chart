@@ -769,6 +769,13 @@ broker:
       #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
+  ## optional, you can specify a clusterIP for the broker's service
+  # 1. any valid IPv4 can be used to rewrite the clusterIP
+  # 2. use clusterIP: 'auto' to let kubernetes pick a clusterIP (i.e. clusterIP: "")
+  # 3. otherwise, clusterIP is set to "None" (i.e. headless mode)
+  # More on clusterIP kubernetes service type: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
+  # service:
+  #   clusterIP: 255.255.255.255
   ports:
     http: 8080
     https: 8443

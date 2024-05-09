@@ -29,6 +29,7 @@ metadata:
   annotations:
 {{ toYaml .Values.broker.service.annotations | indent 4 }}
 spec:
+  type: ClusterIP
   ports:
   # prometheus needs to access /metrics endpoint
   - name: http
@@ -43,7 +44,17 @@ spec:
   - name: "{{ .Values.tlsPrefix }}pulsarssl"
     port: {{ .Values.broker.ports.pulsarssl }}
   {{- end }}
-  clusterIP: None
+  {{- if and .Values.broker.service .Values.broker.service.clusterIP }}
+  {{- if eq .Values.broker.service.clusterIP "auto" }}
+  clusterIP: ""
+  {{- else if regexMatch "^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$" .Values.broker.service.clusterIP }}
+  clusterIP: "{{ .Values.broker.service.clusterIP }}"
+  {{- else }}
+  clusterIP: "None"
+  {{- end }}
+  {{- else }}
+  clusterIP: "None"
+  {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
