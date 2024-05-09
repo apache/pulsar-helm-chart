@@ -1105,6 +1105,11 @@ proxy:
     ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
     # loadBalancerSourceRanges:
     #   - 10.0.0.0/8
+    nodePorts:
+      http: ""
+      https: ""
+      pulsar: ""
+      pulsarssl: ""
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##
