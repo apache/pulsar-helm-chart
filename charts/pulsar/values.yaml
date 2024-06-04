@@ -1111,6 +1111,13 @@ proxy:
     ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
     # loadBalancerSourceRanges:
     #   - 10.0.0.0/8
+    # Optional. When setting proxy.service.type is set to NodePort, nodePorts allows to choose the port that will be open on each node to proxy requests to each destination proxy service.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    nodePorts:
+      http: ""
+      https: ""
+      pulsar: ""
+      pulsarssl: ""
   ## Proxy ingress
   ## templates/proxy-ingress.yaml
   ##
