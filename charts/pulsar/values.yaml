@@ -861,6 +861,12 @@ broker:
   ## templates/broker-service.yaml
   ##
   service:
+    # clusterIP can be one of the three, which determines the type of k8s service deployed for broker
+    # 1. a valid IPv4 address -> non-headless service, let you select the IPv4 address
+    # 2. '' -> non-headless service, k8s picks an IPv4 address
+    # 3. 'None' -> headless
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
+    clusterIP: "None"
     annotations: {}
   ## Broker PodDisruptionBudget
   ## templates/broker-pdb.yaml
