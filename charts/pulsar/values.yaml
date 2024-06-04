@@ -769,13 +769,6 @@ broker:
       #   regex: cluster
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
-  ## optional, you can specify a clusterIP for the broker's service
-  # 1. any valid IPv4 can be used to rewrite the clusterIP
-  # 2. use clusterIP: 'auto' to let kubernetes pick a clusterIP (i.e. clusterIP: "")
-  # 3. otherwise, clusterIP is set to "None" (i.e. headless mode)
-  # More on clusterIP kubernetes service type: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
-  # service:
-  #   clusterIP: 255.255.255.255
   ports:
     http: 8080
     https: 8443
@@ -868,6 +861,11 @@ broker:
   ## templates/broker-service.yaml
   ##
   service:
+    # clusterIP can be one of the three, which determines the type of k8s service deployed for broker
+    # 1. a valid IPv4 address -> non-headless service, let you select the IPv4 address
+    # 2. '' -> non-headless service, k8s picks an IPv4 address
+    # 3. 'None' -> headless
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
     clusterIP: "None"
     annotations: {}
   ## Broker PodDisruptionBudget
