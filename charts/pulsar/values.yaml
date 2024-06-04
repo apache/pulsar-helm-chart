@@ -868,6 +868,7 @@ broker:
   ## templates/broker-service.yaml
   ##
   service:
+    clusterIP: "None"
     annotations: {}
   ## Broker PodDisruptionBudget
   ## templates/broker-pdb.yaml
