@@ -156,9 +156,9 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         {{- $zkConnectCommand := "" -}}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-        {{- $zkConnectCommand = print "openssl s_client -quiet -crlf -connect localhost:" .Values.zookeeper.ports.clientTls " -cert /pulsar/certs/zookeeper/tls.crt -key /pulsar/certs/zookeeper/tls.key" -}}
+        {{- $zkConnectCommand = print "openssl s_client -quiet -crlf -connect 127.0.0.1:" .Values.zookeeper.ports.clientTls " -cert /pulsar/certs/zookeeper/tls.crt -key /pulsar/certs/zookeeper/tls.key" -}}
         {{- else -}}
-        {{- $zkConnectCommand = print "nc localhost " .Values.zookeeper.ports.client -}}
+        {{- $zkConnectCommand = print "nc 127.0.0.1 " .Values.zookeeper.ports.client -}}
         {{- end }}
         {{- if .Values.zookeeper.probe.readiness.enabled }}
         {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
