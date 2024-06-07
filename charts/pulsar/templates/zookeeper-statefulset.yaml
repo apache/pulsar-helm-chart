@@ -158,7 +158,7 @@ spec:
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
         {{- $zkConnectCommand = print "openssl s_client -quiet -crlf -connect localhost:" .Values.zookeeper.ports.clientTls " -cert /pulsar/certs/zookeeper/tls.crt -key /pulsar/certs/zookeeper/tls.key" -}}
         {{- else -}}
-        {{- $zkConnectCommand = print "nc -q 1 localhost " .Values.zookeeper.ports.client -}}
+        {{- $zkConnectCommand = print "nc localhost " .Values.zookeeper.ports.client -}}
         {{- end }}
         {{- if .Values.zookeeper.probe.readiness.enabled }}
         {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
@@ -172,7 +172,7 @@ spec:
             - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.readiness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.readiness.timeoutSeconds }}
@@ -186,7 +186,7 @@ spec:
             - "{{ .Values.zookeeper.probe.liveness.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.liveness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.liveness.timeoutSeconds }}
@@ -200,7 +200,7 @@ spec:
             - "{{ .Values.zookeeper.probe.startup.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.startup.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.startup.timeoutSeconds }}
