@@ -213,6 +213,13 @@ jobs:
               version: "1.21.14"
               kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
             testScenario:
+              name: "Pulsar Latest"
+              values_file: .ci/clusters/values-pulsar-latest.yaml
+              shortname: pulsar-latest
+          - k8sVersion:
+              version: "1.21.14"
+              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+            testScenario:
               name: "Upgrade TLS"
               values_file: .ci/clusters/values-tls.yaml
               shortname: tls
