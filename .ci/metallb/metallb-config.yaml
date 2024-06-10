@@ -17,17 +17,17 @@
 # under the License.
 #
 
-{{- if .Values.components.autorecovery }}
-apiVersion: v1
-kind: ConfigMap
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
-  labels:
-    {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.autorecovery.component }}
-data:
-  # common config
-  {{- include "pulsar.bookkeeper.config.common" . | nindent 2 }}
-{{ toYaml .Values.autorecovery.configData | indent 2 }}
-{{- end }}
+  name: example
+  namespace: metallb-system
+spec:
+  addresses:
+  - 172.19.255.200-172.19.255.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: empty
+  namespace: metallb-system

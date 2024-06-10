@@ -17,22 +17,6 @@
 # under the License.
 #
 
-{{- if .Values.extra.dashboard }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
-  labels:
-    {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.dashboard.component }}
-  annotations:
-{{ toYaml .Values.dashboard.service.annotations | indent 4 }}
-spec:
-  ports:
-{{ toYaml .Values.dashboard.service.ports | indent 2 }}
-  clusterIP: None
-  selector:
-    {{- include "pulsar.matchLabels" . | nindent 4 }}
-    component: {{ .Values.dashboard.component }}
-{{- end }}
+{{- if semverCompare "<3.10.0-0" .Capabilities.HelmVersion.Version -}}
+{{- fail "Your Helm version is not supported. Please upgrade to Helm 3.10.0 or later. The recommended version is currently 3.12.3 or newer. You can find more about Helm releases and installation at https://github.com/helm/helm/releases. " -}}
+{{- end -}}

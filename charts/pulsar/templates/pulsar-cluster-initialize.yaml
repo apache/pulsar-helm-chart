@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if or .Release.IsInstall .Values.initialize }}
+{{- if or (and .Values.useReleaseStatus .Release.IsInstall) .Values.initialize }}
 {{- if .Values.components.broker }}
 apiVersion: batch/v1
 kind: Job
@@ -30,11 +30,12 @@ metadata:
 spec:
 # This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
 # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
-{{- if .Values.job.ttl.enabled }}
-  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished }}
+{{- if and .Values.job.ttl.enabled (semverCompare ">=1.23-0" .Capabilities.KubeVersion.Version) }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished | default 600 }}
 {{- end }}
   template:
     spec:
+    {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
     {{- if .Values.pulsar_metadata.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
@@ -44,6 +45,7 @@ spec:
       - name: wait-cs-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
@@ -54,10 +56,12 @@ spec:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
+            export PULSAR_MEM="-Xmx128M";
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
@@ -71,10 +75,14 @@ spec:
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
         - >
           bin/apply-config-from-env.py conf/bookkeeper.conf;
+          echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
+          echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
+          export BOOKIE_MEM="-Xmx128M";
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
           until bin/bookkeeper shell whatisinstanceid; do
             sleep 3;
@@ -96,6 +104,7 @@ spec:
         args:
           - |
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
+            export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
               --zookeeper {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
@@ -120,6 +129,10 @@ spec:
       {{- if .Values.pulsar_metadata.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.pulsar_metadata.tolerations }}
+      tolerations:
+{{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
       {{- end }}
 {{- end }}
 {{- end }}

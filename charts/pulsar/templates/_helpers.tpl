@@ -126,5 +126,5 @@ imagePullSecrets:
 Create full image name
 */}}
 {{- define "pulsar.imageFullName" -}}
-{{- printf "%s:%s" .image.repository (.image.tag | default .root.Values.defaultPulsarImageTag | default .root.Chart.AppVersion) -}}
+{{- printf "%s:%s" (.image.repository | default .root.Values.defaultPulsarImageRepository) (.image.tag | default .root.Values.defaultPulsarImageTag | default .root.Chart.AppVersion) -}}
 {{- end -}}

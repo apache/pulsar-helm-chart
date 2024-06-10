@@ -17,17 +17,5 @@
 # under the License.
 #
 
-{{- if .Values.components.autorecovery }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
-  labels:
-    {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.autorecovery.component }}
-data:
-  # common config
-  {{- include "pulsar.bookkeeper.config.common" . | nindent 2 }}
-{{ toYaml .Values.autorecovery.configData | indent 2 }}
-{{- end }}
+components:
+  pulsar_manager: true

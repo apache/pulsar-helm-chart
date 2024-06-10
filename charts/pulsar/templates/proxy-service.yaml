@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if or .Values.components.proxy .Values.extra.proxy }}
+{{- if .Values.components.proxy }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -32,26 +32,47 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.proxy.service.type }}
+  {{- with .Values.proxy.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- if .Values.proxy.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.proxy.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if .Values.proxy.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.proxy.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
   ports:
     {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
     - name: http
       port: {{ .Values.proxy.ports.http }}
       protocol: TCP
       targetPort: sts-http
+      {{- if and (eq .Values.proxy.service.type "NodePort") (ne .Values.proxy.service.nodePorts.http "") }}
+      nodePort: {{ .Values.proxy.service.nodePorts.http }}
+      {{- end}}
     - name: "{{ .Values.tcpPrefix }}pulsar"
       port: {{ .Values.proxy.ports.pulsar }}
       protocol: TCP
       targetPort: "sts-{{ .Values.tcpPrefix }}pulsar"
+      {{- if and (eq .Values.proxy.service.type "NodePort") (ne .Values.proxy.service.nodePorts.pulsar "") }}
+      nodePort: {{ .Values.proxy.service.nodePorts.pulsar }}
+      {{- end}}
     {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
     - name: https
       port: {{ .Values.proxy.ports.https }}
       protocol: TCP
       targetPort: sts-https
+      {{- if and (eq .Values.proxy.service.type "NodePort") (ne .Values.proxy.service.nodePorts.https "") }}
+      nodePort: {{ .Values.proxy.service.nodePorts.https }}
+      {{- end}}
     - name: "{{ .Values.tlsPrefix }}pulsarssl"
       port: {{ .Values.proxy.ports.pulsarssl }}
       protocol: TCP
       targetPort: "sts-{{ .Values.tlsPrefix }}pulsarssl"
+      {{- if and (eq .Values.proxy.service.type "NodePort") (ne .Values.proxy.service.nodePorts.pulsarssl "") }}
+      nodePort: {{ .Values.proxy.service.nodePorts.pulsarssl }}
+      {{- end}}
     {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}

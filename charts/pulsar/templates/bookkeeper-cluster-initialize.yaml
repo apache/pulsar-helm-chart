@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if or .Release.IsInstall .Values.initialize }}
+{{- if or (and .Values.useReleaseStatus .Release.IsInstall) .Values.initialize }}
 {{- if .Values.components.bookkeeper }}
 apiVersion: batch/v1
 kind: Job
@@ -29,26 +29,31 @@ metadata:
 spec:
 # This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
 # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
-{{- if .Values.job.ttl.enabled }}
-  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished }}
+{{- if and .Values.job.ttl.enabled (semverCompare ">=1.23-0" .Capabilities.KubeVersion.Version) }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished | default 600 }}
 {{- end }}
   template:
     spec:
-    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+    {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-    {{- end }}
       nodeSelector:
       {{- if .Values.pulsar_metadata.nodeSelector }}
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.pulsar_metadata.tolerations }}
+{{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
       {{- end }}
       initContainers:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
+            export PULSAR_MEM="-Xmx128M";
             until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
@@ -70,6 +75,7 @@ spec:
           - >
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
+            export BOOKIE_MEM="-Xmx128M";
             if bin/bookkeeper shell whatisinstanceid; then
                 echo "bookkeeper cluster already initialized";
             else
@@ -81,7 +87,7 @@ spec:
             {{- if .Values.extraInitCommand }}
               {{ .Values.extraInitCommand }}
             {{- end }}
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}

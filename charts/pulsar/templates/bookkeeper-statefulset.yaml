@@ -101,9 +101,7 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
-    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-    {{- end}}
       {{- if .Values.bookkeeper.securityContext }}
       securityContext:
 {{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
@@ -114,6 +112,7 @@ spec:
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
@@ -122,7 +121,7 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end}}
@@ -175,7 +174,7 @@ spec:
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
+      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
           readOnlyRootFilesystem: false
       {{- end}}

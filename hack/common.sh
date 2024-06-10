@@ -25,14 +25,16 @@ fi
 
 OUTPUT=${PULSAR_CHART_HOME}/output
 OUTPUT_BIN=${OUTPUT}/bin
-KUBECTL_VERSION=1.21.14
+: "${KUBECTL_VERSION:=1.21.14}"
 KUBECTL_BIN=$OUTPUT_BIN/kubectl
 HELM_BIN=$OUTPUT_BIN/helm
-HELM_VERSION=3.12.0
-KIND_VERSION=0.20.0
+: "${HELM_VERSION:=3.12.3}"
+: "${KIND_VERSION:=0.20.0}"
 KIND_BIN=$OUTPUT_BIN/kind
 CR_BIN=$OUTPUT_BIN/cr
-CR_VERSION=1.6.0
+: "${CR_VERSION:=1.6.0}"
+KUBECONFORM_BIN=$OUTPUT_BIN/kubeconform
+: "${KUBECONFORM_VERSION:=0.6.4}"
 export PATH="$OUTPUT_BIN:$PATH"
 
 test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
@@ -45,11 +47,13 @@ hack::discoverArch() {
     x86_64) ARCH="amd64";;
     i686) ARCH="386";;
     i386) ARCH="386";;
+    arm64) ARCH="arm64";;
+    aarch64) ARCH="arm64";;
   esac
 }
 
 hack::discoverArch
-OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+OS=$(uname|tr '[:upper:]' '[:lower:]')
 
 function hack::verify_kubectl() {
     if test -x "$KUBECTL_BIN"; then
@@ -103,7 +107,7 @@ function hack::ensure_kind() {
     echo "Installing kind v$KIND_VERSION..."
     tmpfile=$(mktemp)
     trap "test -f $tmpfile && rm $tmpfile" RETURN
-    curl --retry 10 -L -o $tmpfile https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-$(uname)-amd64
+    curl --retry 10 -L -o $tmpfile https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
     mv $tmpfile $KIND_BIN
     chmod +x $KIND_BIN
 }
@@ -133,4 +137,10 @@ function hack::ensure_cr() {
     mv $tmpfile $CR_BIN
     chmod +x $CR_BIN
     $CR_BIN version
+}
+
+function hack::ensure_kubeconform() {
+    echo "Installing kubeconform v$KUBECONFORM_VERSION..."
+    curl -s --retry 10 -L https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-${OS}-${ARCH}.tar.gz | tar -xzO kubeconform > $KUBECONFORM_BIN
+    chmod +x $KUBECONFORM_BIN
 }

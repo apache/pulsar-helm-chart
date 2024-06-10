@@ -27,6 +27,27 @@ Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/deploy-kuber
 
 > :warning: This helm chart is updated outside of the regular Pulsar release cycle and might lag behind a bit. It only supports basic Kubernetes features now. Currently, it can be used as no more than a template and starting point for a Kubernetes deployment. In many cases, it would require some customizations.
 
+## Important Security Disclaimer for Helm Chart Usage
+
+### Notice of Default Configuration
+This Helm chart is provided with a default configuration that does not meet the security requirements for production environments or sensitive data handling. Users are strongly advised to thoroughly review and customize the security settings to ensure a secure deployment that aligns with their specific operational and security policies.
+
+### Pulsar Proxy Security Considerations
+As per the [Pulsar Proxy documentation](https://pulsar.apache.org/docs/3.1.x/administration-proxy/), it is explicitly stated that the Pulsar proxy is not designed for exposure to the public internet. The design assumes that deployments will be protected by network perimeter security measures. It is crucial to understand that relying solely on the default configuration can expose your deployment to significant security vulnerabilities.
+
+#### Recommendations:
+- **Network Perimeter Security:** It is imperative to implement robust network perimeter security to safeguard your deployment. The absence of such security measures can lead to unauthorized access and potential data breaches.
+- **Restricted Access:** For environments where security is less critical, such as certain development or testing scenarios, the use of `loadBalancerSourceRanges` may be employed to restrict access to specified IP addresses or ranges. This, however, should not be considered a substitute for comprehensive security measures in production environments.
+
+### User Responsibility
+The user assumes full responsibility for the security and integrity of their deployment. This includes, but is not limited to, the proper configuration of security features and adherence to best practices for securing network access. The providers of this Helm chart disclaim all warranties, whether express or implied, including any warranties of merchantability, fitness for a particular purpose, and non-infringement of third-party rights.
+
+### No Security Guarantees
+The providers of this Helm chart make no guarantees regarding the security of the chart under any circumstances. It is the user's responsibility to ensure that their deployment is secure and complies with all relevant security standards and regulations.
+
+By using this Helm chart, the user acknowledges the risks associated with its default configuration and the necessity for proper security customization. The user further agrees that the providers of the Helm chart shall not be liable for any security breaches or incidents resulting from the use of the chart.
+
+
 ## Features
 
 This Helm Chart includes all the components of Apache Pulsar for a complete experience.
@@ -64,7 +85,7 @@ It includes support for:
     - [x] Non-persistence storage
     - [x] Persistence Volume
     - [x] Local Persistent Volumes
-    - [ ] Tiered Storage
+    - [x] Tiered Storage
 - [x] Functions
     - [x] Kubernetes Runtime
     - [x] Process Runtime
@@ -77,7 +98,7 @@ It includes support for:
 In order to use this chart to deploy Apache Pulsar on Kubernetes, the followings are required.
 
 1. kubectl 1.21 or higher, compatible with your cluster ([+/- 1 minor release from your cluster](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin))
-2. Helm v3 (3.0.2 or higher)
+2. Helm v3 (3.10.0 or higher)
 3. A Kubernetes cluster, version 1.21 or higher.
 
 ## Environment setup
@@ -160,14 +181,50 @@ Otherwise, the helm chart installation will attempt to install the CRDs for the 
 you'll need to disable each of the component's `PodMonitors`. This is shown in some [examples](./examples) and is
 verified in some [tests](./.ci/clusters).
 
+## Pulsar Manager
+
+The Pulsar Manager can be deployed alongside the pulsar cluster instance.
+Depending on the given settings it uses an existing Secret within the given namespace or creates a new one, with random
+passwords for both, the UI and the internal database.
+
+To forward the UI use (assumes you did not change the namespace):
+
+```
+kubectl port-forward $(kubectl get pods -l component=pulsar-manager -o jsonpath='{.items[0].metadata.name}') 9527:9527
+```
+
+And then opening the browser to http://localhost:9527
+
+The default user is `pulsar` and you can find out the password with this command
+
+```
+kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
+```
+
 ## Grafana Dashboards
 
-The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana. Dashboards are loaded via a Kubernetes `ConfigMap`. Please see their documentation for loading those dashboards.
+The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana.
 
-The `apache/pulsar` GitHub repo contains some dashboards [here](https://github.com/apache/pulsar/tree/master/grafana).
+There are several ways to configure Grafana dashboards. The default `values.yaml` comes with examples of Pulsar dashboards which get downloaded from the Apache-2.0 licensed [streamnative/apache-pulsar-grafana-dashboard OSS project](https://github.com/streamnative/apache-pulsar-grafana-dashboard) by URL.
 
-### Third Party Dashboards
+Dashboards can be configured in `values.yaml` or by adding `ConfigMap` items with the label `grafana_dashboard: "1"`.
+In `values.yaml`, it's possible to include dashboards by URL or by grafana.com dashboard id (`gnetId` and `revision`).
+Please see the [Grafana Helm chart documentation for importing dashboards](https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md#import-dashboards).
 
+You can connect to Grafana by forwarding port 3000
+```
+kubectl port-forward $(kubectl get pods -l app.kubernetes.io/name=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000
+```
+And then opening the browser to http://localhost:3000 . The default user is `admin`.
+
+You can find out the password with this command
+```
+kubectl get secret -l app.kubernetes.io/name=grafana -o=jsonpath="{.items[0].data.admin-password}" | base64 --decode
+```
+
+### Pulsar Grafana Dashboards
+
+* The `apache/pulsar` GitHub repo contains some Grafana dashboards [here](https://github.com/apache/pulsar/tree/master/grafana).
 * StreamNative provides Grafana Dashboards for Apache Pulsar in this [GitHub repository](https://github.com/streamnative/apache-pulsar-grafana-dashboard).
 * DataStax provides Grafana Dashboards for Apache Pulsar in this [GitHub repository](https://github.com/datastax/pulsar-helm-chart/tree/master/helm-chart-sources/pulsar/grafana-dashboards).
 
@@ -187,6 +244,33 @@ helm upgrade -f pulsar.yaml \
 ```
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
+
+## Upgrading from Helm Chart version 3.0.0-3.4.x to 3.5.0 version and above
+
+The kube-prometheus-stack version has been upgraded to 59.x.x in Pulsar Helm Chart version 3.5.0 .
+Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-58x-to-59x). 
+
+There's a script to run the required commands:
+```shell
+./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.74.0
+```
+
+After, this you can proceed with `helm upgrade`.
+
+
+## Upgrading from Helm Chart version 3.0.0-3.2.x to 3.3.0 version and above
+
+The kube-prometheus-stack version has been upgraded to 56.x.x in Pulsar Helm Chart version 3.3.0 .
+Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-55x-to-56x). 
+
+There's a script to run the required commands:
+```shell
+./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.71.0
+```
+
+After, this you can proceed with `helm upgrade`.
 
 ## Upgrading to Apache Pulsar 2.10.0 and above (or Helm Chart version 3.0.0 and above)
 
@@ -238,15 +322,46 @@ Caused by: org.rocksdb.RocksDBException: while open a file for lock: /pulsar/dat
     ... 13 more
 ```
 
+### Recovering from `helm upgrade` error "unable to build kubernetes objects from current release manifest"
+
+Example of the error message:
+```bash
+Error: UPGRADE FAILED: unable to build kubernetes objects from current release manifest:
+[resource mapping not found for name: "pulsar-bookie" namespace: "pulsar" from "":
+no matches for kind "PodDisruptionBudget" in version "policy/v1beta1" ensure CRDs are installed first,
+resource mapping not found for name: "pulsar-broker" namespace: "pulsar" from "":
+no matches for kind "PodDisruptionBudget" in version "policy/v1beta1" ensure CRDs are installed first,
+resource mapping not found for name: "pulsar-zookeeper" namespace: "pulsar" from "":
+no matches for kind "PodDisruptionBudget" in version "policy/v1beta1" ensure CRDs are installed first]
+```
+
+Helm documentation [explains issues with managing releases deployed using outdated APIs](https://helm.sh/docs/topics/kubernetes_apis/#helm-users) when the Kubernetes cluster has been upgraded
+to a version where these APIs are removed. This happens regardless of whether the chart in the upgrade includes supported API versions.
+In this case, you can use the following workaround:
+
+1. Install the [Helm mapkubeapis plugin](https://github.com/helm/helm-mapkubeapis):
+
+    ```bash
+    helm plugin install https://github.com/helm/helm-mapkubeapis
+    ```
+
+2. Run the `helm mapkubeapis` command with the appropriate namespace and release name. In this example, we use the namespace "pulsar" and release name "pulsar":
+
+    ```bash
+    helm mapkubeapis --namespace pulsar pulsar
+    ```
+
+This workaround addresses the issue by updating in-place Helm release metadata that contains deprecated or removed Kubernetes APIs to a new instance with supported Kubernetes APIs and should allow for a successful Helm upgrade.
+
 ## Uninstall
 
 To uninstall the Pulsar Chart, run the following command:
 
 ```bash
-helm delete <pulsar-release-name>
+helm uninstall <pulsar-release-name>
 ```
 
-For the purposes of continuity, these charts have some Kubernetes objects that are not removed when performing `helm delete`.
+For the purposes of continuity, these charts have some Kubernetes objects that are not removed when performing `helm uninstall`.
 These items we require you to *conciously* remove them, as they affect re-deployment should you choose to.
 
 * PVCs for stateful data, which you must *consciously* remove
