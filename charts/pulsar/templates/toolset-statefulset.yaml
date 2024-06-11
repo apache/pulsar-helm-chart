@@ -61,8 +61,13 @@ spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+        {{- if (and .Values.images.toolset .Values.images.toolset.repository) }}
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.toolset "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.toolset "root" .) }}"
+        {{- else }}
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
+        {{- end }}
       {{- if .Values.toolset.resources }}
         resources:
 {{ toYaml .Values.toolset.resources | indent 10 }}

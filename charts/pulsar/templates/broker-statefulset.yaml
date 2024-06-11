@@ -125,7 +125,7 @@ spec:
       # deploying the bookies
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -150,7 +150,7 @@ spec:
       # deploying the broker
       - name: wait-bookkeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -182,7 +182,7 @@ spec:
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         {{- if .Values.broker.probe.liveness.enabled }}
         livenessProbe:
           httpGet:

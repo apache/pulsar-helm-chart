@@ -137,6 +137,9 @@ defaultPulsarImageRepository: apachepulsar/pulsar-all
 # uses chart's appVersion when unspecified
 defaultPulsarImageTag:
 
+# default pull policy for all images
+defaultPullPolicy: IfNotPresent
+
 ## Images
 ##
 ## Control what images to use for each component
@@ -149,40 +152,55 @@ images:
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   bookie:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   autorecovery:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   broker:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
+  toolset:
+    # uses defaultPulsarImageRepository when unspecified
+    repository:
+    # uses defaultPulsarImageTag when unspecified
+    tag:
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   proxy:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   functions:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
     tag: v0.4.0
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
     hasCommand: false
 
 ## TLS
@@ -726,7 +744,8 @@ pulsar_metadata:
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   ## set an existing configuration store
   # configurationStore:
   configurationStoreMetadataPrefix: ""

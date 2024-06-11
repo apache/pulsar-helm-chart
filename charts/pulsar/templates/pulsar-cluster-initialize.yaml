@@ -44,7 +44,7 @@ spec:
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-cs-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
-        imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -55,7 +55,7 @@ spec:
       {{- end }}
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
-        imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -74,7 +74,7 @@ spec:
       # before initializing pulsar metadata
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
-        imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -95,7 +95,7 @@ spec:
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
-        imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
       {{- if .Values.pulsar_metadata.resources }}
         resources:
 {{ toYaml .Values.pulsar_metadata.resources | indent 10 }}
