@@ -128,3 +128,10 @@ Create full image name
 {{- define "pulsar.imageFullName" -}}
 {{- printf "%s:%s" (.image.repository | default .root.Values.defaultPulsarImageRepository) (.image.tag | default .root.Values.defaultPulsarImageTag | default .root.Chart.AppVersion) -}}
 {{- end -}}
+
+{{/*
+Lookup pull policy, default to defaultPullPolicy
+*/}}
+{{- define "pulsar.imagePullPolicy" -}}
+{{- printf "%s" (.image.pullPolicy | default .root.Values.defaultPullPolicy) -}}
+{{- end -}}

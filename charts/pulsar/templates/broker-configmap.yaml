@@ -114,6 +114,7 @@ data:
   PF_functionRuntimeFactoryConfigs_pulsarRootDir: {{ template "pulsar.home" . }}
   PF_kubernetesContainerFactory_pulsarRootDir: {{ template "pulsar.home" . }}
   PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+  PF_functionRuntimeFactoryConfigs_imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.functions "root" .) }}"
   PF_functionRuntimeFactoryConfigs_submittingInsidePod: "true"
   PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
   PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
@@ -127,6 +128,7 @@ data:
   {{- end }}
   # support version < 2.5.0
   PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+  PF_kubernetesContainerFactory_imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.functions "root" .) }}"
   PF_kubernetesContainerFactory_submittingInsidePod: "true"
   PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
   PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}

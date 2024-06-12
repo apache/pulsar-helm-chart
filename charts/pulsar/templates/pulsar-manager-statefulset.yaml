@@ -58,7 +58,7 @@ spec:
       containers:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
           image: "{{ .Values.images.pulsar_manager.repository }}:{{ .Values.images.pulsar_manager.tag }}"
-          imagePullPolicy: {{ .Values.images.pulsar_manager.pullPolicy }}
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.pulsar_manager "root" .) }}"
         {{- if .Values.pulsar_manager.resources }}
           resources:
 {{ toYaml .Values.pulsar_manager.resources | indent 12 }}
