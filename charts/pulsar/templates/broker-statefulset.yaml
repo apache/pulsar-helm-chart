@@ -121,22 +121,23 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
       initContainers:
+      {{- if and .Values.broker.waitZookeeperTimeout (not (eq (.Values.broker.waitZookeeperTimeout | toString) "0")) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.broker.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - >-
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             export BOOKIE_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
-            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
             {{- if not .Values.pulsar_metadata.configurationStore }}
-            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
@@ -146,19 +147,21 @@ spec:
       {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.broker.waitBookkeeperTimeout (not (eq (.Values.broker.waitBookkeeperTimeout | toString) "0")) }}
       # This init container will wait for bookkeeper to be ready before
       # deploying the broker
       - name: wait-bookkeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.broker.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
           - >
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             export BOOKIE_MEM="-Xmx128M";
-            until bin/bookkeeper shell whatisinstanceid; do
+            until timeout 15 bin/bookkeeper shell whatisinstanceid; do
               echo "bookkeeper cluster is not initialized yet. backoff for 3 seconds ...";
               sleep 3;
             done;
@@ -179,6 +182,7 @@ spec:
       {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
@@ -227,11 +231,11 @@ spec:
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > "${statusFilePath:-status}";
           {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 10 }}
-          bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+          timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           while [ $? -eq 0 ]; do
             echo "broker {{ template "pulsar.broker.hostname" . }} znode still exists ... check in 10 seconds ...";
             sleep 10;
-            bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+            timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
           cat conf/pulsar_env.sh;
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar broker;
