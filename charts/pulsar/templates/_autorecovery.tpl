@@ -93,7 +93,7 @@ Define autorecovery init container : verify cluster id
 {{- define "pulsar.autorecovery.init.verify_cluster_id" -}}
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 {{- include "pulsar.autorecovery.zookeeper.tls.settings" . -}}
-until bin/bookkeeper shell whatisinstanceid; do
+until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 {{- end }}

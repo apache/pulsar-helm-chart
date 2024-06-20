@@ -124,7 +124,7 @@ Define bookie init container : verify cluster id
 {{- if not (and .Values.volumes.persistence .Values.bookkeeper.volumes.persistence) }}
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . -}}
-until bin/bookkeeper shell whatisinstanceid; do
+until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 bin/bookkeeper shell bookieformat -nonInteractive -force -deleteCookie || true
@@ -133,7 +133,7 @@ bin/bookkeeper shell bookieformat -nonInteractive -force -deleteCookie || true
 set -e;
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . -}}
-until bin/bookkeeper shell whatisinstanceid; do
+until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 {{- end }}
