@@ -70,7 +70,7 @@ spec:
           - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
             mountPath: /data
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.jwt.enabled }}
           - name: pulsar-manager-keys
             mountPath: /pulsar-manager/keys
         {{- end }}
@@ -98,7 +98,7 @@ spec:
                 {{- end }}
                 key: DB_PASSWORD
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.jwt.enabled }}
         {{- if .Values.auth.superUsers.manager }}
           - name: JWT_TOKEN
             valueFrom:
@@ -111,7 +111,7 @@ spec:
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       volumes:
       {{- if .Values.auth.authentication.enabled }}
-      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      {{- if .Values.auth.authentication.jwt.enabled }}
         - name: pulsar-manager-keys
           secret:
             defaultMode: 420

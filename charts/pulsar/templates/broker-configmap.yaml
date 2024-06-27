@@ -164,9 +164,14 @@ data:
   proxyRoles: {{ .Values.auth.superUsers.proxy }}
   {{- end }}
   {{- end }}
-  {{- if eq .Values.auth.authentication.provider "jwt" }}
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled  }}
   # token authentication configuration
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled .Values.auth.authentication.openid.enabled }}
+  authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken,org.apache.pulsar.broker.authentication.oidc.AuthenticationProviderOpenID"
+  {{- end }}
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled ( not .Values.auth.authentication.openid.enabled ) }}
   authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken"
+  {{- end }}
   brokerClientAuthenticationParameters: "file:///pulsar/tokens/broker/token"
   brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
   {{- if .Values.auth.authentication.jwt.usingSecretKey }}
@@ -174,6 +179,25 @@ data:
   {{- else }}
   tokenPublicKey: "file:///pulsar/keys/token/public.key"
   {{- end }}
+  {{- end }}
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.openid.enabled  }}
+  # openid authentication configuration
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.openid.enabled ( not .Values.auth.authentication.jwt.enabled ) }}
+  authenticationProviders: "org.apache.pulsar.broker.authentication.oidc.AuthenticationProviderOpenID"
+  {{- end }}
+  PULSAR_PREFIX_openIDAllowedTokenIssuers: {{ .Values.auth.authentication.openid.openIDAllowedTokenIssuers | uniq | compact | sortAlpha | join "," | quote }}
+  PULSAR_PREFIX_openIDAllowedAudiences: {{ .Values.auth.authentication.openid.openIDAllowedAudiences | uniq | compact | sortAlpha | join "," | quote }}
+  PULSAR_PREFIX_openIDTokenIssuerTrustCertsFilePath: {{ .Values.auth.authentication.openid.openIDTokenIssuerTrustCertsFilePath | quote }}
+  PULSAR_PREFIX_openIDRoleClaim: {{  .Values.auth.authentication.openid.openIDRoleClaim | quote }}
+  PULSAR_PREFIX_openIDAcceptedTimeLeewaySeconds: {{ .Values.auth.authentication.openid.openIDAcceptedTimeLeewaySeconds | quote }}
+  PULSAR_PREFIX_openIDCacheSize: {{ .Values.auth.authentication.openid.openIDCacheSize | quote }}
+  PULSAR_PREFIX_openIDCacheRefreshAfterWriteSeconds: {{ .Values.auth.authentication.openid.openIDCacheRefreshAfterWriteSeconds | quote }}
+  PULSAR_PREFIX_openIDCacheExpirationSeconds: {{ .Values.auth.authentication.openid.openIDCacheExpirationSeconds | quote }}
+  PULSAR_PREFIX_openIDHttpConnectionTimeoutMillis: {{ .Values.auth.authentication.openid.openIDHttpConnectionTimeoutMillis | quote }}
+  PULSAR_PREFIX_openIDHttpReadTimeoutMillis: {{ .Values.auth.authentication.openid.openIDHttpReadTimeoutMillis | quote }}
+  PULSAR_PREFIX_openIDKeyIdCacheMissRefreshSeconds: {{ .Values.auth.authentication.openid.openIDKeyIdCacheMissRefreshSeconds | quote }}
+  PULSAR_PREFIX_openIDRequireIssuersUseHttps: {{ .Values.auth.authentication.openid.openIDRequireIssuersUseHttps | quote }}
+  PULSAR_PREFIX_openIDFallbackDiscoveryMode: {{ .Values.auth.authentication.openid.openIDFallbackDiscoveryMode | quote }}
   {{- end }}
   {{- end }}
 
