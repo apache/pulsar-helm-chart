@@ -77,6 +77,7 @@ It includes support for:
         - [x] ZooKeeper
     - [x] Authentication
         - [x] JWT
+        - [x] OpenID
         - [ ] Mutal TLS
         - [ ] Kerberos
     - [x] Authorization
