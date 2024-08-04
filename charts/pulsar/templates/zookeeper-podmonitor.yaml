@@ -28,6 +28,9 @@ metadata:
     chart: {{ template "pulsar.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+    {{- if $.Values.podMonitor.customLabels }}
+    {{ $.Values.podMonitor.customLabels | toYaml | trim }}
+    {{- end }}
 spec:
   jobLabel: zookeeper
   podMetricsEndpoints:
