@@ -183,6 +183,9 @@ spec:
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       {{- end }}
+      {{- if .Values.broker.initContainers }}
+        {{- toYaml .Values.broker.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"

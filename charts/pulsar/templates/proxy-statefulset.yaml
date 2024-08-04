@@ -144,6 +144,9 @@ spec:
               brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
             done;
       {{- end}}
+      {{- if .Values.proxy.initContainers }}
+        {{- toYaml .Values.proxy.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"

@@ -105,6 +105,10 @@ spec:
       securityContext:
 {{ toYaml .Values.zookeeper.securityContext | indent 8 }}
       {{- end }}
+      {{- if .Values.zookeeper.initContainers }}
+      initContainers:
+        {{- toYaml .Values.zookeeper.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.zookeeper "root" .) }}"

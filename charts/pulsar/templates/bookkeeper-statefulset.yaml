@@ -128,7 +128,10 @@ spec:
       {{- end}}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
-      {{- end}}
+      {{- end }}
+      {{- if .Values.bookkeeper.initContainers }}
+        {{- toYaml .Values.bookkeeper.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
