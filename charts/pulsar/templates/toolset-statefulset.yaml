@@ -59,6 +59,10 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+      {{- if .Values.toolset.initContainers }}
+      initContainers:
+        {{- toYaml .Values.toolset.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
         {{- if (and .Values.images.toolset .Values.images.toolset.repository) }}

@@ -312,6 +312,7 @@ zookeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
+  initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -488,6 +489,7 @@ bookkeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
+  initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -696,6 +698,7 @@ autorecovery:
   # so the metrics are correctly rendered in grafana dashboard
   component: recovery
   replicaCount: 1
+  initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -802,6 +805,7 @@ broker:
     maxReplicas: 3
     metrics: ~
     behavior: ~
+  initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -1044,6 +1048,7 @@ proxy:
     maxReplicas: 3
     metrics: ~
     behavior: ~
+  initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
     enabled: true
@@ -1192,12 +1197,13 @@ proxy:
     maxUnavailable: 1
 
 ## Pulsar ToolSet
-## templates/toolset-deployment.yaml
+## templates/toolset-statefulset.yaml
 ##
 toolset:
   component: toolset
   useProxy: true
   replicaCount: 1
+  initContainers: []
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
@@ -1331,6 +1337,7 @@ kube-prometheus-stack:
 pulsar_manager:
   component: pulsar-manager
   replicaCount: 1
+  initContainers: []
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
