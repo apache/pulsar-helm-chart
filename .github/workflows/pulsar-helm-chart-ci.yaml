@@ -107,7 +107,7 @@ jobs:
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         uses: azure/setup-helm@v3
         with:
-          version: v3.12.3
+          version: v3.14.4
 
       - name: Set up Python
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
@@ -127,7 +127,7 @@ jobs:
             --validate-maintainers=false \
             --target-branch ${{ github.event.repository.default_branch }}
 
-      - name: Run kubeconform check for helm template with every major k8s version 1.21.0-1.29.0
+      - name: Run kubeconform check for helm template with every major k8s version 1.23.0-1.30.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
           PULSAR_CHART_HOME=$(pwd)
@@ -145,7 +145,7 @@ jobs:
               kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
           }
           set -o pipefail
-          for k8s_version_part in {21..29}; do
+          for k8s_version_part in {23..30}; do
             k8s_version="1.${k8s_version_part}.0"
             echo "Validating helm template with kubeconform for k8s version $k8s_version"
             validate_helm_template_with_k8s_version $k8s_version
@@ -167,12 +167,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0 for the list of supported k8s versions for kind 0.20.0
+        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.22.0 for the list of supported k8s versions for kind 0.22.0
         k8sVersion:
-          - version: "1.21.14"
-            kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
-          - version: "1.27.3"
-            kind_image_tag: v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
+          - version: "1.23.17"
+            kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
+          - version: "1.29.2"
+            kind_image_tag: v1.29.2@sha256:51a1434a5397193442f0be2a297b488b6c919ce8a3931be0ce822606ea5ca245
         testScenario:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
@@ -210,31 +210,31 @@ jobs:
             shortname: pulsar-manager
         include:
           - k8sVersion:
-              version: "1.21.14"
-              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+              version: "1.23.17"
+              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
               name: "Pulsar Latest"
               values_file: .ci/clusters/values-pulsar-latest.yaml
               shortname: pulsar-latest
           - k8sVersion:
-              version: "1.21.14"
-              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+              version: "1.23.17"
+              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
               name: "Upgrade TLS"
               values_file: .ci/clusters/values-tls.yaml
               shortname: tls
               type: upgrade
           - k8sVersion:
-              version: "1.21.14"
-              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+              version: "1.23.17"
+              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
               name: "Upgrade PSP"
               values_file: .ci/clusters/values-psp.yaml
               shortname: psp
               type: upgrade
           - k8sVersion:
-              version: "1.21.14"
-              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+              version: "1.23.17"
+              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
               name: "Upgrade kube-prometheus-stack"
               values_file: .ci/clusters/values-prometheus-grafana.yaml
@@ -242,18 +242,18 @@ jobs:
               type: upgrade
               upgradeFromVersion: 3.2.0
           - k8sVersion:
-              version: "1.21.14"
-              kind_image_tag: v1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+              version: "1.23.17"
+              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
-              name: "TLS with helm 3.10.0"
+              name: "TLS with helm 3.12.0"
               values_file: .ci/clusters/values-tls.yaml
               shortname: tls
               type: install
-            helmVersion: 3.10.0
+            helmVersion: 3.12.0
     env:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
-      HELM_VERSION: ${{ matrix.helmVersion || '3.12.3' }}
+      HELM_VERSION: ${{ matrix.helmVersion || '3.14.4' }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -285,7 +285,7 @@ jobs:
             # install k9s on the fly
             if [ ! -x /usr/local/bin/k9s ]; then
               echo "Installing k9s..."
-              curl -L -s https://github.com/derailed/k9s/releases/download/v0.29.1/k9s_Linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin k9s
+              curl -L -s https://github.com/derailed/k9s/releases/download/v0.32.5/k9s_Linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin k9s
             fi
             command k9s "$@"
           }
