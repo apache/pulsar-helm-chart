@@ -226,6 +226,7 @@ tls:
   proxy:
     enabled: false
     cert_name: tls-proxy
+    createCert: true # set to false if you want to use an existing certificate
   # settings for generating certs for broker
   broker:
     enabled: false
@@ -1425,6 +1426,9 @@ pulsar_manager:
     ui_password: ""  # leave empty for random password
     db_username: "pulsar"
     db_password: ""  # leave empty for random password
+    dbExistingSecret: ""
+    dbUsernameKey: "" # leave empty to use default key
+    dbPasswordKey: "" # leave empty to use default key
 
 # These are jobs where job ttl configuration is used
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml

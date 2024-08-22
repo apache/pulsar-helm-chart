@@ -21,6 +21,7 @@
 {{- if .Values.certs.internal_issuer.enabled }}
 
 {{- if .Values.tls.proxy.enabled }}
+{{- if .Values.tls.proxy.createCert }}
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Certificate
 metadata:
@@ -62,6 +63,7 @@ spec:
     # if you are using an external issuer, change this to that issuer group.
     group: cert-manager.io
 ---
+{{- end }}
 {{- end }}
 
 {{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
