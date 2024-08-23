@@ -226,6 +226,7 @@ tls:
   proxy:
     enabled: false
     cert_name: tls-proxy
+    createCert: true  # set to false if you want to use an existing certificate
   # settings for generating certs for broker
   broker:
     enabled: false
