@@ -59,6 +59,10 @@ spec:
       tolerations:
 {{ toYaml .Values.bookkeeper.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.bookkeeper.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.bookkeeper.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.bookkeeper.affinity.anti_affinity}}
         podAntiAffinity:

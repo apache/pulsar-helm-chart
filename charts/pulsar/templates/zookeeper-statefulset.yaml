@@ -58,6 +58,10 @@ spec:
       tolerations:
 {{ toYaml .Values.zookeeper.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.zookeeper.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.zookeeper.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
         podAntiAffinity:

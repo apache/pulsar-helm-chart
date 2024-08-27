@@ -57,6 +57,10 @@ spec:
       tolerations:
 {{ toYaml .Values.toolset.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.toolset.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.toolset.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
       {{- if .Values.toolset.initContainers }}
