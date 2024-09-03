@@ -806,6 +806,8 @@ broker:
     maxReplicas: 3
     metrics: ~
     behavior: ~
+  # The podManagementPolicy cannot be modified for an existing deployment. If you need to change this value, you will need to manually delete the existing broker StatefulSet and then redeploy the chart.
+  podManagementPolicy:
   initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
