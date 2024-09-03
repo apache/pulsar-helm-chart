@@ -806,7 +806,8 @@ broker:
     maxReplicas: 3
     metrics: ~
     behavior: ~
-  podManagementPolicy: Parallel
+  # The podManagementPolicy cannot be changed on an existing broker. If you want to make this change, you will need to manually recreate the StatefulSet.
+  podManagementPolicy:
   initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
