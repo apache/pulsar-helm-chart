@@ -49,7 +49,7 @@ spec:
   podManagementPolicy: {{ $stsObj.spec.podManagementPolicy }}
   {{- else }}
   {{- if not .Values.components.functions }}
-  podManagementPolicy: Parallel
+  podManagementPolicy: {{ .Values.broker.podManagementPolicy }}
   {{- else }}
   podManagementPolicy: OrderedReady
   {{- end }}

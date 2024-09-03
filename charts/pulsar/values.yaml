@@ -806,6 +806,7 @@ broker:
     maxReplicas: 3
     metrics: ~
     behavior: ~
+  podManagementPolicy: Parallel
   initContainers: []
   # This is how prometheus discovers this component
   podMonitor:
