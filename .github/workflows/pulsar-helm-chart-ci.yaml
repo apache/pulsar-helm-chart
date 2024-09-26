@@ -330,7 +330,7 @@ jobs:
           ci::collect_k8s_logs
 
       - name: Upload k8s logs on failure
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: ${{ cancelled() || failure() }}
         continue-on-error: true
         with:
