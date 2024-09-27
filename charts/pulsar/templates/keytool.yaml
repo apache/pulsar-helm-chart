@@ -36,9 +36,14 @@ data:
     crtFile=/pulsar/certs/${component}/tls.crt
     keyFile=/pulsar/certs/${component}/tls.key
     caFile=/pulsar/certs/ca/ca.crt
-    p12File=/pulsar/${component}.p12
-    keyStoreFile=/pulsar/${component}.keystore.jks
-    trustStoreFile=/pulsar/${component}.truststore.jks
+    tlsDir=/tmp/pulsar-tls$$
+    p12File=${tlsDir}/${component}.p12
+    keyStoreFile=${tlsDir}/${component}.keystore.jks
+    trustStoreFile=${tlsDir}/${component}.truststore.jks
+
+    # create tmp dir for keystore and truststore files
+    mkdir ${tlsDir}
+    chmod 0700 ${tlsDir}
     
     function checkFile() {
         local file=$1
