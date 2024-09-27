@@ -61,6 +61,10 @@ spec:
       tolerations:
 {{ toYaml .Values.proxy.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.proxy.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.proxy.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.proxy.affinity.anti_affinity}}
         podAntiAffinity:

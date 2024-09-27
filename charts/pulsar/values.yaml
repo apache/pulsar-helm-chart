@@ -358,6 +358,8 @@ zookeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -533,6 +535,8 @@ bookkeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -721,6 +725,8 @@ autorecovery:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   # tolerations: []
   gracePeriod: 30
@@ -852,6 +858,8 @@ broker:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: preferredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1090,6 +1098,8 @@ proxy:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1211,6 +1221,8 @@ toolset:
   restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1345,6 +1357,8 @@ pulsar_manager:
   restartPodsOnConfigMapChange: false
   # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30

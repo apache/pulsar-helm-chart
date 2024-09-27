@@ -54,6 +54,10 @@ spec:
       tolerations:
 {{ toYaml .Values.pulsar_manager.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.pulsar_manager.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.pulsar_manager.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.pulsar_manager.gracePeriod }}
       {{- if .Values.pulsar_manager.initContainers }}
       initContainers:

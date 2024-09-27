@@ -80,6 +80,10 @@ spec:
       tolerations:
 {{ toYaml .Values.broker.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.broker.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.broker.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.broker.affinity.anti_affinity}}
         podAntiAffinity:
