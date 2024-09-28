@@ -17,5 +17,5 @@
 # under the License.
 #
 
-defaultPulsarImageRepository: apachepulsar/pulsar-all
-defaultPulsarImageTag: 3.3.1
+#defaultPulsarImageRepository: apachepulsar/pulsar-all
+#defaultPulsarImageTag: 3.3.1
