@@ -88,4 +88,4 @@ toolset:
   useProxy: false
 
 defaultPulsarImageRepository: lhotari/pulsar-all
-defaultPulsarImageTag: 4.0.0-SNAPSHOT-c80dd1b
+defaultPulsarImageTag: 4.0.0-SNAPSHOT-7e59bde
