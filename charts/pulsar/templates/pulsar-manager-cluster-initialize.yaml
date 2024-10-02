@@ -33,6 +33,7 @@ spec:
   {{- end }}
   template:
     spec:
+    {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       nodeSelector:
       {{- if .Values.pulsar_metadata.nodeSelector }}
       {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
