@@ -1361,6 +1361,8 @@ pulsar_manager:
   topologySpreadConstraints: []
   annotations: {}
   tolerations: []
+  extraVolumes: []
+  extraVolumeMounts: []
   gracePeriod: 30
   resources:
     requests:
