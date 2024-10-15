@@ -884,7 +884,7 @@ broker:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  extreEnvs: []
+  extraEnvs: []
   #  - name: POD_NAME
   #    valueFrom:
   #      fieldRef:
@@ -1124,7 +1124,7 @@ proxy:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  extreEnvs: []
+  extraEnvs: []
 #    - name: POD_IP
 #      valueFrom:
 #        fieldRef:

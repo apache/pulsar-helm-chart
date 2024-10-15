@@ -216,9 +216,9 @@ spec:
         securityContext:
           readOnlyRootFilesystem: false
       {{- end }}
-{{- if .Values.proxy.extreEnvs }}
+{{- if .Values.proxy.extraEnvs }}
         env:
-{{ toYaml .Values.proxy.extreEnvs | indent 8 }}
+{{ toYaml .Values.proxy.extraEnvs | indent 8 }}
 {{- end }}
         envFrom:
         - configMapRef:

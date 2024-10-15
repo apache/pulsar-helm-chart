@@ -316,8 +316,8 @@ spec:
                 name: {{ .Values.broker.storageOffload.secret }}
                 key: AZURE_STORAGE_ACCESS_KEY
           {{- end }}
-        {{- if .Values.broker.extreEnvs }}
-{{- toYaml .Values.broker.extreEnvs | nindent 10 }}
+        {{- if .Values.broker.extraEnvs }}
+{{- toYaml .Values.broker.extraEnvs | nindent 10 }}
         {{- end }}
       volumes:
       {{- if .Values.broker.extraVolumes }}
