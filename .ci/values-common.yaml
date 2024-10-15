@@ -86,3 +86,6 @@ proxy:
 
 toolset:
   useProxy: false
+
+defaultPulsarImageRepository: lhotari/pulsar-all
+defaultPulsarImageTag: 4.0.0-92448d5
