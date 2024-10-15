@@ -884,12 +884,12 @@ broker:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  extreEnvs:
-   - name: POD_NAME
-     valueFrom:
-       fieldRef:
-         apiVersion: v1
-         fieldPath: metadata.name
+  extreEnvs: []
+  #  - name: POD_NAME
+  #    valueFrom:
+  #      fieldRef:
+  #        apiVersion: v1
+  #        fieldPath: metadata.name
   ## Broker configmap
   ## templates/broker-configmap.yaml
   ## Keys in broker.conf can be overridden here. Use PULSAR_PREFIX_ to add keys to broker.conf.
