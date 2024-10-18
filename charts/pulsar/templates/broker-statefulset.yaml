@@ -262,10 +262,6 @@ spec:
         - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
-{{- if .Values.broker.extreEnvs }}
-        env:
-{{ toYaml .Values.broker.extreEnvs | indent 8 }}
-{{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
@@ -320,6 +316,9 @@ spec:
                 name: {{ .Values.broker.storageOffload.secret }}
                 key: AZURE_STORAGE_ACCESS_KEY
           {{- end }}
+        {{- if .Values.broker.extraEnvs }}
+{{- toYaml .Values.broker.extraEnvs | nindent 10 }}
+        {{- end }}
       volumes:
       {{- if .Values.broker.extraVolumes }}
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
