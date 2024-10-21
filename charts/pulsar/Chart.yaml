@@ -33,6 +33,6 @@ maintainers:
     email: dev@pulsar.apache.org
 dependencies:
   - name: kube-prometheus-stack
-    version: 59.x.x
+    version: 65.x.x
     repository: https://prometheus-community.github.io/helm-charts
     condition: kube-prometheus-stack.enabled
