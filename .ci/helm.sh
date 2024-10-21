@@ -118,6 +118,7 @@ function ci::install_pulsar_chart() {
     local values_next=false
     for arg in "$@"; do
         if [[ "$arg" == "--values" ]]; then
+            extra_values+=("$arg")
             values_next=true
         elif [[ "$values_next" == true ]]; then
             extra_values+=("$arg")
