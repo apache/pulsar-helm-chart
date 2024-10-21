@@ -36,13 +36,21 @@ ci::create_cluster
 
 ci::helm_repo_add
 
-extra_opts=""
+extra_opts=()
+
+# Add any arguments after $1 to extra_opts
+shift # Remove $1 from the argument list
+while [[ $# -gt 0 ]]; do
+    extra_opts+=("$1")
+    shift
+done
+
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
-    extra_opts="-s"
+    extra_opts+=("-s")
 fi
 
 if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
-    extra_opts="${extra_opts} --pulsar-superusers proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}"
+    extra_opts+=("--pulsar-superusers" "proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}")
 fi
 
 install_type="install"
@@ -50,7 +58,7 @@ test_action="produce-consume"
 if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
     # install older version of pulsar chart
     PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
-    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}    
+    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} "${extra_opts[@]}"
     install_type="upgrade"
     echo "Wait 10 seconds"
     sleep 10
@@ -68,7 +76,7 @@ fi
 
 PULSAR_CHART_VERSION="local"
 # install (or upgrade) pulsar chart
-ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} "${extra_opts[@]}"
 
 echo "Wait 10 seconds"
 sleep 10

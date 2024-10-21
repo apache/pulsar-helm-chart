@@ -178,9 +178,9 @@ jobs:
             values_file: .ci/clusters/values-upgrade.yaml
             shortname: upgrade
             type: upgrade
-          - name: Use Pulsar Image
-            values_file: .ci/clusters/values-pulsar-image.yaml
-            shortname: pulsar-image
+          - name: Use previous LTS Pulsar Image
+            values_file: .ci/clusters/values-pulsar-previous-lts.yaml
+            shortname: pulsar-previous-lts
           - name: JWT Asymmetric Keys
             values_file: .ci/clusters/values-jwt-asymmetric.yaml
             shortname: jwt-asymmetric
@@ -213,13 +213,6 @@ jobs:
               version: "1.23.17"
               kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
-              name: "Pulsar Latest"
-              values_file: .ci/clusters/values-pulsar-latest.yaml
-              shortname: pulsar-latest
-          - k8sVersion:
-              version: "1.23.17"
-              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
-            testScenario:
               name: "Upgrade TLS"
               values_file: .ci/clusters/values-tls.yaml
               shortname: tls
@@ -236,8 +229,8 @@ jobs:
               version: "1.23.17"
               kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
             testScenario:
-              name: "Upgrade kube-prometheus-stack"
-              values_file: .ci/clusters/values-prometheus-grafana.yaml
+              name: "Upgrade kube-prometheus-stack for previous LTS"
+              values_file: .ci/clusters/values-prometheus-grafana.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
               shortname: prometheus-grafana
               type: upgrade
               upgradeFromVersion: 3.2.0
