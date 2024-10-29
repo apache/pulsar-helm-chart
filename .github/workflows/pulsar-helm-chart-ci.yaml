@@ -256,38 +256,7 @@ jobs:
 
       - name: Setup debugging tools for ssh access
         if: ${{ github.repository != 'apache/pulsar-helm-chart' && github.event_name == 'pull_request' }}
-        run: |
-          cat >> $HOME/.bashrc <<'EOF'
-          function use_kind_kubeconfig() {
-            export KUBECONFIG=$(ls $HOME/kind/pulsar-ci-*/kubeconfig.yaml)
-          }
-
-          function kubectl() {
-            # use kind environment's kubeconfig
-            if [ -z "$KUBECONFIG" ]; then
-              use_kind_kubeconfig
-            fi
-            command kubectl "$@"
-          }
-
-          function k9s() {
-            # use kind environment's kubeconfig
-            if [ -z "$KUBECONFIG" ]; then
-              use_kind_kubeconfig
-            fi
-            # install k9s on the fly
-            if [ ! -x /usr/local/bin/k9s ]; then
-              echo "Installing k9s..."
-              curl -L -s https://github.com/derailed/k9s/releases/download/v0.32.5/k9s_Linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin k9s
-            fi
-            command k9s "$@"
-          }
-          EOF
-          cat >> $HOME/.bash_profile <<'EOF'
-          if [ -f ~/.bashrc ]; then
-            source ~/.bashrc
-          fi
-          EOF
+        run: .ci/configure_ci_runner_for_debugging.sh
 
       - name: Setup ssh access to build runner VM
         # ssh access is enabled for builds in own forks
