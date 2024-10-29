@@ -21,7 +21,7 @@
 # This script is used to upgrade the Prometheus Operator CRDs before running "helm upgrade"
 # source: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#upgrading-an-existing-release-to-a-new-major-version
 # "Run these commands to update the CRDs before applying the upgrade."
-PROMETHEUS_OPERATOR_VERSION="${1:-"0.74.0"}"
+PROMETHEUS_OPERATOR_VERSION="${1:-"0.77.1"}"
 PREFIX_URL="https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v${PROMETHEUS_OPERATOR_VERSION}/example/prometheus-operator-crd"
 for crd in alertmanagerconfigs alertmanagers podmonitors probes prometheusagents prometheuses prometheusrules scrapeconfigs servicemonitors thanosrulers; do
   # "--force-conflicts" is required to upgrade the CRDs. Following instructions from https://github.com/prometheus-community/helm-charts/issues/2489

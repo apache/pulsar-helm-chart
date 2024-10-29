@@ -112,15 +112,29 @@ function ci::install_pulsar_chart() {
     local install_type=$1
     local common_value_file=$2
     local value_file=$3
-    local extra_opts="$4 $5 $6 $7 $8"
+    shift 3
+    local extra_values=()
+    local extra_opts=()
+    local values_next=false
+    for arg in "$@"; do
+        if [[ "$arg" == "--values" ]]; then
+            extra_values+=("$arg")
+            values_next=true
+        elif [[ "$values_next" == true ]]; then
+            extra_values+=("$arg")
+            values_next=false
+        else
+            extra_opts+=("$arg")
+        fi
+    done
     local install_args
 
     if [[ "${install_type}" == "install" ]]; then
       echo "Installing the pulsar chart"
       ${KUBECTL} create namespace ${NAMESPACE}
       ci::install_cert_manager
-      echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
-      ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
+      echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} "${extra_opts[@]}"
+      ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} "${extra_opts[@]}"
       sleep 10
 
       # install metallb for loadbalancer support
@@ -154,8 +168,8 @@ function ci::install_pulsar_chart() {
       fi
     fi
     set -x
-    ${HELM} template --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHART_ARGS}
-    ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
+    ${HELM} template --values ${common_value_file} --values ${value_file} "${extra_values[@]}" ${CLUSTER} ${CHART_ARGS}
+    ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} "${extra_values[@]}" --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
     set +x
 
     if [[ "${install_type}" == "install" ]]; then

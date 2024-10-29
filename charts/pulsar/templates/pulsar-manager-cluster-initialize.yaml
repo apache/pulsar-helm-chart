@@ -83,6 +83,7 @@ spec:
           command: [ "sh", "-c" ]
           args:
             - |
+              cd /tmp
               ADMIN_URL={{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-admin:{{ .Values.pulsar_manager.adminService.port }}
               CSRF_TOKEN=$(curl http://${ADMIN_URL}/pulsar-manager/csrf-token)
               UI_URL={{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}:{{ .Values.pulsar_manager.service.port }}
