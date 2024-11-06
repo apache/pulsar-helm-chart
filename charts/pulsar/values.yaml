@@ -113,6 +113,8 @@ affinity:
 components:
   # zookeeper
   zookeeper: true
+  # oxia
+  oxia: true
   # bookkeeper
   bookkeeper: true
   # bookkeeper - autorecovery
@@ -202,6 +204,10 @@ images:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
     hasCommand: false
+  oxia:
+    repository: streamnative/oxia
+    tag: main
+    pullPolicy: Always
 
 ## TLS
 ## templates/tls-certs.yaml
@@ -467,6 +473,31 @@ zookeeper:
     usePolicy: true
     maxUnavailable: 1
 
+## Pulsar: Oxia cluster
+
+oxia:
+  initialShardCount: 3
+  replicationFactor: 3
+## templates/coordinator-deployment.yaml
+  coordinator:
+    cpu: 100m
+    memory: 128Mi
+    ports:
+      internal: 6649
+      metrics: 8080
+## templates/server-statefulset.yaml
+  server:
+    replicas: 3
+    cpu: 1
+    memory: 1Gi
+    storage: 8Gi
+    #storageClassName: xxx
+    ports:
+      public: 6648
+      internal: 6649
+      metrics: 8080
+  pprofEnabled: false
+  monitoringEnabled: false
 
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
