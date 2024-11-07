@@ -33,7 +33,7 @@ spec:
   {{- if .Values.pulsar_manager.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.pulsar_manager.service.externalTrafficPolicy }}
   {{- end }}
-  {{- with .pulsar_manager.proxy.service.loadBalancerClass }}
+  {{- with .pulsar_manager.service.loadBalancerClass }}
   loadBalancerClass: {{ . }}
   {{- end }}
   {{- if .Values.pulsar_manager.service.loadBalancerSourceRanges }}
