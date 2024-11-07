@@ -33,6 +33,9 @@ spec:
   {{- if .Values.pulsar_manager.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.pulsar_manager.service.externalTrafficPolicy }}
   {{- end }}
+  {{- with .pulsar_manager.proxy.service.loadBalancerClass }}
+  loadBalancerClass: {{ . }}
+  {{- end }}
   {{- if .Values.pulsar_manager.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | nindent 4 }}
   {{- end }}
