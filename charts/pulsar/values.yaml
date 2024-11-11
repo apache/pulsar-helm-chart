@@ -206,7 +206,7 @@ images:
     hasCommand: false
   oxia:
     repository: streamnative/oxia
-    tag: main
+    tag: 0.11.3
     pullPolicy: Always
 
 ## TLS
@@ -254,6 +254,8 @@ tls:
   # TLS setting for function runtime instance
   function_instance:
     # controls the use of TLS for function runtime connections towards brokers
+    enabled: false
+  oxia:
     enabled: false
 
 # Enable or disable broker authentication and authorization.
@@ -476,6 +478,7 @@ zookeeper:
 ## Pulsar: Oxia cluster
 
 oxia:
+  component: oxia
   initialShardCount: 3
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
@@ -796,10 +799,11 @@ pulsar_metadata:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
   ## set an existing configuration store
-  # configurationStore:
+  # configurationStore: default zk. available: zk or oxia
   configurationStoreMetadataPrefix: ""
+  # default: zk port. avaiable: zk 2181, oxia 6648
   configurationStorePort: 2181
-  ## Timeout for waiting for zookeeper to become available before running metadata initialization
+  ## Timeout for waiting for zookeeper or oxia to become available before running metadata initialization
   waitZookeeperTimeout: 600
   ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
   waitBookkeeperTimeout: 120
@@ -821,10 +825,11 @@ pulsar_metadata:
   # nodeSelector: {}
   #   cloud.google.com/gke-nodepool: default-pool
 
-  ## optional, you can provide your own zookeeper metadata store for other components
+  ## optional, you can provide your own zookeeper metadata store or oxia metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
+  # userProvidedOxia: ""
 
 # Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
 extraInitCommand: ""

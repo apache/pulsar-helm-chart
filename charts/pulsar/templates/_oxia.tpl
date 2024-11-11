@@ -85,3 +85,26 @@ initialDelaySeconds: 60
 timeoutSeconds: 10
 {{- end }}
 
+{{/*
+Define the pulsar oxia
+*/}}
+{{- define "pulsar.oxia.server.service" -}}
+{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
+{{- end }}
+
+{{/*
+Define the pulsar oxia
+*/}}
+{{- define "pulsar.oxia.connect" -}}
+{{$oxia:=.Values.pulsar_metadata.userProvidedOxia}}
+{{- if and (not .Values.components.zookeeper) $oxia }}
+{{- $oxia -}}
+{{ else }}
+{{- if not (and .Values.tls.enabled .Values.tls.oxia.enabled) -}}
+{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.client }}
+{{- end -}}
+{{- if and .Values.tls.enabled .Values.tls.oxia.enabled -}}
+{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.clientTls }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
