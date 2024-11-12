@@ -21,4 +21,4 @@ pulsarctl-*-*.tar.gz
 pulsarctl-*-*/
 
 #test.yaml
-test-values.yaml
+charts/pulsar/test-values.yaml
