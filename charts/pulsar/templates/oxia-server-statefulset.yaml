@@ -17,12 +17,14 @@
 # under the License.
 #
 
+{{- if .Values.components.oxia }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
     {{- include "oxia-cluster.server.labels" . | nindent 4 }}
-  name: {{ .Release.Name }}
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   replicas: {{ .Values.oxia.server.replicas }}
   selector:
@@ -84,3 +86,4 @@ spec:
         resources:
           requests:
             storage: {{ .Values.oxia.server.storage }}
+{{- end}}

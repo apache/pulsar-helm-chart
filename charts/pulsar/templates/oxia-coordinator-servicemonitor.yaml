@@ -16,13 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+{{- if .Values.components.oxia }}
 {{- if .Values.monitoringEnabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
     {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
-  name: {{ .Release.Name }}-coordinator
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"-coordinator
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   endpoints:
     - port: metrics
@@ -31,4 +34,5 @@ spec:
       {{- include "oxia-cluster.coordinator.selectorLabels" . | nindent 6 }}
   targetLabels:
     - oxia_cluster
+{{- end }}
 {{- end }}

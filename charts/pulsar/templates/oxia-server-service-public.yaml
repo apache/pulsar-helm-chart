@@ -17,13 +17,15 @@
 # under the License.
 #
 
+{{- if .Values.components.oxia }}
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     oxia_cluster: {{ .Release.Name }}
     {{- include "oxia-cluster.server.labels" . | nindent 4 }}
-  name: {{ .Release.Name }}
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
 spec:
   ports:
     {{- range $key, $value := .Values.oxia.server.ports }}
@@ -33,3 +35,4 @@ spec:
     {{- end}}
   selector:
     {{- include "oxia-cluster.server.selectorLabels" . | nindent 4 }}
+{{- end}}
