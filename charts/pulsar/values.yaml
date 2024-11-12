@@ -494,7 +494,7 @@ oxia:
     cpu: 1
     memory: 1Gi
     storage: 8Gi
-    #storageClassName: xxx
+    # storageClassName: xxx
     ports:
       public: 6648
       internal: 6649
