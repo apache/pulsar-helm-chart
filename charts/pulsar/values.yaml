@@ -576,6 +576,7 @@ bookkeeper:
   gracePeriod: 30
   ## Timeout for waiting for bookkeeper cluster metadata to be initialized before starting a bookie
   waitMetadataTimeout: 600
+  waitZookeeperTimeout: 600
   resources:
     requests:
       memory: 512Mi
@@ -804,7 +805,7 @@ pulsar_metadata:
   # default: zk port. avaiable: zk 2181, oxia 6648
   configurationStorePort: 2181
   ## Timeout for waiting for zookeeper or oxia to become available before running metadata initialization
-  waitZookeeperTimeout: 600
+  waitMetadataTimeout: 600
   ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
   waitBookkeeperTimeout: 120
   ## Timeout for running metadata initialization

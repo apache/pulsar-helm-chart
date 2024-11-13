@@ -22,7 +22,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
@@ -58,7 +58,7 @@ spec:
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitMetadataTimeout }}", "sh", "-c"]
         args:
           - >-
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
@@ -136,7 +136,7 @@ spec:
                   {{- if .Values.pulsar_metadata.configurationStore }}
                   --configuration-store {{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }} \
                   {{- else }}
-                  --configuration-store {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
+                  --configuration-store {{ template "pulsar.oxia.connect" . }}{{ .Values.metadataPrefix }} \
                   {{- end }}
                   --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
                   --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
