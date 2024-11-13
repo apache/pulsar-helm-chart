@@ -108,3 +108,33 @@ Define the pulsar oxia
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Define coordinator configmap
+*/}}
+{{- define "oxia.coordinator.CMProperties" -}}
+namespaces:
+  - name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+    initialShardCount: {{ .Values.oxia.initialShardCount }}
+    replicationFactor: {{ .Values.oxia.replicationFactor }}
+servers:
+  - public:  {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc.{{ template "pulsar.namespace" . }}.svc.cluster.local:{{ .Values.oxia.server.ports.public }}
+    internal:  {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc.{{ template "pulsar.namespace" . }}.svc:{{ .Values.oxia.server.ports.internal }}
+{{- end }}
+
+{{/*
+Define coordinator entrypoint
+*/}}
+{{- define "oxia.coordinator.entrypoint" -}}
+- "oxia"
+- "coordinator"
+- "--conf=configmap:{{ template "pulsar.namespace" . }}/{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator"
+- "--log-json"
+- "--metadata=configmap"
+- "--k8s-namespace={{ template "pulsar.namespace" . }}"
+- "--k8s-configmap-name={{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator-status"
+{{- if .Values.oxia.pprofEnabled }}
+- "--profile"
+{{- end}}
+{{- end}}
+

@@ -22,17 +22,10 @@ kind: ConfigMap
 metadata:
   labels:
     {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
-  name: {{ .Release.Name }}-coordinator
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
+  namespace: {{ template "pulsar.namespace" . }}
 data:
   config.yaml: |
-    namespaces:
-      - name: default
-        initialShardCount: {{ .Values.oxia.initialShardCount }}
-        replicationFactor: {{ .Values.oxia.replicationFactor }}
-    servers:
-      {{- $vars := dict "name" .Release.Name "namespace" .Release.Namespace "public" .Values.oxia.server.ports.public "internal" .Values.oxia.server.ports.internal }}
-      {{- range until (int .Values.oxia.server.replicas) }}
-      - public: {{ $vars.name }}-{{ . }}.{{ $vars.name }}-svc.{{ $vars.namespace }}.svc.cluster.local:{{ $vars.public }}
-        internal: {{ $vars.name }}-{{ . }}.{{ $vars.name }}-svc:{{ $vars.internal }}
-      {{- end }}
+    {{- include "oxia.coordinator.CMProperties" . | nindent 4 }}
+
 {{- end }}

@@ -23,7 +23,7 @@ kind: Deployment
 metadata:
   labels:
     {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"-coordinator
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
 spec:
   replicas: 1
@@ -38,24 +38,15 @@ spec:
         prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
         prometheus.io/scrape: "{{ .Values.oxia.monitoringEnabled }}"
       labels:
-        oxia_cluster: {{ .Release.Name }}
+        oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
         {{- include "oxia-cluster.coordinator.labels" . | nindent 8 }}
-      name: {{ .Release.Name }}-coordinator
+      name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
     spec:
-      serviceAccountName: {{ .Release.Name }}-coordinator
+      serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:
         - command:
-            - "oxia"
-            - "coordinator"
-            - "--conf=configmap:{{ .Release.Namespace }}/{{ .Release.Name }}-coordinator"
-            - "--log-json"
-            - "--metadata=configmap"
-            - "--k8s-namespace={{ .Release.Namespace }}"
-            - "--k8s-configmap-name={{ .Release.Name }}-status"
-            {{- if .Values.oxia.pprofEnabled }}
-            - "--profile"
-            {{- end}}
-          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag | default .Chart.AppVersion }}"
+            {{- include "oxia.coordinator.entrypoint" . | nindent 12 }}
+          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
           imagePullPolicy: {{ .Values.images.oxia.pullPolicy }}
           name: coordinator
           ports:

@@ -23,14 +23,14 @@ kind: RoleBinding
 metadata:
   labels:
     {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"-coordinator
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-coordinator
-    namespace: {{ .Release.Namespace }}
+    name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
+    namespace: {{ template "pulsar.namespace" . }}
 roleRef:
   apiGroup: ""
   kind: Role
-  name: {{ .Release.Name }}-coordinator
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
 {{- end }}

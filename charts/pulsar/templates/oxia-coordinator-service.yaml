@@ -22,9 +22,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    oxia_cluster: {{ .Release.Name }}
+    oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
     {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"-coordinator
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
 spec:
   ports:

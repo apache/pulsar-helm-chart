@@ -30,7 +30,7 @@ spec:
   selector:
     matchLabels:
       {{- include "oxia-cluster.server.selectorLabels" . | nindent 6 }}
-  serviceName: {{ .Release.Name }}-svc
+  serviceName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc
   podManagementPolicy: Parallel
   template:
     metadata:
@@ -38,11 +38,11 @@ spec:
         prometheus.io/port: "{{ .Values.oxia.server.ports.metrics }}"
         prometheus.io/scrape: "{{ .Values.oxia.monitoringEnabled }}"
       labels:
-        oxia_cluster: {{ .Release.Name }}
+        oxia_cluster: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
         {{- include "oxia-cluster.server.labels" . | nindent 8 }}
-      name: {{ .Release.Name }}
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
     spec:
-      serviceAccountName: {{ .Release.Name }}
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
       containers:
         - command:
             - "oxia"
@@ -77,7 +77,7 @@ spec:
             {{- include "oxia-cluster.startup-probe" .Values.oxia.server.ports.internal | nindent 12 }}
   volumeClaimTemplates:
     - metadata:
-        name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"-data
+        name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data
       spec:
         accessModes: [ "ReadWriteOnce" ]
         {{- if .Values.oxia.server.storageClassName }}
