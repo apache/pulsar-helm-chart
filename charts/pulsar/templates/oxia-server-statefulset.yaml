@@ -23,7 +23,7 @@ kind: StatefulSet
 metadata:
   labels:
     {{- include "oxia-cluster.server.labels" . | nindent 4 }}
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
   namespace: {{ template "pulsar.namespace" . }}
 spec:
   replicas: {{ .Values.oxia.server.replicas }}
@@ -38,11 +38,11 @@ spec:
         prometheus.io/port: "{{ .Values.oxia.server.ports.metrics }}"
         prometheus.io/scrape: "{{ .Values.oxia.monitoringEnabled }}"
       labels:
-        oxia_cluster: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+        oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
         {{- include "oxia-cluster.server.labels" . | nindent 8 }}
       name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
     spec:
-      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+      serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
       containers:
         - command:
             - "oxia"
