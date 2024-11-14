@@ -1,0 +1,16 @@
+namespace: pulsar
+initialize: true
+kube-prometheus-stack:
+  enabled: false
+
+components:
+  zookeeper: false
+  oxia: true
+  proxy: false
+
+zookeeper:
+
+oxia:
+
+pulsar_metadata:
+  configurationStorePort: 6648
