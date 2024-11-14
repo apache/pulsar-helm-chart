@@ -89,7 +89,7 @@ timeoutSeconds: 10
 Define the pulsar oxia
 */}}
 {{- define "pulsar.oxia.server.service" -}}
-{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
+{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc
 {{- end }}
 
 {{/*

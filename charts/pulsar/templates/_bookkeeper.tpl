@@ -92,6 +92,7 @@ Define bookie tls certs volumes
 Define bookie common config
 */}}
 {{- define "pulsar.bookkeeper.config.common" -}}
+{{- if .Values.components.zookeeper }}
 zkServers: "{{ template "pulsar.zookeeper.connect" . }}"
 zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
 # enable bookkeeper http server
@@ -101,6 +102,7 @@ httpServerPort: "{{ .Values.bookkeeper.ports.http }}"
 statsProviderClass: org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider
 # use hostname as the bookie id
 useHostNameAsBookieID: "true"
+{{- end }}
 {{- end }}
 
 {{/*

@@ -8,9 +8,5 @@ components:
   oxia: true
   proxy: false
 
-zookeeper:
-
-oxia:
-
 pulsar_metadata:
   configurationStorePort: 6648
