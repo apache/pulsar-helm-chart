@@ -501,7 +501,8 @@ oxia:
       metrics: 8080
   pprofEnabled: false
   monitoringEnabled: false
-
+  service_account:
+    annotations: {}
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
 ##

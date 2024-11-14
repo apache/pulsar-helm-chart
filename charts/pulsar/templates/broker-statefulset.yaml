@@ -87,7 +87,7 @@ spec:
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.broker.affinity.anti_affinity}}
         podAntiAffinity:
-          {{ if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{- if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.broker.affinity.type }}:
           - labelSelector:
               matchExpressions:
@@ -104,7 +104,7 @@ spec:
                 values:
                 - {{ .Values.broker.component }}
             topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
-        {{ else }}
+        {{- else }}
           {{ .Values.broker.affinity.type }}:
             - weight: 100
               podAffinityTerm:
@@ -123,7 +123,7 @@ spec:
                       values:
                       - {{ .Values.broker.component }}
                 topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
-        {{ end }}
+        {{- end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
       initContainers:

@@ -26,6 +26,10 @@ metadata:
     {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
   name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
+{{- with .Values.oxia.service_account.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   ports:
     {{- range $key, $value := .Values.oxia.coordinator.ports }}

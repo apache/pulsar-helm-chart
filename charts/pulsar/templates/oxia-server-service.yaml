@@ -25,6 +25,10 @@ metadata:
     {{- include "oxia-cluster.server.labels" . | nindent 4 }}
   name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc
   namespace: {{ template "pulsar.namespace" . }}
+{{- with .Values.oxia.service_account.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   clusterIP: None
   publishNotReadyAddresses: true

@@ -66,7 +66,7 @@ spec:
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.bookkeeper.affinity.anti_affinity}}
         podAntiAffinity:
-          {{ if eq .Values.bookkeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{- if eq .Values.bookkeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.bookkeeper.affinity.type }}:
           - labelSelector:
               matchExpressions:
@@ -83,7 +83,7 @@ spec:
                 values:
                 - {{ .Values.bookkeeper.component }}
             topologyKey: {{ .Values.bookkeeper.affinity.anti_affinity_topology_key }}
-        {{ else }}
+        {{- else }}
           {{ .Values.bookkeeper.affinity.type }}:
             - weight: 100
               podAffinityTerm:
