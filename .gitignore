@@ -21,7 +21,3 @@ PUBLICKEY
 .vagrant/
 pulsarctl-*-*.tar.gz
 pulsarctl-*-*/
-
-#test.yaml
-charts/pulsar/test-values.yaml
-charts/pulsar/test1.yaml
