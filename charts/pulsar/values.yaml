@@ -476,7 +476,6 @@ zookeeper:
     maxUnavailable: 1
 
 ## Pulsar: Oxia cluster
-
 oxia:
   component: oxia
   initialShardCount: 3
@@ -807,6 +806,7 @@ pulsar_metadata:
   configurationStorePort: 2181
   ## Timeout for waiting for zookeeper or oxia to become available before running metadata initialization
   waitMetadataTimeout: 600
+  waitZookeeperTimeout: 600
   ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
   waitBookkeeperTimeout: 120
   ## Timeout for running metadata initialization
