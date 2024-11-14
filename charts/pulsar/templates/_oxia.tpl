@@ -89,14 +89,14 @@ timeoutSeconds: 10
 Define the pulsar oxia
 */}}
 {{- define "pulsar.oxia.server.service" -}}
-{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc
+{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
 {{- end }}
 
 {{/*
 Define the pulsar oxia
 */}}
 {{- define "pulsar.oxia.connect" -}}
-{{- if and (not .Values.components.zookeeper) .Values.components.oxia }}
+{{- if and (not .Values.components.zookeeper) .Values.components.oxia -}}
 {{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}
 {{- end -}}
 {{- end -}}
