@@ -1,6 +1,8 @@
 # Intellij
 .idea
 
+.gitignore
+
 # Mac
 **/.DS_Store
 
@@ -22,3 +24,4 @@ pulsarctl-*-*/
 
 #test.yaml
 charts/pulsar/test-values.yaml
+charts/pulsar/test1.yaml

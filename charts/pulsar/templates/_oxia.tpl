@@ -32,7 +32,7 @@ Coordinator selector labels
 */}}
 {{- define "oxia-cluster.coordinator.selectorLabels" -}}
 app.kubernetes.io/name: {{ .Chart.Name }}
-app.kubernetes.io/component: coordinator
+app.kubernetes.io/component: oxia-coordinator
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -50,7 +50,7 @@ Server selector labels
 */}}
 {{- define "oxia-cluster.server.selectorLabels" -}}
 app.kubernetes.io/name: {{ .Chart.Name }}
-app.kubernetes.io/component: server
+app.kubernetes.io/component: oxia-server
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -98,7 +98,6 @@ Define the pulsar oxia
 {{- define "pulsar.oxia.connect" -}}
 {{- if and (not .Values.components.zookeeper) .Values.components.oxia }}
 oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}/
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
