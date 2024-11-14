@@ -23,8 +23,10 @@ Define configuration store endpoint
 {{- define "pulsar.configurationStore.service" -}}
 {{- if .Values.pulsar_metadata.configurationStore }}
 {{- .Values.pulsar_metadata.configurationStore }}
-{{- else -}}
+{{- else if .Values.components.zookeeper -}}
 {{ template "pulsar.zookeeper.service" . }}
+{{- else -}}
+{{ template "pulsar.oxia.service" . }}
 {{- end -}}
 {{- end -}}
 

@@ -97,7 +97,7 @@ Define the pulsar oxia
 */}}
 {{- define "pulsar.oxia.connect" -}}
 {{- if and (not .Values.components.zookeeper) .Values.components.oxia }}
-oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}/
+{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}
 {{- end -}}
 {{- end -}}
 
