@@ -40,6 +40,8 @@ spec:
       port: {{ .Values.zookeeper.ports.leaderElection }}
     - name: "{{ .Values.tcpPrefix }}client"
       port: {{ .Values.zookeeper.ports.client }}
+    - name: admin
+      port: {{ .Values.zookeeper.ports.admin }}
     {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
     - name: "{{ .Values.tlsPrefix }}client-tls"
       port: {{ .Values.zookeeper.ports.clientTls }}
