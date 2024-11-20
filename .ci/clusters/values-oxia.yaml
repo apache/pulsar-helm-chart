@@ -21,9 +21,6 @@ components:
   zookeeper: false
   oxia: true
 
-pulsar_metadata:
-  configurationStorePort: 6648
-
 oxia:
   initialShardCount: 1
   replicationFactor: 1

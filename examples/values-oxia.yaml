@@ -7,6 +7,3 @@ components:
   zookeeper: false
   oxia: true
   proxy: false
-
-pulsar_metadata:
-  configurationStorePort: 6648

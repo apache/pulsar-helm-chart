@@ -35,7 +35,7 @@ Define configuration store connection string
 */}}
 {{- define "pulsar.configurationStore.connect" -}}
 {{- if .Values.pulsar_metadata.configurationStore }}
-{{- template "pulsar.configurationStore.service" . }}:{{ .Values.pulsar_metadata.configurationStorePort }}
+{{- template "pulsar.configurationStore.service" . }}:{{ .Values.pulsar_metadata.configurationStorePort | default (ternary 6648 2181 .Values.components.oxia) }}
 {{- end -}}
 {{- end -}}
 

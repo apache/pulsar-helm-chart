@@ -802,8 +802,8 @@ pulsar_metadata:
   ## set an existing configuration store
   # configurationStore: default zk. available: zk or oxia
   configurationStoreMetadataPrefix: ""
-  # default: zk port. avaiable: zk 2181, oxia 6648
-  configurationStorePort: 2181
+  # default: zk port (2181), or oxia port (6648) when oxia is enabled.
+  configurationStorePort:
   ## Timeout for waiting for zookeeper or oxia to become available before running metadata initialization
   waitMetadataTimeout: 600
   waitZookeeperTimeout: 600
