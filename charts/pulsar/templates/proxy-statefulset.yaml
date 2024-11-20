@@ -109,7 +109,7 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
       initContainers:
-      {{- if and .Values.proxy.waitZookeeperTimeout (not (eq (.Values.proxy.waitZookeeperTimeout | toString) "0")) }}
+      {{- if and .Values.components.zookeeper .Values.proxy.waitZookeeperTimeout (not (eq (.Values.proxy.waitZookeeperTimeout | toString) "0")) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready

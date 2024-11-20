@@ -127,7 +127,7 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
       initContainers:
-      {{- if and .Values.broker.waitZookeeperTimeout (not (eq (.Values.broker.waitZookeeperTimeout | toString) "0")) }}
+      {{- if and .Values.components.zookeeper .Values.broker.waitZookeeperTimeout (not (eq (.Values.broker.waitZookeeperTimeout | toString) "0")) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
