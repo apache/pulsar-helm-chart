@@ -71,7 +71,7 @@ spec:
               sleep 3;
             done;
             {{ else }}
-            until nslookup {{- include "pulsar.oxia.server.service" . }}; do
+            until nslookup {{ include "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
             {{- end }}
