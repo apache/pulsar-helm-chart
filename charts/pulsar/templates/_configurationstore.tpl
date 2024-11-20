@@ -26,7 +26,7 @@ Define configuration store endpoint
 {{- else if .Values.components.zookeeper -}}
 {{ template "pulsar.zookeeper.service" . }}
 {{- else -}}
-{{ template "pulsar.oxia.service" . }}
+{{ template "pulsar.oxia.server.service" . }}
 {{- end -}}
 {{- end -}}
 
