@@ -125,6 +125,7 @@ Define bookie init container : verify cluster id
 {{- define "pulsar.bookkeeper.init.verify_cluster_id" -}}
 {{- if not (and .Values.volumes.persistence .Values.bookkeeper.volumes.persistence) }}
 bin/apply-config-from-env.py conf/bookkeeper.conf;
+export BOOKIE_MEM="-Xmx128M";
 {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . -}}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
@@ -134,6 +135,7 @@ bin/bookkeeper shell bookieformat -nonInteractive -force -deleteCookie || true
 {{- if and .Values.volumes.persistence .Values.bookkeeper.volumes.persistence }}
 set -e;
 bin/apply-config-from-env.py conf/bookkeeper.conf;
+export BOOKIE_MEM="-Xmx128M";
 {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . -}}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
