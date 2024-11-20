@@ -81,7 +81,7 @@ spec:
             if timeout 15 bin/bookkeeper shell whatisinstanceid; then
                 echo "bookkeeper cluster already initialized";
             else
-                {{- if not (eq .Values.metadataPrefix "") }}
+                {{- if and .Values.components.zookeeper (not (eq .Values.metadataPrefix "")) }}
                 bin/pulsar zookeeper-shell -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} && echo 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' &&
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;
