@@ -61,7 +61,7 @@ spec:
         command: ["timeout", "{{ .Values.pulsar_metadata.waitMetadataTimeout }}", "sh", "-c"]
         args:
           - >-
-            {{- if $zk :=.Values.pulsar_metadata.userProvidedZookeepers }}
+            {{- if $zk := .Values.pulsar_metadata.userProvidedZookeepers }}
             export PULSAR_MEM="-Xmx128M";
             until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
@@ -90,7 +90,7 @@ spec:
           echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
           echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
           export BOOKIE_MEM="-Xmx128M";
-          {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 8 }}
+          {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
           until timeout 15 bin/bookkeeper shell whatisinstanceid; do
             sleep 3;
           done;
