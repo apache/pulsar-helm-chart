@@ -330,7 +330,7 @@ zookeeper:
     clientTls: 2281
     follower: 2888
     leaderElection: 3888
-    admin: 9990
+    # admin: 9990
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
