@@ -95,6 +95,9 @@ Define bookie common config
 {{- if .Values.components.zookeeper }}
 zkServers: "{{ template "pulsar.zookeeper.connect" . }}"
 zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
+{{- else if .Values.components.oxia }}
+metadataServiceUri: "metadata-store:oxia://{{ template "pulsar.oxia.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
+{{- end }}
 # enable bookkeeper http server
 httpServerEnabled: "true"
 httpServerPort: "{{ .Values.bookkeeper.ports.http }}"
@@ -102,7 +105,6 @@ httpServerPort: "{{ .Values.bookkeeper.ports.http }}"
 statsProviderClass: org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider
 # use hostname as the bookie id
 useHostNameAsBookieID: "true"
-{{- end }}
 {{- end }}
 
 {{/*
