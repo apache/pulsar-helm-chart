@@ -67,7 +67,7 @@ spec:
               cpu: {{ .Values.oxia.server.cpu }}
               memory: {{ .Values.oxia.server.memory }}
           volumeMounts:
-            - name: data
+            - name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data
               mountPath: /data
           livenessProbe:
             {{- include "oxia-cluster.probe" .Values.oxia.server.ports.internal | nindent 12 }}
