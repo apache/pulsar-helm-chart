@@ -208,6 +208,9 @@ jobs:
           - name: Pulsar Manager
             values_file: .ci/clusters/values-pulsar-manager.yaml
             shortname: pulsar-manager
+          - name: Oxia
+            values_file: .ci/clusters/values-oxia.yaml
+            shortname: oxia
         include:
           - k8sVersion:
               version: "1.23.17"
