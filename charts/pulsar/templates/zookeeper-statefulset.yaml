@@ -141,6 +141,10 @@ spec:
           containerPort: {{ .Values.zookeeper.ports.follower }}
         - name: leader-election
           containerPort: {{ .Values.zookeeper.ports.leaderElection }}
+        {{- if .Values.zookeeper.ports.admin }}
+        - name: admin
+          containerPort: {{ .Values.zookeeper.ports.admin }}
+        {{- end }}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
         - name: client-tls
           containerPort: {{ .Values.zookeeper.ports.clientTls }}
