@@ -21,28 +21,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
   name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-coordinator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "oxia-cluster.coordinator.selectorLabels" . | nindent 6 }}
       {{- include "pulsar.matchLabels" . | nindent 6 }}
-      component: {{ .Values.oxia.component }}
+      component: {{ .Values.oxia.component }}-coordinator
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
         {{- include "pulsar.template.labels" . | nindent 8 }}
-        oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
-        {{- include "oxia-cluster.coordinator.labels" . | nindent 8 }}
-        {{- include "pulsar.matchLabels" . | nindent 8 }}
-        component: {{ .Values.oxia.component }}
-      name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
+        component: {{ .Values.oxia.component }}-coordinator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
     spec:
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:

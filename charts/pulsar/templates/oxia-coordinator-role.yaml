@@ -21,10 +21,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  labels:
-    {{- include "oxia-cluster.coordinator.labels" . | nindent 4 }}
   name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-coordinator
 rules:
   - apiGroups: [ "" ]
     resources: [ "configmaps" ]

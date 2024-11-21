@@ -21,12 +21,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
-    {{- include "oxia-cluster.server.labels" . | nindent 4 }}
   name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
   namespace: {{ template "pulsar.namespace" . }}
-{{- with .Values.oxia.service_account.annotations }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-server
+{{- with .Values.oxia.server.service.public.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}
@@ -38,5 +38,6 @@ spec:
       targetPort: {{ $key }}
     {{- end}}
   selector:
-    {{- include "oxia-cluster.server.selectorLabels" . | nindent 4 }}
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-server
 {{- end}}

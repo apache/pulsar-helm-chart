@@ -18,37 +18,6 @@ under the License.
 */}}
 
 {{/*
-Coordinator labels
-*/}}
-{{- define "oxia-cluster.coordinator.labels" -}}
-{{ include "oxia-cluster.coordinator.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-app.kubernetes.io/part-of: oxia
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Coordinator selector labels
-*/}}
-{{- define "oxia-cluster.coordinator.selectorLabels" -}}
-app.kubernetes.io/component: oxia-coordinator
-{{- end }}
-
-{{/*
-Server labels
-*/}}
-{{- define "oxia-cluster.server.labels" -}}
-{{ include "oxia-cluster.server.selectorLabels" . }}
-{{- end }}
-
-{{/*
-Server selector labels
-*/}}
-{{- define "oxia-cluster.server.selectorLabels" -}}
-component: oxia-server
-{{- end }}
-
-{{/*
 Probe
 */}}
 {{- define "oxia-cluster.probe" -}}

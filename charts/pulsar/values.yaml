@@ -496,6 +496,10 @@ oxia:
     ports:
       internal: 6649
       metrics: 8080
+    service:
+      annotations: {}
+    service_account:
+      annotations: {}
 ## templates/server-statefulset.yaml
   server:
     # This is how prometheus discovers this component
@@ -521,9 +525,14 @@ oxia:
       public: 6648
       internal: 6649
       metrics: 8080
+    service:
+      public:
+        annotations: {}
+      internal:
+        annotations: {}
+    service_account:
+      annotations: {}
   pprofEnabled: false
-  service_account:
-    annotations: {}
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
 ##
