@@ -142,8 +142,8 @@ jobs:
             local kube_version=$1
             shift
             echo -n "Validating helm template with kubeconform for k8s version $kube_version"
-            if [ -n "$@" ]; then
-              echo " Extra args: $@"
+            if [ $# -gt 0 ]; then
+              echo " Extra args: $*"
             else
               echo ""
             fi
