@@ -70,11 +70,19 @@ spec:
             until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}.{{ template "pulsar.namespace" . }}; do
               sleep 3;
             done;
-            {{ else }}
-            until nslookup {{ include "pulsar.oxia.server.service" . }}; do
+            {{- end }}
+      {{- end }}
+      {{- if and .Values.components.oxia .Values.pulsar_metadata.waitOxiaTimeout (gt (.Values.pulsar_metadata.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - >-
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
-            {{- end }}
       {{- end }}
       {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (gt (.Values.pulsar_metadata.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
