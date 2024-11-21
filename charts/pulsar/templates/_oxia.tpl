@@ -60,7 +60,7 @@ oxia url for broker metadata
 */}}
 {{- define "pulsar.oxia.metadata.url.broker" -}}
 {{- if .Values.components.oxia -}}
-oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}/broker
+oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.public }}/broker
 {{- end -}}
 {{- end -}}
 
@@ -69,7 +69,7 @@ oxia url for bookkeeper metadata
 */}}
 {{- define "pulsar.oxia.metadata.url.bookkeeper" -}}
 {{- if .Values.components.oxia -}}
-metadata-store:oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}/bookkeeper
+metadata-store:oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.public }}/bookkeeper
 {{- end -}}
 {{- end -}}
 
