@@ -154,6 +154,18 @@ spec:
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.components.oxia .Values.broker.waitOxiaTimeout (gt (.Values.broker.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.broker.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - >-
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
+              sleep 3;
+            done;
+      {{- end }}
       {{- if and .Values.broker.waitBookkeeperTimeout (gt (.Values.broker.waitBookkeeperTimeout | int) 0) }}
       # This init container will wait for bookkeeper to be ready before
       # deploying the broker

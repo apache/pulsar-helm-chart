@@ -936,6 +936,8 @@ broker:
   gracePeriod: 30
   ## Timeout for waiting for zookeeper to become available before starting a broker
   waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before starting a broker. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
   ## Timeout for waiting for bookkeeper to become available before starting a broker
   waitBookkeeperTimeout: 120
   resources:
@@ -1176,6 +1178,8 @@ proxy:
   gracePeriod: 30
   ## Timeout for waiting for zookeeper to become available before starting a proxy
   waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before starting a proxy. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
   ## Timeout for waiting for brokers to become available before starting a proxy
   waitBrokerTimeout: 120
   resources:
