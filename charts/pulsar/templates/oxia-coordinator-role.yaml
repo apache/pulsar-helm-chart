@@ -29,7 +29,4 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "configmaps" ]
     verbs: [ "*" ]
-  - apiGroups: [ "oxia.streamnative.io" ]
-    resources: [ "oxiaclusters" ]
-    verbs: [ "get", "update" ]
 {{- end }}
