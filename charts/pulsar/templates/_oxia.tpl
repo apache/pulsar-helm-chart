@@ -78,6 +78,9 @@ Define coordinator configmap
 */}}
 {{- define "oxia.coordinator.config.yaml" -}}
 namespaces:
+  - name: default
+    initialShardCount: {{ .Values.oxia.initialShardCount }}
+    replicationFactor: {{ .Values.oxia.replicationFactor }}
   - name: broker
     initialShardCount: {{ .Values.oxia.initialShardCount }}
     replicationFactor: {{ .Values.oxia.replicationFactor }}
