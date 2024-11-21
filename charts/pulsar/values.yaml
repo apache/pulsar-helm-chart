@@ -547,6 +547,8 @@ bookkeeper:
     waitZookeeperTimeout: 600
     ## Timeout for running metadata initialization
     initTimeout: 60
+    ## Timeout for waiting for oxia to be available before running metadata initialization. This setting applies only when oxia is enabled.
+    waitOxiaTimeout: 600
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
