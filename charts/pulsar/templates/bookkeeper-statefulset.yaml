@@ -110,7 +110,7 @@ spec:
       securityContext:
 {{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
       {{- end }}
-      {{- if and .Values.bookkeeper.waitMetadataTimeout (not (eq (.Values.bookkeeper.waitMetadataTimeout | toString) "0")) }}
+      {{- if and .Values.bookkeeper.waitMetadataTimeout (gt (.Values.bookkeeper.waitMetadataTimeout | int) 0) }}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies

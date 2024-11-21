@@ -45,7 +45,7 @@ spec:
 {{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
       {{- end }}
       initContainers:
-      {{- if and .Values.components.zookeeper .Values.bookkeeper.metadata.waitZookeeperTimeout (not (eq (.Values.bookkeeper.metadata.waitZookeeperTimeout | toString) "0")) }}
+      {{- if and .Values.components.zookeeper .Values.bookkeeper.metadata.waitZookeeperTimeout (gt (.Values.bookkeeper.metadata.waitZookeeperTimeout | int) 0) }}
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"

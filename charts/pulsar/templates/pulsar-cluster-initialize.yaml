@@ -41,9 +41,9 @@ spec:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
       initContainers:
-      {{- if and .Values.pulsar_metadata.waitZookeeperTimeout (ne (.Values.pulsar_metadata.waitZookeeperTimeout | toString) "0") }}
+      {{- if and .Values.components.zookeeper .Values.pulsar_metadata.waitZookeeperTimeout (gt (.Values.pulsar_metadata.waitZookeeperTimeout | int) 0) }}
       {{- if .Values.pulsar_metadata.configurationStore }}
-      - name: wait-cs-ready
+      - name: wait-zk-cs-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
@@ -54,11 +54,11 @@ spec:
               sleep 3;
             done;
       {{- end }}
-      - name: wait-metastore-ready
+      - name: wait-zk-metastore-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["timeout", "{{ .Values.pulsar_metadata.waitMetadataTimeout }}", "sh", "-c"]
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - >-
             {{- if $zk := .Values.pulsar_metadata.userProvidedZookeepers }}
@@ -76,7 +76,7 @@ spec:
             done;
             {{- end }}
       {{- end }}
-      {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (ne (.Values.pulsar_metadata.waitBookkeeperTimeout | toString) "0") }}
+      {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (gt (.Values.pulsar_metadata.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before initializing pulsar metadata
       - name: pulsar-bookkeeper-verify-clusterid
