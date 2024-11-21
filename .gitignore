@@ -1,8 +1,6 @@
 # Intellij
 .idea
 
-.gitignore
-
 # Mac
 **/.DS_Store
 
