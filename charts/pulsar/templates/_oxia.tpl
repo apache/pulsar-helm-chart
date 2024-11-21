@@ -106,7 +106,10 @@ Define coordinator configmap
 */}}
 {{- define "oxia.coordinator.CMProperties" -}}
 namespaces:
-  - name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"
+  - name: broker
+    initialShardCount: {{ .Values.oxia.initialShardCount }}
+    replicationFactor: {{ .Values.oxia.replicationFactor }}
+  - name: bookkeeper
     initialShardCount: {{ .Values.oxia.initialShardCount }}
     replicationFactor: {{ .Values.oxia.replicationFactor }}
 servers:
