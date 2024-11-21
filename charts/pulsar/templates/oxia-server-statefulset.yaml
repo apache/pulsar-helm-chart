@@ -43,7 +43,64 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.oxia.server.ports.metrics }}"
     spec:
+    {{- if .Values.oxia.server.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.oxia.server.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.oxia.server.tolerations }}
+      tolerations:
+{{ toYaml .Values.oxia.server.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.oxia.server.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.oxia.server.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
+      affinity:
+        {{- if and .Values.affinity.anti_affinity .Values.oxia.server.affinity.anti_affinity}}
+        podAntiAffinity:
+          {{ if eq .Values.oxia.server.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{ .Values.oxia.server.affinity.type }}:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.oxia.component }}-server
+            topologyKey: {{ .Values.oxia.server.affinity.anti_affinity_topology_key }}
+        {{ else }}
+          {{ .Values.oxia.server.affinity.type }}:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component" 
+                      operator: In
+                      values:
+                      - {{ .Values.oxia.component }}-server
+                topologyKey: {{ .Values.oxia.server.affinity.anti_affinity_topology_key }}
+        {{ end }}
+        {{- end }}    
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
+      {{- if .Values.oxia.server.securityContext }}
+      securityContext:
+{{ toYaml .Values.oxia.server.securityContext | indent 8 }}
+      {{- end }}
       containers:
         - command:
             - "oxia"

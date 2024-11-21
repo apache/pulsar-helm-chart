@@ -43,6 +43,14 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
     spec:
+    {{- if .Values.oxia.server.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.oxia.server.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.oxia.server.tolerations }}
+      tolerations:
+{{ toYaml .Values.oxia.server.tolerations | indent 8 }}
+    {{- end }}    
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:
         - command:

@@ -500,6 +500,9 @@ oxia:
       annotations: {}
     service_account:
       annotations: {}
+    tolerations: []
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
 ## templates/server-statefulset.yaml
   server:
     # This is how prometheus discovers this component
@@ -532,6 +535,21 @@ oxia:
         annotations: {}
     service_account:
       annotations: {}
+    securityContext:
+      fsGroup: 0
+      fsGroupChangePolicy: "OnRootMismatch"      
+    affinity:
+      anti_affinity: true
+      anti_affinity_topology_key: kubernetes.io/hostname
+      # Set the anti affinity type. Valid values:
+      # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+      # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+      type: requiredDuringSchedulingIgnoredDuringExecution
+    # set topologySpreadConstraint to deploy pods across different zones
+    topologySpreadConstraints: []
+    tolerations: []
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
   pprofEnabled: false
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
