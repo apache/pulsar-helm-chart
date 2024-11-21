@@ -799,13 +799,15 @@ pulsar_metadata:
     tag:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
-  ## set an existing configuration store
-  # configurationStore: default zk. available: zk or oxia
+  ## set an existing configuration store. This setting applies only when zookeeper is enabled.
+  # configurationStore:
+  # the prefix for the configuration store metadata. This setting applies only when zookeeper is enabled.
   configurationStoreMetadataPrefix: ""
-  # default: zk port (2181), or oxia port (6648) when oxia is enabled.
-  configurationStorePort:
+  # the configuration store port. This setting applies only when zookeeper is enabled.
+  configurationStorePort: 2181
   ## Timeout for waiting for zookeeper or oxia to become available before running metadata initialization
   waitMetadataTimeout: 600
+  # the zookeeper timeout. This setting applies only when zookeeper is enabled.
   waitZookeeperTimeout: 600
   ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
   waitBookkeeperTimeout: 120
@@ -827,11 +829,10 @@ pulsar_metadata:
   # nodeSelector: {}
   #   cloud.google.com/gke-nodepool: default-pool
 
-  ## optional, you can provide your own zookeeper metadata store or oxia metadata store for other components
+  ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
   #
   # userProvidedZookeepers: "zk01.example.com:2181,zk02.example.com:2181"
-  # userProvidedOxia: ""
 
 # Can be used to run extra commands in the initialization jobs e.g. to quit istio sidecars etc.
 extraInitCommand: ""
