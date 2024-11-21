@@ -537,7 +537,7 @@ oxia:
       annotations: {}
     securityContext:
       fsGroup: 0
-      fsGroupChangePolicy: "OnRootMismatch"      
+      fsGroupChangePolicy: "OnRootMismatch"
     affinity:
       anti_affinity: true
       anti_affinity_topology_key: kubernetes.io/hostname
