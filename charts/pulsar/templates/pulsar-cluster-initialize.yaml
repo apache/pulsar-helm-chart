@@ -144,6 +144,7 @@ spec:
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
               --metadata-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
+              --configuration-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
               --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
               --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
               --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \
