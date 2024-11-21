@@ -96,7 +96,7 @@ Define bookie common config
 zkServers: "{{ template "pulsar.zookeeper.connect" . }}"
 zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
 {{- else if .Values.components.oxia }}
-metadataServiceUri: "metadata-store:oxia://{{ template "pulsar.oxia.connect" . }}{{ .Values.metadataPrefix }}/bookkeeper"
+metadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
 {{- end }}
 # enable bookkeeper http server
 httpServerEnabled: "true"

@@ -93,11 +93,20 @@ Define the pulsar oxia
 {{- end }}
 
 {{/*
-Define the pulsar oxia
+oxia url for broker metadata
 */}}
-{{- define "pulsar.oxia.connect" -}}
-{{- if and (not .Values.components.zookeeper) .Values.components.oxia -}}
-{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}
+{{- define "pulsar.oxia.metadata.url.broker" -}}
+{{- if .Values.components.oxia -}}
+oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}/broker
+{{- end -}}
+{{- end -}}
+
+{{/*
+oxia url for bookkeeper metadata
+*/}}
+{{- define "pulsar.oxia.metadata.url.bookkeeper" -}}
+{{- if .Values.components.oxia -}}
+metadata-store:oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.internal }}/bookkeeper
 {{- end -}}
 {{- end -}}
 

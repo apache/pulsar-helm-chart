@@ -135,12 +135,7 @@ spec:
             export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
-              --metadata-store oxia://{{ template "pulsar.oxia.connect" . }}{{ .Values.metadataPrefix }} \
-            {{- if .Values.pulsar_metadata.configurationStore }}
-              --configuration-store {{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }} \
-            {{- else }}
-              --configuration-store oxia://{{ template "pulsar.oxia.connect" . }}{{ .Values.metadataPrefix }} \
-            {{- end }}
+              --metadata-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
               --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
               --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
               --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \
