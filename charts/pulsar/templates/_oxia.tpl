@@ -31,9 +31,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Coordinator selector labels
 */}}
 {{- define "oxia-cluster.coordinator.selectorLabels" -}}
-app.kubernetes.io/name: {{ .Chart.Name }}
 app.kubernetes.io/component: oxia-coordinator
-app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -41,17 +39,13 @@ Server labels
 */}}
 {{- define "oxia-cluster.server.labels" -}}
 {{ include "oxia-cluster.server.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
 Server selector labels
 */}}
 {{- define "oxia-cluster.server.selectorLabels" -}}
-app.kubernetes.io/name: {{ .Chart.Name }}
-app.kubernetes.io/component: oxia-server
-app.kubernetes.io/instance: {{ .Release.Name }}
+component: oxia-server
 {{- end }}
 
 {{/*

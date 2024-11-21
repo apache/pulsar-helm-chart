@@ -30,6 +30,8 @@ spec:
   selector:
     matchLabels:
       {{- include "oxia-cluster.coordinator.selectorLabels" . | nindent 6 }}
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.oxia.component }}
   strategy:
     type: Recreate
   template:
@@ -38,6 +40,8 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
         {{- include "oxia-cluster.coordinator.labels" . | nindent 8 }}
+        {{- include "pulsar.matchLabels" . | nindent 8 }}
+        component: {{ .Values.oxia.component }}
       name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
     spec:
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
