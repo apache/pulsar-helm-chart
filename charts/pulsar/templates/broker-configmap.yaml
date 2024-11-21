@@ -39,6 +39,7 @@ data:
   {{- end }}
   {{- if .Values.components.oxia }}
   metadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
+  configurationMetadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
   bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
   {{- end }}
 
