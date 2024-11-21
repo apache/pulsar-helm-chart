@@ -18,7 +18,7 @@
 #
 
 # deploy oxia-server PodMonitor only when `$.Values.oxia.podMonitor.enabled` is true
-{{- if $.Values.oxia.server.podMonitor.enabled }}
+{{- if and $.Values.components.oxia $.Values.oxia.server.podMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
