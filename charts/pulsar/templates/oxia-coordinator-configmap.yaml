@@ -26,6 +26,6 @@ metadata:
   namespace: {{ template "pulsar.namespace" . }}
 data:
   config.yaml: |
-    {{- include "oxia.coordinator.CMProperties" . | nindent 4 }}
+    {{- include "oxia.coordinator.config.yaml" . | nindent 4 }}
 
 {{- end }}

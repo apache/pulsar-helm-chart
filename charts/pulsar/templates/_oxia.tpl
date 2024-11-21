@@ -104,7 +104,7 @@ Define the pulsar oxia
 {{/*
 Define coordinator configmap
 */}}
-{{- define "oxia.coordinator.CMProperties" -}}
+{{- define "oxia.coordinator.config.yaml" -}}
 namespaces:
   - name: broker
     initialShardCount: {{ .Values.oxia.initialShardCount }}
