@@ -26,5 +26,6 @@ oxia:
   replicationFactor: 1
   server:
     replicas: 1
-    memory: 256Mi
-    storage: 8Gi
+    memoryLimit: 256Mi
+    dbCacheSizeMb: 128
+    storageSize: 1Gi

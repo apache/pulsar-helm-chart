@@ -50,7 +50,7 @@ spec:
             - "--log-json"
             - "--data-dir=/data/db"
             - "--wal-dir=/data/wal"
-            - "--db-cache-size-mb=512"
+            - "--db-cache-size-mb={{ .Values.oxia.server.dbCacheSizeMb }}"
             {{- if .Values.oxia.pprofEnabled }}
             - "--profile"
             {{- end}}
@@ -64,8 +64,8 @@ spec:
             {{- end}}
           resources:
             limits:
-              cpu: {{ .Values.oxia.server.cpu }}
-              memory: {{ .Values.oxia.server.memory }}
+              cpu: {{ .Values.oxia.server.cpuLimit }}
+              memory: {{ .Values.oxia.server.memoryLimit }}
           volumeMounts:
             - name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data
               mountPath: /data
@@ -85,5 +85,5 @@ spec:
         {{- end}}
         resources:
           requests:
-            storage: {{ .Values.oxia.server.storage }}
+            storage: {{ .Values.oxia.server.storageSize }}
 {{- end}}

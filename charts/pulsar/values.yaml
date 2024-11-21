@@ -491,10 +491,16 @@ oxia:
 ## templates/server-statefulset.yaml
   server:
     replicas: 3
-    cpu: 1
-    memory: 1Gi
-    storage: 8Gi
-    # storageClassName: xxx
+    # CPU limit for the server pod
+    cpuLimit: 1
+    # Memory limit for the server pod
+    memoryLimit: 1Gi
+    # Oxia database cache size in MB
+    dbCacheSizeMb: 512
+    # Storage size for the PVC of the server pod
+    storageSize: 8Gi
+    # Storage class name for the PVC of the server pod
+    # storageClassName: existent-storage-class
     ports:
       public: 6648
       internal: 6649
