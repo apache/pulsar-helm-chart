@@ -34,10 +34,8 @@ spec:
     type: Recreate
   template:
     metadata:
-      annotations:
-        prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
-        prometheus.io/scrape: "{{ .Values.oxia.monitoringEnabled }}"
       labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
         oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
         {{- include "oxia-cluster.coordinator.labels" . | nindent 8 }}
       name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator

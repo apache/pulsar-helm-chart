@@ -34,10 +34,8 @@ spec:
   podManagementPolicy: Parallel
   template:
     metadata:
-      annotations:
-        prometheus.io/port: "{{ .Values.oxia.server.ports.metrics }}"
-        prometheus.io/scrape: "{{ .Values.oxia.monitoringEnabled }}"
       labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
         oxia_cluster: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
         {{- include "oxia-cluster.server.labels" . | nindent 8 }}
       name: "{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}"

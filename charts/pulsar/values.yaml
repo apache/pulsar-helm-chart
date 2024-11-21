@@ -483,6 +483,14 @@ oxia:
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
   coordinator:
+    # This is how prometheus discovers this component
+    podMonitor:
+      enabled: true
+      interval: 60s
+      scrapeTimeout: 60s
+      metricRelabelings:
+        # - action: labeldrop
+        #   regex: cluster
     cpuLimit: 100m
     memoryLimit: 128Mi
     ports:
@@ -490,6 +498,14 @@ oxia:
       metrics: 8080
 ## templates/server-statefulset.yaml
   server:
+    # This is how prometheus discovers this component
+    podMonitor:
+      enabled: true
+      interval: 60s
+      scrapeTimeout: 60s
+      metricRelabelings:
+        # - action: labeldrop
+        #   regex: cluster
     replicas: 3
     # CPU limit for the server pod
     cpuLimit: 1
@@ -506,7 +522,6 @@ oxia:
       internal: 6649
       metrics: 8080
   pprofEnabled: false
-  monitoringEnabled: false
   service_account:
     annotations: {}
 ## Pulsar: Bookkeeper cluster

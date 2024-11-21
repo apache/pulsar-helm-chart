@@ -86,3 +86,11 @@ proxy:
 
 toolset:
   useProxy: false
+
+oxia:
+  coordinator:
+    podMonitor:
+      enabled: false
+  server:
+    podMonitor:
+      enabled: false
