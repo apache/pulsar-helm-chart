@@ -45,7 +45,7 @@ spec:
         component: {{ .Values.proxy.component }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.proxy.ports.http }}"
+        prometheus.io/port: "{{ .Values.proxy.ports.containerPorts.http }}"
         {{- if .Values.proxy.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/proxy-configmap.yaml") . | sha256sum }}
         {{- end }}
