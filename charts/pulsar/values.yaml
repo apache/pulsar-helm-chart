@@ -483,8 +483,8 @@ oxia:
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
   coordinator:
-    cpu: 100m
-    memory: 128Mi
+    cpuLimit: 100m
+    memoryLimit: 128Mi
     ports:
       internal: 6649
       metrics: 8080

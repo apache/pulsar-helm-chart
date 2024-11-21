@@ -56,8 +56,8 @@ spec:
             {{- end}}
           resources:
             limits:
-              cpu: {{ .Values.oxia.coordinator.cpu }}
-              memory: {{ .Values.oxia.coordinator.memory }}
+              cpu: {{ .Values.oxia.coordinator.cpuLimit }}
+              memory: {{ .Values.oxia.coordinator.memoryLimit }}
           livenessProbe:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
           readinessProbe:
