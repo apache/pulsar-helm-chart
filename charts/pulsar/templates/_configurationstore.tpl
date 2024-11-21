@@ -23,10 +23,8 @@ Define configuration store endpoint
 {{- define "pulsar.configurationStore.service" -}}
 {{- if .Values.pulsar_metadata.configurationStore }}
 {{- .Values.pulsar_metadata.configurationStore }}
-{{- else if .Values.components.zookeeper -}}
-{{ template "pulsar.zookeeper.service" . }}
 {{- else -}}
-{{ template "pulsar.oxia.server.service" . }}
+{{ template "pulsar.zookeeper.service" . }}
 {{- end -}}
 {{- end -}}
 
@@ -35,7 +33,7 @@ Define configuration store connection string
 */}}
 {{- define "pulsar.configurationStore.connect" -}}
 {{- if .Values.pulsar_metadata.configurationStore }}
-{{- template "pulsar.configurationStore.service" . }}:{{ .Values.pulsar_metadata.configurationStorePort | default (ternary 6648 2181 .Values.components.oxia) }}
+{{- template "pulsar.configurationStore.service" . }}:{{ .Values.pulsar_metadata.configurationStorePort }}
 {{- end -}}
 {{- end -}}
 
