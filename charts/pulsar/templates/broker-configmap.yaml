@@ -109,7 +109,7 @@ data:
   {{- end }}
   {{- if .Values.components.functions }}
   functionsWorkerEnabled: "true"
-  {{- if .Values.functions.useBookieAsStateStore }}
+  {{- if and .Values.components.zookeeper .Values.functions.useBookieAsStateStore }}
   PF_stateStorageServiceUrl: "bk://{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}:{{ .Values.bookkeeper.ports.statestore }}"
   {{- end }}
   PF_functionRuntimeFactoryClassName: "org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactory"
