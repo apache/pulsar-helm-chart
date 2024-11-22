@@ -88,13 +88,15 @@ namespaces:
     initialShardCount: {{ .Values.oxia.initialShardCount }}
     replicationFactor: {{ .Values.oxia.replicationFactor }}
 servers:
-  {{- $servicenameFQDN := printf "%s-%s-svc.%s.svc.cluster.local" (include "pulsar.fullname" .) .Values.oxia.component (include "pulsar.namespace" .) }}
+  {{- $servicename := printf "%s-%s-svc" (include "pulsar.fullname" .) .Values.oxia.component }}
+  {{- $fqdnSuffix := printf "%s.svc.cluster.local" (include "pulsar.namespace" .) }}
   {{- $podnamePrefix := printf "%s-%s-server-" (include "pulsar.fullname" .) .Values.oxia.component }}
   {{- range until (int .Values.oxia.server.replicas) }}
   {{- $podnameIndex := . }}
-  {{- $podnameFQDN := printf "%s%d.%s" $podnamePrefix $podnameIndex $servicenameFQDN }}
+  {{- $podname := printf "%s%d.%s" $podnamePrefix $podnameIndex $servicename }}
+  {{- $podnameFQDN := printf "%s.%s" $podname $fqdnSuffix }}
   - public: {{ $podnameFQDN }}:{{ $.Values.oxia.server.ports.public }}
-    internal: {{ $podnameFQDN }}:{{ $.Values.oxia.server.ports.internal }}
+    internal: {{ $podname }}:{{ $.Values.oxia.server.ports.internal }}
   {{- end }}
 {{- end }}
 
