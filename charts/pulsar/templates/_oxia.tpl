@@ -89,7 +89,7 @@ namespaces:
     replicationFactor: {{ .Values.oxia.replicationFactor }}
 servers:
   - public:  {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc.{{ template "pulsar.namespace" . }}.svc.cluster.local:{{ .Values.oxia.server.ports.public }}
-    internal:  {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc.{{ template "pulsar.namespace" . }}.svc:{{ .Values.oxia.server.ports.internal }}
+    internal:  {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc.{{ template "pulsar.namespace" . }}.svc.cluster.local:{{ .Values.oxia.server.ports.internal }}
 {{- end }}
 
 {{/*
