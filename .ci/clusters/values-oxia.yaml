@@ -25,10 +25,11 @@ components:
   functions: false
 
 oxia:
-  initialShardCount: 1
-  replicationFactor: 1
+  initialShardCount: 3
+  replicationFactor: 3
   server:
-    replicas: 1
-    memoryLimit: 256Mi
-    dbCacheSizeMb: 128
+    replicas: 3
+    cpuLimit: 333m
+    memoryLimit: 200Mi
+    dbCacheSizeMb: 100
     storageSize: 1Gi
