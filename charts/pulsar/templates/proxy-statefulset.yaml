@@ -109,7 +109,7 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
       initContainers:
-      {{- if and .Values.proxy.waitZookeeperTimeout (not (eq (.Values.proxy.waitZookeeperTimeout | toString) "0")) }}
+      {{- if and .Values.components.zookeeper .Values.proxy.waitZookeeperTimeout (gt (.Values.proxy.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
@@ -130,7 +130,19 @@ spec:
             done;
             {{- end}}
       {{- end}}
-      {{- if and .Values.proxy.waitBrokerTimeout (not (eq (.Values.proxy.waitBrokerTimeout | toString) "0")) }}
+      {{- if and .Values.components.oxia .Values.proxy.waitOxiaTimeout (gt (.Values.proxy.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.proxy.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - >-
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
+              sleep 3;
+            done;
+      {{- end }}      
+      {{- if and .Values.proxy.waitBrokerTimeout (gt (.Values.proxy.waitBrokerTimeout | int) 0) }}
       # This init container will wait for at least one broker to be ready before
       # deploying the proxy
       - name: wait-broker-ready

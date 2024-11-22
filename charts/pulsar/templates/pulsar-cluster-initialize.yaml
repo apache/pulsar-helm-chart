@@ -22,7 +22,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
@@ -41,9 +41,9 @@ spec:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
       initContainers:
-      {{- if and .Values.pulsar_metadata.waitZookeeperTimeout (not (eq (.Values.pulsar_metadata.waitZookeeperTimeout | toString) "0")) }}
+      {{- if and .Values.components.zookeeper .Values.pulsar_metadata.waitZookeeperTimeout (gt (.Values.pulsar_metadata.waitZookeeperTimeout | int) 0) }}
       {{- if .Values.pulsar_metadata.configurationStore }}
-      - name: wait-cs-ready
+      - name: wait-zk-cs-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
@@ -54,34 +54,46 @@ spec:
               sleep 3;
             done;
       {{- end }}
-      - name: wait-zookeeper-ready
+      - name: wait-zk-metastore-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - >-
-            {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
+            {{- if $zk := .Values.pulsar_metadata.userProvidedZookeepers }}
             export PULSAR_MEM="-Xmx128M";
             until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
-            {{ else }}
+            {{ else if .Values.components.zookeeper }}
             until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}.{{ template "pulsar.namespace" . }}; do
               sleep 3;
             done;
-            {{- end}}
+            {{- end }}
       {{- end }}
-      {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (not (eq (.Values.pulsar_metadata.waitBookkeeperTimeout | toString) "0")) }}
-      # This initContainer will wait for bookkeeper initnewcluster to complete
-      # before initializing pulsar metadata
-      - name: pulsar-bookkeeper-verify-clusterid
+      {{- if and .Values.components.oxia .Values.pulsar_metadata.waitOxiaTimeout (gt (.Values.pulsar_metadata.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.pulsar_metadata.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - >-
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
+              sleep 3;
+            done;
+      {{- end }}
+      {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (gt (.Values.pulsar_metadata.waitBookkeeperTimeout | int) 0) }}
+      # This initContainer will wait for bookkeeper initnewcluster to complete
+      # before initializing pulsar metadata
+      - name: pulsar-bookkeeper-verify-clusterid
+        image: {{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}
+        imagePullPolicy: {{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-        - >
+        - >-
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
           echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
@@ -92,32 +104,32 @@ spec:
           done;
         envFrom:
         - configMapRef:
-            name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+            name: {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
       containers:
-      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}"
-        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
-        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+      - name: {{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}
+        image: {{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}
+        imagePullPolicy: {{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}
       {{- if .Values.pulsar_metadata.resources }}
         resources:
 {{ toYaml .Values.pulsar_metadata.resources | indent 10 }}
       {{- end }}
         command: ["timeout", "{{ .Values.pulsar_metadata.initTimeout | default 60 }}", "sh", "-c"]
+        {{- if .Values.components.zookeeper }}
         args:
-          - |
+          - >-
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
             export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
               --zookeeper {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
-              {{- if .Values.pulsar_metadata.configurationStore }}
+            {{- if .Values.pulsar_metadata.configurationStore }}
               --configuration-store {{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }} \
-              {{- end }}
-              {{- if not .Values.pulsar_metadata.configurationStore }}
+            {{- else }}
               --configuration-store {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
-              {{- end }}
+            {{- end }}
               --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
               --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
               --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \
@@ -125,10 +137,26 @@ spec:
             {{- if .Values.extraInitCommand }}
               {{ .Values.extraInitCommand }}
             {{- end }}
+        {{- else if .Values.components.oxia }}
+        args:
+          - >-
+            export PULSAR_MEM="-Xmx128M";
+            bin/pulsar initialize-cluster-metadata \
+              --cluster {{ template "pulsar.cluster.name" . }} \
+              --metadata-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
+              --configuration-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
+              --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
+              --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
+              --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \
+              --broker-service-url-tls pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsarssl }}/ ;
+            {{- if .Values.extraInitCommand }}
+              {{ .Values.extraInitCommand }}
+            {{- end }}
+        {{- end }}
         volumeMounts:
-        {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+        {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 10 }}
       volumes:
-      {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
+      {{- include "pulsar.toolset.certs.volumes" . | nindent 8 }}
       restartPolicy: OnFailure
       {{- if .Values.pulsar_metadata.nodeSelector }}
       nodeSelector:

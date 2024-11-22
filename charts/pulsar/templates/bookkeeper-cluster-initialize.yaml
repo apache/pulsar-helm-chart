@@ -36,16 +36,16 @@ spec:
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+      {{- with .Values.pulsar_metadata.nodeSelector }}
       nodeSelector:
-      {{- if .Values.pulsar_metadata.nodeSelector }}
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
+      {{- with .Values.pulsar_metadata.tolerations }}
       tolerations:
-      {{- if .Values.pulsar_metadata.tolerations }}
 {{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
       {{- end }}
       initContainers:
-      {{- if and .Values.bookkeeper.metadata.waitZookeeperTimeout (not (eq (.Values.bookkeeper.metadata.waitZookeeperTimeout | toString) "0")) }}
+      {{- if and .Values.components.zookeeper .Values.bookkeeper.metadata.waitZookeeperTimeout (gt (.Values.bookkeeper.metadata.waitZookeeperTimeout | int) 0) }}
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
@@ -64,6 +64,18 @@ spec:
             done;
             {{- end}}
       {{- end}}
+      {{- if and .Values.components.oxia .Values.bookkeeper.metadata.waitOxiaTimeout (gt (.Values.bookkeeper.metadata.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.bookkeeper.metadata.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - >-
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
+              sleep 3;
+            done;
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
@@ -81,7 +93,7 @@ spec:
             if timeout 15 bin/bookkeeper shell whatisinstanceid; then
                 echo "bookkeeper cluster already initialized";
             else
-                {{- if not (eq .Values.metadataPrefix "") }}
+                {{- if and .Values.components.zookeeper (not (eq .Values.metadataPrefix "")) }}
                 bin/pulsar zookeeper-shell -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} && echo 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' &&
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;

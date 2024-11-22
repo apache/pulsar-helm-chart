@@ -17,17 +17,18 @@
 # under the License.
 #
 
-{{- if .Values.components.toolset }}
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-  namespace: {{ template "pulsar.namespace" . }}
-  labels:
-    {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.toolset.component }}
-{{- with .Values.toolset.service_account.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
-{{- end }}
+components:
+  zookeeper: false
+  oxia: true
+  # disable functions for oxia tests since there's no support for Oxia in 
+  # BookKeeperPackagesStorage which requires Zookeeper
+  functions: false
+
+oxia:
+  initialShardCount: 1
+  replicationFactor: 1
+  server:
+    replicas: 1
+    memoryLimit: 256Mi
+    dbCacheSizeMb: 128
+    storageSize: 1Gi

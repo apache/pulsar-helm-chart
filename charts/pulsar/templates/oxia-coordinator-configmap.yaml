@@ -16,18 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-{{- if .Values.components.toolset }}
+{{- if .Values.components.oxia }}
 apiVersion: v1
-kind: ServiceAccount
+kind: ConfigMap
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.toolset.component }}
-{{- with .Values.toolset.service_account.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+    component: {{ .Values.oxia.component }}-coordinator
+data:
+  config.yaml: |
+    {{- include "oxia.coordinator.config.yaml" . | nindent 4 }}
+
 {{- end }}

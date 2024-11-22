@@ -113,6 +113,8 @@ affinity:
 components:
   # zookeeper
   zookeeper: true
+  # oxia
+  oxia: false
   # bookkeeper
   bookkeeper: true
   # bookkeeper - autorecovery
@@ -202,6 +204,10 @@ images:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
     hasCommand: false
+  oxia:
+    repository: streamnative/oxia
+    tag: 0.11.9
+    pullPolicy: Always
 
 ## TLS
 ## templates/tls-certs.yaml
@@ -248,6 +254,8 @@ tls:
   # TLS setting for function runtime instance
   function_instance:
     # controls the use of TLS for function runtime connections towards brokers
+    enabled: false
+  oxia:
     enabled: false
 
 # Enable or disable broker authentication and authorization.
@@ -468,7 +476,81 @@ zookeeper:
     usePolicy: true
     maxUnavailable: 1
 
-
+## Pulsar: Oxia cluster
+oxia:
+  component: oxia
+  initialShardCount: 3
+  replicationFactor: 3
+## templates/coordinator-deployment.yaml
+  coordinator:
+    # This is how prometheus discovers this component
+    podMonitor:
+      enabled: true
+      interval: 60s
+      scrapeTimeout: 60s
+      metricRelabelings:
+        # - action: labeldrop
+        #   regex: cluster
+    cpuLimit: 100m
+    memoryLimit: 128Mi
+    ports:
+      internal: 6649
+      metrics: 8080
+    service:
+      annotations: {}
+    service_account:
+      annotations: {}
+    tolerations: []
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
+## templates/server-statefulset.yaml
+  server:
+    # This is how prometheus discovers this component
+    podMonitor:
+      enabled: true
+      interval: 60s
+      scrapeTimeout: 60s
+      metricRelabelings:
+        # - action: labeldrop
+        #   regex: cluster
+    replicas: 3
+    # CPU limit for the server pod
+    cpuLimit: 1
+    # Memory limit for the server pod
+    memoryLimit: 1Gi
+    # Oxia database cache size in MB
+    dbCacheSizeMb: 512
+    # Storage size for the PVC of the server pod
+    storageSize: 8Gi
+    # Storage class name for the PVC of the server pod
+    # storageClassName: existent-storage-class
+    ports:
+      public: 6648
+      internal: 6649
+      metrics: 8080
+    service:
+      public:
+        annotations: {}
+      internal:
+        annotations: {}
+    service_account:
+      annotations: {}
+    securityContext:
+      fsGroup: 0
+      fsGroupChangePolicy: "OnRootMismatch"
+    affinity:
+      anti_affinity: true
+      anti_affinity_topology_key: kubernetes.io/hostname
+      # Set the anti affinity type. Valid values:
+      # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+      # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+      type: requiredDuringSchedulingIgnoredDuringExecution
+    # set topologySpreadConstraint to deploy pods across different zones
+    topologySpreadConstraints: []
+    tolerations: []
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
+  pprofEnabled: false
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
 ##
@@ -483,6 +565,8 @@ bookkeeper:
     waitZookeeperTimeout: 600
     ## Timeout for running metadata initialization
     initTimeout: 60
+    ## Timeout for waiting for oxia to be available before running metadata initialization. This setting applies only when oxia is enabled.
+    waitOxiaTimeout: 600
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
@@ -765,12 +849,16 @@ pulsar_metadata:
     tag:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
-  ## set an existing configuration store
+  ## set an existing configuration store. This setting applies only when zookeeper is enabled.
   # configurationStore:
+  # the prefix for the configuration store metadata. This setting applies only when zookeeper is enabled.
   configurationStoreMetadataPrefix: ""
+  # the configuration store port. This setting applies only when zookeeper is enabled.
   configurationStorePort: 2181
-  ## Timeout for waiting for zookeeper to become available before running metadata initialization
+  # the zookeeper timeout. This setting applies only when zookeeper is enabled.
   waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before running metadata initialization. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
   ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
   waitBookkeeperTimeout: 120
   ## Timeout for running metadata initialization
@@ -866,6 +954,8 @@ broker:
   gracePeriod: 30
   ## Timeout for waiting for zookeeper to become available before starting a broker
   waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before starting a broker. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
   ## Timeout for waiting for bookkeeper to become available before starting a broker
   waitBookkeeperTimeout: 120
   resources:
@@ -1106,6 +1196,8 @@ proxy:
   gracePeriod: 30
   ## Timeout for waiting for zookeeper to become available before starting a proxy
   waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before starting a proxy. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
   ## Timeout for waiting for brokers to become available before starting a proxy
   waitBrokerTimeout: 120
   resources:

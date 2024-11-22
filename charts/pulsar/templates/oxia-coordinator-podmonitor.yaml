@@ -17,26 +17,25 @@
 # under the License.
 #
 
-# deploy zookeeper PodMonitor only when `$.Values.zookeeper.podMonitor.enabled` is true
-{{- if .Values.components.zookeeper }}
-{{- if $.Values.zookeeper.podMonitor.enabled }}
+# deploy oxia-coordinator PodMonitor only when `$.Values.oxia.podMonitor.enabled` is true
+{{- if and $.Values.components.oxia $.Values.oxia.coordinator.podMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: {{ template "pulsar.fullname" . }}-zookeeper
+  name: {{ template "pulsar.fullname" . }}-oxia-coordinator
   labels:
     app: {{ template "pulsar.name" . }}
     chart: {{ template "pulsar.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  jobLabel: zookeeper
+  jobLabel: oxia-coordinator
   podMetricsEndpoints:
-    - port: http
+    - port: metrics
       path: /metrics
       scheme: http
-      interval: {{ $.Values.zookeeper.podMonitor.interval }}
-      scrapeTimeout: {{ $.Values.zookeeper.podMonitor.scrapeTimeout }}
+      interval: {{ $.Values.oxia.coordinator.podMonitor.interval }}
+      scrapeTimeout: {{ $.Values.oxia.coordinator.podMonitor.scrapeTimeout }}
       relabelings:
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
@@ -49,12 +48,11 @@ spec:
         - sourceLabels: [__meta_kubernetes_pod_name]
           action: replace
           targetLabel: kubernetes_pod_name
-    {{- if $.Values.zookeeper.podMonitor.metricRelabelings }}
-      metricRelabelings: {{ toYaml $.Values.zookeeper.podMonitor.metricRelabelings | nindent 8 }}
+    {{- if $.Values.oxia.coordinator.podMonitor.metricRelabelings }}
+      metricRelabelings: {{ toYaml $.Values.oxia.coordinator.podMonitor.metricRelabelings | nindent 8 }}
     {{- end }}
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
-      component: zookeeper
-{{- end }}
+      app.kubernetes.io/component: oxia-coordinator
 {{- end }}

@@ -28,12 +28,19 @@ metadata:
     component: {{ .Values.broker.component }}
 data:
   # Metadata settings
+  {{- if .Values.components.zookeeper }}
   zookeeperServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
   {{- if .Values.pulsar_metadata.configurationStore }}
   configurationStoreServers: "{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
   {{- end }}
   {{- if not .Values.pulsar_metadata.configurationStore }}
   configurationStoreServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- end }}
+  {{- end }}
+  {{- if .Values.components.oxia }}
+  metadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
+  configurationMetadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
+  bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
   {{- end }}
 
   # Broker settings

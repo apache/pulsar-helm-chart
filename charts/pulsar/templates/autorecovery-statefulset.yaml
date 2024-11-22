@@ -110,7 +110,7 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
       initContainers:
-      {{- if and .Values.autorecovery.waitBookkeeperTimeout (not (eq (.Values.autorecovery.waitBookkeeperTimeout | toString) "0")) }}
+      {{- if and .Values.autorecovery.waitBookkeeperTimeout (gt (.Values.autorecovery.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
