@@ -180,8 +180,6 @@ spec:
         readinessProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
             - bash
             - -c
             - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
@@ -194,8 +192,6 @@ spec:
         livenessProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.liveness.timeoutSeconds }}"
             - bash
             - -c
             - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
@@ -208,8 +204,6 @@ spec:
         startupProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.startup.timeoutSeconds }}"
             - bash
             - -c
             - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
