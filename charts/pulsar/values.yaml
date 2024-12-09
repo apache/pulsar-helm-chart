@@ -1297,6 +1297,7 @@ proxy:
 
     hostname: ""
     path: "/"
+    pathType: ImplementationSpecific
   ## Proxy PodDisruptionBudget
   ## templates/proxy-pdb.yaml
   ##
@@ -1523,6 +1524,7 @@ pulsar_manager:
 
     hostname: ""
     path: "/"
+    pathType: ImplementationSpecific
 
   ## On first install, the helm chart tries to reuse an existing secret with matching name by default
   ## if this should fail it uses the given username and password to create a new secret

@@ -55,7 +55,7 @@ spec:
               serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
               servicePort: {{ .Values.pulsar_manager.service.targetPort }}
             {{- else }}
-            pathType: ImplementationSpecific
+            pathType: {{ .Values.pulsar_manager.ingress.pathType }}
             backend:
               service:
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"

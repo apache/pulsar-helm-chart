@@ -59,7 +59,7 @@ spec:
               servicePort: {{ .Values.proxy.ports.http }}
               {{- end }}
             {{- else }}
-            pathType: ImplementationSpecific
+            pathType: {{ .Values.proxy.ingress.pathType }}
             backend:
               service:
                 name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
