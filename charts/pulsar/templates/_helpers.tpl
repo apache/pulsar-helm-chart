@@ -143,6 +143,6 @@ Define TLS CA secret name
 {{- if .Values.tls.common.caSecretName -}}
 {{- .Values.tls.common.caSecretName -}}
 {{- else -}}
-{{ .Release.Name }}-ca-tls
+{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}
 {{- end -}}
 {{- end -}}
