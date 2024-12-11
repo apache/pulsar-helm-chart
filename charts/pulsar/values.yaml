@@ -228,29 +228,48 @@ tls:
     keySize: 4096
     keyAlgorithm: RSA
     keyEncoding: PKCS8
+    caSecretName:
   # settings for generating certs for proxy
   proxy:
     enabled: false
     cert_name: tls-proxy
     createCert: true  # set to false if you want to use an existing certificate
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    untrustedCa: true
   # settings for generating certs for broker
   broker:
     enabled: false
     cert_name: tls-broker
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    untrustedCa: true
   # settings for generating certs for bookies
   bookie:
     enabled: false
     cert_name: tls-bookie
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    untrustedCa: true
   # settings for generating certs for zookeeper
   zookeeper:
     enabled: false
     cert_name: tls-zookeeper
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    untrustedCa: true
   # settings for generating certs for recovery
   autorecovery:
     cert_name: tls-recovery
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    untrustedCa: true
   # settings for generating certs for toolset
   toolset:
     cert_name: tls-toolset
+    # specify name of secret contain certificate if using pre-generated certificate
+    certSecretName:
+    untrustedCa: true
   # TLS setting for function runtime instance
   function_instance:
     # controls the use of TLS for function runtime connections towards brokers

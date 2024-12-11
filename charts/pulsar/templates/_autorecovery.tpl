@@ -66,7 +66,7 @@ Define autorecovery tls certs volumes
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
 - name: autorecovery-certs
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.autorecovery.cert_name }}"
+    secretName: "{{ template "pulsar.autorecovery.tls.secret.name" . }}"
     items:
     - key: tls.crt
       path: tls.crt
@@ -74,7 +74,7 @@ Define autorecovery tls certs volumes
       path: tls.key
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt
@@ -98,3 +98,14 @@ until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 {{- end }}
+
+{{/*
+Define Autorecovery TLS certificate secret name
+*/}}
+{{- define "pulsar.autorecovery.tls.secret.name" -}}
+{{- if .Values.tls.autorecovery.certSecretName -}}
+{{- .Values.tls.autorecovery.certSecretName -}}
+{{- else -}}
+{{ .Release.Name }}-{{ .Values.tls.autorecovery.cert_name }}
+{{- end -}}
+{{- end -}}

@@ -247,16 +247,7 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
-          {{- if .Values.tls.proxy.enabled }}
-          - mountPath: "/pulsar/certs/proxy"
-            name: proxy-certs
-            readOnly: true
-          {{- end}}
-          {{- if .Values.tls.enabled }}
-          - mountPath: "/pulsar/certs/ca"
-            name: ca
-            readOnly: true
-          {{- end}}
+          {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
           {{- if .Values.proxy.extraVolumeMounts }}
 {{ toYaml .Values.proxy.extraVolumeMounts | indent 10 }}
           {{- end }}
@@ -293,21 +284,6 @@ spec:
                 path: proxy/token
         {{- end}}
         {{- end}}
-        {{- if .Values.tls.proxy.enabled }}
-        - name: ca
-          secret:
-            secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
-            items:
-              - key: ca.crt
-                path: ca.crt
-        - name: proxy-certs
-          secret:
-            secretName: "{{ .Release.Name }}-{{ .Values.tls.proxy.cert_name }}"
-            items:
-              - key: tls.crt
-                path: tls.crt
-              - key: tls.key
-                path: tls.key
-        {{- end}}
+        {{- include "pulsar.proxy.certs.volumes" . | nindent 6 }}
       {{- end}}
 {{- end }}

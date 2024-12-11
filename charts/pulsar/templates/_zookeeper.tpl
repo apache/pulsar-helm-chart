@@ -57,3 +57,56 @@ Define zookeeper tls settings
 {{- end }}
 {{- end }}
 
+{{/*
+Define zookeeper certs mounts
+*/}}
+{{- define "pulsar.zookeeper.certs.volumeMounts" -}}
+{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+- mountPath: "/pulsar/certs/zookeeper"
+  name: zookeeper-certs
+  readOnly: true
+- mountPath: "/pulsar/certs/ca"
+  name: ca
+  readOnly: true
+- name: keytool
+  mountPath: "/pulsar/keytool/keytool.sh"
+  subPath: keytool.sh
+{{- end }}
+{{- end }}
+
+{{/*
+Define zookeeper certs volumes
+*/}}
+{{- define "pulsar.zookeeper.certs.volumes" -}}
+{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+- name: zookeeper-certs
+  secret:
+    secretName: "{{ template "pulsar.zookeeper.tls.secret.name" . }}"
+    items:
+      - key: tls.crt
+        path: tls.crt
+      - key: tls.key
+        path: tls.key
+- name: ca
+  secret:
+    secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
+    items:
+      - key: ca.crt
+        path: ca.crt
+- name: keytool
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
+    defaultMode: 0755
+{{- end}}
+{{- end }}
+
+{{/*
+Define ZooKeeper TLS certificate secret name
+*/}}
+{{- define "pulsar.zookeeper.tls.secret.name" -}}
+{{- if .Values.tls.zookeeper.certSecretName -}}
+{{- .Values.tls.zookeeper.certSecretName -}}
+{{- else -}}
+{{ .Release.Name }}-{{ .Values.tls.zookeeper.cert_name }}
+{{- end -}}
+{{- end -}}

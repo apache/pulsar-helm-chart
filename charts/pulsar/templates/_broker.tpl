@@ -73,7 +73,7 @@ Define broker tls certs volumes
 {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled)) }}
 - name: broker-certs
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}"
+    secretName: "{{ template "pulsar.broker.tls.secret.name" . }}"
     items:
     - key: tls.crt
       path: tls.crt
@@ -81,7 +81,7 @@ Define broker tls certs volumes
       path: tls.key
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: ""{{ template "pulsar.tls.ca.secret.name" . }}""
     items:
     - key: ca.crt
       path: ca.crt
@@ -93,3 +93,14 @@ Define broker tls certs volumes
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Define Broker TLS certificate secret name
+*/}}
+{{- define "pulsar.broker.tls.secret.name" -}}
+{{- if .Values.tls.broker.certSecretName -}}
+{{- .Values.tls.broker.certSecretName -}}
+{{- else -}}
+{{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}
+{{- end -}}
+{{- end -}}
