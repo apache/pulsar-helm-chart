@@ -81,7 +81,7 @@ Define broker tls certs volumes
       path: tls.key
 - name: ca
   secret:
-    secretName: ""{{ template "pulsar.tls.ca.secret.name" . }}""
+    secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt

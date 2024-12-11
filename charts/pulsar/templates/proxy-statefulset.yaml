@@ -247,7 +247,7 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
-          {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+          {{- include "pulsar.proxy.certs.volumeMounts" . | nindent 8 }}
           {{- if .Values.proxy.extraVolumeMounts }}
 {{ toYaml .Values.proxy.extraVolumeMounts | indent 10 }}
           {{- end }}
