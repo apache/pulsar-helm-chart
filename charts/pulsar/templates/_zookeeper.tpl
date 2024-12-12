@@ -65,9 +65,11 @@ Define zookeeper certs mounts
 - mountPath: "/pulsar/certs/zookeeper"
   name: zookeeper-certs
   readOnly: true
+{{- if .Values.tls.zookeeper.untrustedCa }}
 - mountPath: "/pulsar/certs/ca"
   name: ca
   readOnly: true
+{{- end }}
 - name: keytool
   mountPath: "/pulsar/keytool/keytool.sh"
   subPath: keytool.sh
@@ -87,12 +89,14 @@ Define zookeeper certs volumes
         path: tls.crt
       - key: tls.key
         path: tls.key
+{{- if .Values.tls.zookeeper.untrustedCa }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
       - key: ca.crt
         path: ca.crt
+{{- end}}
 - name: keytool
   configMap:
     name: "{{ template "pulsar.fullname" . }}-keytool-configmap"

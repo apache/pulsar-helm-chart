@@ -228,6 +228,7 @@ tls:
     keySize: 4096
     keyAlgorithm: RSA
     keyEncoding: PKCS8
+    # specify name of ca secret if using pre-generated certificate
     caSecretName:
   # settings for generating certs for proxy
   proxy:

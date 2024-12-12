@@ -55,9 +55,11 @@ Define broker tls certs mounts
 - name: broker-certs
   mountPath: "/pulsar/certs/broker"
   readOnly: true
+{{- if .Values.tls.broker.untrustedCa }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   mountPath: "/pulsar/keytool/keytool.sh"
@@ -79,12 +81,14 @@ Define broker tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.broker.untrustedCa }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   configMap:

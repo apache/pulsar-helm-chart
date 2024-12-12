@@ -48,9 +48,11 @@ Define autorecovery tls certs mounts
 - name: autorecovery-certs
   mountPath: "/pulsar/certs/autorecovery"
   readOnly: true
+{{- if .Values.tls.autorecovery.untrustedCa }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   mountPath: "/pulsar/keytool/keytool.sh"
@@ -72,12 +74,14 @@ Define autorecovery tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.autorecovery.untrustedCa }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   configMap:
