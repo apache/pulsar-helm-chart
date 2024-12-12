@@ -140,8 +140,8 @@ Lookup pull policy, default to defaultPullPolicy
 Define TLS CA secret name
 */}}
 {{- define "pulsar.tls.ca.secret.name" -}}
-{{- if .Values.tls.common.caSecretName -}}
-{{- .Values.tls.common.caSecretName -}}
+{{- if .Values.tls.common.existingCaSecret -}}
+{{- .Values.tls.common.existingCaSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.ca_suffix }}
 {{- end -}}

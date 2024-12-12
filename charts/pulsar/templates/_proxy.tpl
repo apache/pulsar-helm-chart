@@ -21,8 +21,8 @@ under the License.
 Define Proxy TLS certificate secret name
 */}}
 {{- define "pulsar.proxy.tls.secret.name" -}}
-{{- if .Values.tls.proxy.certSecretName -}}
-{{- .Values.tls.proxy.certSecretName -}}
+{{- if .Values.tls.proxy.existingCertSecret -}}
+{{- .Values.tls.proxy.existingCertSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.proxy.cert_name }}
 {{- end -}}
@@ -37,7 +37,7 @@ Define proxy certs mounts
 - mountPath: "/pulsar/certs/proxy"
   name: proxy-certs
   readOnly: true
-{{- if .Values.tls.proxy.untrustedCa }}
+{{- if .Values.tls.proxy.selfSigned }}
 - mountPath: "/pulsar/certs/ca"
   name: proxy-ca
   readOnly: true
@@ -56,7 +56,7 @@ Define proxy certs volumes
 */}}
 {{- define "pulsar.proxy.certs.volumes" -}}
 {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
-{{- if .Values.tls.proxy.untrustedCa }}
+{{- if .Values.tls.proxy.selfSigned }}
 - name: proxy-ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"

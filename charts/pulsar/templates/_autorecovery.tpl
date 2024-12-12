@@ -48,7 +48,7 @@ Define autorecovery tls certs mounts
 - name: autorecovery-certs
   mountPath: "/pulsar/certs/autorecovery"
   readOnly: true
-{{- if .Values.tls.autorecovery.untrustedCa }}
+{{- if .Values.tls.autorecovery.selfSigned }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
@@ -74,7 +74,7 @@ Define autorecovery tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
-{{- if .Values.tls.autorecovery.untrustedCa }}
+{{- if .Values.tls.autorecovery.selfSigned }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
@@ -107,8 +107,8 @@ done;
 Define Autorecovery TLS certificate secret name
 */}}
 {{- define "pulsar.autorecovery.tls.secret.name" -}}
-{{- if .Values.tls.autorecovery.certSecretName -}}
-{{- .Values.tls.autorecovery.certSecretName -}}
+{{- if .Values.tls.autorecovery.existingCertSecret -}}
+{{- .Values.tls.autorecovery.existingCertSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.autorecovery.cert_name }}
 {{- end -}}

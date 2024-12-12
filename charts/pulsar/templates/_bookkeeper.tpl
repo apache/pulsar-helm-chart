@@ -73,7 +73,7 @@ Define bookie tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
-{{- if .Values.tls.bookkeeper.untrustedCa }}
+{{- if .Values.tls.bookkeeper.selfSigned }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
@@ -151,8 +151,8 @@ done;
 Define Bookie TLS certificate secret name
 */}}
 {{- define "pulsar.bookie.tls.secret.name" -}}
-{{- if .Values.tls.bookie.certSecretName -}}
-{{- .Values.tls.bookie.certSecretName -}}
+{{- if .Values.tls.bookie.existingCertSecret -}}
+{{- .Values.tls.bookie.existingCertSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.bookie.cert_name }}
 {{- end -}}

@@ -65,7 +65,7 @@ Define zookeeper certs mounts
 - mountPath: "/pulsar/certs/zookeeper"
   name: zookeeper-certs
   readOnly: true
-{{- if .Values.tls.zookeeper.untrustedCa }}
+{{- if .Values.tls.zookeeper.selfSigned }}
 - mountPath: "/pulsar/certs/ca"
   name: ca
   readOnly: true
@@ -89,7 +89,7 @@ Define zookeeper certs volumes
         path: tls.crt
       - key: tls.key
         path: tls.key
-{{- if .Values.tls.zookeeper.untrustedCa }}
+{{- if .Values.tls.zookeeper.selfSigned }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
@@ -108,8 +108,8 @@ Define zookeeper certs volumes
 Define ZooKeeper TLS certificate secret name
 */}}
 {{- define "pulsar.zookeeper.tls.secret.name" -}}
-{{- if .Values.tls.zookeeper.certSecretName -}}
-{{- .Values.tls.zookeeper.certSecretName -}}
+{{- if .Values.tls.zookeeper.existingCertSecret -}}
+{{- .Values.tls.zookeeper.existingCertSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.zookeeper.cert_name }}
 {{- end -}}

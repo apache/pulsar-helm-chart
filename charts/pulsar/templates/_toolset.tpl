@@ -48,7 +48,7 @@ Define toolset tls certs mounts
 - name: toolset-certs
   mountPath: "/pulsar/certs/toolset"
   readOnly: true
-{{- if .Values.tls.broker.untrustedCa }}
+{{- if .Values.tls.broker.selfSigned }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
@@ -74,7 +74,7 @@ Define toolset tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
-{{- if .Values.tls.broker.untrustedCa }}
+{{- if .Values.tls.broker.selfSigned }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
@@ -95,8 +95,8 @@ Define toolset tls certs volumes
 Define toolset TLS certificate secret name
 */}}
 {{- define "pulsar.toolset.tls.secret.name" -}}
-{{- if .Values.tls.toolset.certSecretName -}}
-{{- .Values.tls.toolset.certSecretName -}}
+{{- if .Values.tls.toolset.existingCertSecret -}}
+{{- .Values.tls.toolset.existingCertSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.toolset.cert_name }}
 {{- end -}}

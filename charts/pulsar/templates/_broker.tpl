@@ -55,7 +55,7 @@ Define broker tls certs mounts
 - name: broker-certs
   mountPath: "/pulsar/certs/broker"
   readOnly: true
-{{- if .Values.tls.broker.untrustedCa }}
+{{- if .Values.tls.broker.selfSigned }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
@@ -81,7 +81,7 @@ Define broker tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
-{{- if .Values.tls.broker.untrustedCa }}
+{{- if .Values.tls.broker.selfSigned }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
@@ -102,8 +102,8 @@ Define broker tls certs volumes
 Define Broker TLS certificate secret name
 */}}
 {{- define "pulsar.broker.tls.secret.name" -}}
-{{- if .Values.tls.broker.certSecretName -}}
-{{- .Values.tls.broker.certSecretName -}}
+{{- if .Values.tls.broker.existingCertSecret -}}
+{{- .Values.tls.broker.existingCertSecret -}}
 {{- else -}}
 {{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}
 {{- end -}}
