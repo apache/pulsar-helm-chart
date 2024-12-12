@@ -67,18 +67,20 @@ Define bookie tls certs volumes
 {{- if and .Values.tls.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: bookie-certs
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.bookie.cert_name }}"
+    secretName: "{{ template "pulsar.bookie.tls.secret.name" . }}"
     items:
     - key: tls.crt
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.bookkeeper.selfSigned }}
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   configMap:
@@ -144,3 +146,14 @@ until timeout 15 bin/bookkeeper shell whatisinstanceid; do
 done;
 {{- end }}
 {{- end }}
+
+{{/*
+Define Bookie TLS certificate secret name
+*/}}
+{{- define "pulsar.bookie.tls.secret.name" -}}
+{{- if .Values.tls.bookie.existingCertSecret -}}
+{{- .Values.tls.bookie.existingCertSecret -}}
+{{- else -}}
+{{ .Release.Name }}-{{ .Values.tls.bookie.cert_name }}
+{{- end -}}
+{{- end -}}

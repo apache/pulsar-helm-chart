@@ -55,9 +55,11 @@ Define broker tls certs mounts
 - name: broker-certs
   mountPath: "/pulsar/certs/broker"
   readOnly: true
+{{- if .Values.tls.broker.selfSigned }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   mountPath: "/pulsar/keytool/keytool.sh"
@@ -73,18 +75,20 @@ Define broker tls certs volumes
 {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled)) }}
 - name: broker-certs
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}"
+    secretName: "{{ template "pulsar.broker.tls.secret.name" . }}"
     items:
     - key: tls.crt
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.broker.selfSigned }}
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   configMap:
@@ -93,3 +97,14 @@ Define broker tls certs volumes
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Define Broker TLS certificate secret name
+*/}}
+{{- define "pulsar.broker.tls.secret.name" -}}
+{{- if .Values.tls.broker.existingCertSecret -}}
+{{- .Values.tls.broker.existingCertSecret -}}
+{{- else -}}
+{{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}
+{{- end -}}
+{{- end -}}

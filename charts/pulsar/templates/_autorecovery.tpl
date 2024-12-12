@@ -48,9 +48,11 @@ Define autorecovery tls certs mounts
 - name: autorecovery-certs
   mountPath: "/pulsar/certs/autorecovery"
   readOnly: true
+{{- if .Values.tls.autorecovery.selfSigned }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   mountPath: "/pulsar/keytool/keytool.sh"
@@ -66,18 +68,20 @@ Define autorecovery tls certs volumes
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
 - name: autorecovery-certs
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.autorecovery.cert_name }}"
+    secretName: "{{ template "pulsar.autorecovery.tls.secret.name" . }}"
     items:
     - key: tls.crt
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.autorecovery.selfSigned }}
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.tls.ca.secret.name" . }}"
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
 {{- if .Values.tls.zookeeper.enabled }}
 - name: keytool
   configMap:
@@ -98,3 +102,14 @@ until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 {{- end }}
+
+{{/*
+Define Autorecovery TLS certificate secret name
+*/}}
+{{- define "pulsar.autorecovery.tls.secret.name" -}}
+{{- if .Values.tls.autorecovery.existingCertSecret -}}
+{{- .Values.tls.autorecovery.existingCertSecret -}}
+{{- else -}}
+{{ .Release.Name }}-{{ .Values.tls.autorecovery.cert_name }}
+{{- end -}}
+{{- end -}}
