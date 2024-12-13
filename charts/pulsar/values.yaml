@@ -232,11 +232,16 @@ tls:
   proxy:
     enabled: false
     cert_name: tls-proxy
-    createCert: true  # set to false if you want to use an existing certificate
+    # set to false if you want to use an existing certificate
+    createCert: true 
+    # external DNS name
+    dnsNames:
   # settings for generating certs for broker
   broker:
     enabled: false
     cert_name: tls-broker
+    # external DNS name
+    dnsNames: 
   # settings for generating certs for bookies
   bookie:
     enabled: false
