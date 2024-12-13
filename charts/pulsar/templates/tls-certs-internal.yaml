@@ -59,11 +59,11 @@ spec:
     - client auth
   # At least one of a DNS Name, USI SAN, or IP address is required.
   dnsNames:
-    -  "*.{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
-    -  "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
 {{- if .Values.tls.proxy.dnsNames }}
 {{ toYaml .Values.tls.proxy.dnsNames | indent 4 }}
 {{- end }}
+    -  "*.{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
+    -  "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   # Issuer references are always required.
   issuerRef:
     name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
