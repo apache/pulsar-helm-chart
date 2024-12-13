@@ -297,13 +297,18 @@ certs:
     apiVersion: cert-manager.io/v1
     enabled: false
     component: internal-cert-issuer
+    # type of issuer, supports selfsigning and ca
     type: selfsigning
     # 90d
     duration: 2160h
     # 15d
     renewBefore: 360h
   issuers:
+    # used for certs.type=selfsigning
     selfsigning:
+    # used for certs.type=ca
+    ca:
+      secretName:
 
 ######################################################################
 # Below are settings for each component
