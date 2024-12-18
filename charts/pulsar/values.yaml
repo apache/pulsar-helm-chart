@@ -233,7 +233,7 @@ tls:
     enabled: false
     cert_name: tls-proxy
     # set to false if you want to use an existing certificate
-    createCert: true 
+    createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     dnsNames:
     # - example.com
@@ -242,7 +242,7 @@ tls:
     enabled: false
     cert_name: tls-broker
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
-    dnsNames: 
+    dnsNames:
     # - example.com
   # settings for generating certs for bookies
   bookie:
@@ -311,7 +311,7 @@ certs:
     # 15d
     renewBefore: 360h
   issuers:
-    # Used for certs.type as selfsigning, the selfsigned issuer has no dependency on any other resource. 
+    # Used for certs.type as selfsigning, the selfsigned issuer has no dependency on any other resource.
     selfsigning:
     # used for certs.type as ca, the CA issuer needs to reference a Secret which contains your CA certificate and signing private key.
     ca:
