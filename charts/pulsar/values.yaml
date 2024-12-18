@@ -232,11 +232,18 @@ tls:
   proxy:
     enabled: false
     cert_name: tls-proxy
-    createCert: true  # set to false if you want to use an existing certificate
+    # set to false if you want to use an existing certificate
+    createCert: true
+    # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
+    dnsNames:
+    # - example.com
   # settings for generating certs for broker
   broker:
     enabled: false
     cert_name: tls-broker
+    # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
+    dnsNames:
+    # - example.com
   # settings for generating certs for bookies
   bookie:
     enabled: false
@@ -297,13 +304,18 @@ certs:
     apiVersion: cert-manager.io/v1
     enabled: false
     component: internal-cert-issuer
+    # The type of issuer, supports selfsigning and ca
     type: selfsigning
     # 90d
     duration: 2160h
     # 15d
     renewBefore: 360h
   issuers:
+    # Used for certs.type as selfsigning, the selfsigned issuer has no dependency on any other resource.
     selfsigning:
+    # used for certs.type as ca, the CA issuer needs to reference a Secret which contains your CA certificate and signing private key.
+    ca:
+      secretName:
 
 ######################################################################
 # Below are settings for each component
