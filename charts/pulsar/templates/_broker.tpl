@@ -82,7 +82,7 @@ Define broker tls certs volumes
 - name: ca
   secret:
     {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     {{- end }}
     {{- if eq .Values.certs.internal_issuer.type "ca" }}
     secretName: "{{ .Values.certs.issuers.ca.secretName }}"

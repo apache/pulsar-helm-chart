@@ -33,7 +33,7 @@ metadata:
   name: "{{ template "pulsar.fullname" . }}-ca"
   namespace: {{ template "pulsar.namespace" . }}
 spec:
-  secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+  secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
   commonName: "{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
   duration: "{{ .Values.certs.internal_issuer.duration }}"
   renewBefore: "{{ .Values.certs.internal_issuer.renewBefore }}"
@@ -53,17 +53,17 @@ spec:
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+  name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
   namespace: {{ template "pulsar.namespace" . }}
 spec:
   ca:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
 {{- end }}
 {{- if eq .Values.certs.internal_issuer.type "ca" }}
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+  name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
   namespace: {{ template "pulsar.namespace" . }}
 spec:
   ca:

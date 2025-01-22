@@ -18,7 +18,6 @@
 #
 
 {{- if .Values.tls.enabled }}
-{{- if .Values.certs.internal_issuer.enabled }}
 
 {{- if .Values.tls.proxy.enabled }}
 {{- if .Values.tls.proxy.createCert }}
@@ -66,7 +65,7 @@ spec:
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   # Issuer references are always required.
   issuerRef:
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+    name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: Issuer
@@ -122,7 +121,7 @@ spec:
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
   # Issuer references are always required.
   issuerRef:
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+    name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: Issuer
@@ -176,7 +175,7 @@ spec:
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
   # Issuer references are always required.
   issuerRef:
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+    name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: Issuer
@@ -230,7 +229,7 @@ spec:
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
   # Issuer references are always required.
   issuerRef:
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+    name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: Issuer
@@ -281,7 +280,7 @@ spec:
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
   # Issuer references are always required.
   issuerRef:
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+    name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: Issuer
@@ -332,7 +331,7 @@ spec:
     -  "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
   # Issuer references are always required.
   issuerRef:
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+    name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: Issuer
@@ -341,5 +340,4 @@ spec:
     group: cert-manager.io
 {{- end }}
 
-{{- end }}
 {{- end }}
