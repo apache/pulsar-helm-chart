@@ -1016,9 +1016,9 @@ broker:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-    managedLedgerDefaultEnsembleSize: "1"
-    managedLedgerDefaultWriteQuorum: "1"
-    managedLedgerDefaultAckQuorum: "1"
+    managedLedgerDefaultEnsembleSize: "2"
+    managedLedgerDefaultWriteQuorum: "2"
+    managedLedgerDefaultAckQuorum: "2"
 
   ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
