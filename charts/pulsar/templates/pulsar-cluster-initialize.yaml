@@ -119,7 +119,7 @@ spec:
         command: ["timeout", "{{ .Values.pulsar_metadata.initTimeout | default 60 }}", "sh", "-c"]
         {{- if .Values.components.zookeeper }}
         args:
-          - >-
+          - | # Use the pipe character for the YAML multiline string. Workaround for kubernetes-sigs/kustomize#4201
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
             export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
@@ -139,7 +139,7 @@ spec:
             {{- end }}
         {{- else if .Values.components.oxia }}
         args:
-          - >-
+          - | # Use the pipe character for the YAML multiline string. Workaround for kubernetes-sigs/kustomize#4201
             export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
