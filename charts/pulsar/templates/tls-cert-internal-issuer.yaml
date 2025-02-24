@@ -50,6 +50,7 @@ spec:
     # if you are using an external issuer, change this to that issuer group.
     group: cert-manager.io
 ---
+{{- end }}
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
@@ -58,15 +59,4 @@ metadata:
 spec:
   ca:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-{{- end }}
-{{- if eq .Values.certs.internal_issuer.type "ca" }}
-apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
-kind: Issuer
-metadata:
-  name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
-  namespace: {{ template "pulsar.namespace" . }}
-spec:
-  ca:
-    secretName: "{{ .Values.certs.issuers.ca.secretName }}"
-{{- end }}
 {{- end }}
