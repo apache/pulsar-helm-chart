@@ -295,7 +295,7 @@ auth:
 ######################################################################
 
 ## cert-manager
-## templates/tls-cert-issuer.yaml
+## templates/tls-cert-internal-issuer.yaml
 ##
 ## Cert manager is used for automatically provisioning TLS certificates
 ## for components within a Pulsar cluster
@@ -311,10 +311,11 @@ certs:
     # 15d
     renewBefore: 360h
   issuers:
-    # Used for certs.type as selfsigning, the selfsigned issuer has no dependency on any other resource.
+    # Used for certs.internal_issuer.type as selfsigning, the selfsigned issuer has no dependency on any other resource.
     selfsigning:
-    # used for certs.type as ca, the CA issuer needs to reference a Secret which contains your CA certificate and signing private key.
+    # used for certs.internal_issuer.type as ca, the CA issuer needs to reference a Secret which contains your CA certificate and signing private key.
     ca:
+      name:
       secretName:
 
 ######################################################################
