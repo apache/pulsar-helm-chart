@@ -28,7 +28,10 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
   annotations:
-{{ toYaml .Values.zookeeper.service.annotations | indent 4 }}
+{{- with .Values.zookeeper.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   ports:
     # prometheus needs to access /metrics endpoint
