@@ -833,6 +833,10 @@ autorecovery:
     requests:
       memory: 64Mi
       cpu: 0.05
+  ## Bookkeeper auto-recovery service
+  ## templates/autorecovery-service.yaml
+  service:
+    annotations: {}
   ## Bookkeeper auto-recovery service account
   ## templates/autorecovery-service-account.yaml
   service_account:
