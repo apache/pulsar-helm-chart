@@ -54,6 +54,13 @@ useReleaseStatus: true
 ## be stored under the provided path
 metadataPrefix: ""
 
+## Controls whether to use the PIP-45 metadata driver (PulsarMetadataBookieDriver) for BookKeeper components
+## when using ZooKeeper as a metadata store.
+## This is a global setting that applies to all BookKeeper components.
+## When set to true, BookKeeper components will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
+## When set to false, BookKeeper components will use BookKeeper's default ZooKeeper connection implementation.
+usePulsarMetadataBookieDriver: true
+
 ## Port name prefix
 ##
 ## Used for Istio support which depends on a standard naming of ports
