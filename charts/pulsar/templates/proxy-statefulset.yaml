@@ -118,7 +118,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.proxy.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             export PULSAR_MEM="-Xmx128M";
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
@@ -137,7 +137,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.proxy.waitOxiaTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
@@ -151,7 +151,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.proxy.waitBrokerTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             set -e;
             brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
             until [ ${brokerServiceNumber} -ge 1 ]; do
@@ -203,7 +203,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.proxy.additionalCommand }}
           {{ .Values.proxy.additionalCommand }}
         {{- end }}

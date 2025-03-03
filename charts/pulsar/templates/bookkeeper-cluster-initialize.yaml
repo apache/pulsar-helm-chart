@@ -52,7 +52,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.bookkeeper.metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             export PULSAR_MEM="-Xmx128M";
             until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
@@ -71,7 +71,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.bookkeeper.metadata.waitOxiaTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
@@ -86,7 +86,7 @@ spec:
       {{- end }}
         command: ["timeout", "{{ .Values.bookkeeper.metadata.initTimeout | default 60 }}", "sh", "-c"]
         args:
-          - >
+          - |
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
             export BOOKIE_MEM="-Xmx128M";

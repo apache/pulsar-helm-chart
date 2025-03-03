@@ -121,7 +121,7 @@ spec:
         command: ["timeout", "{{ .Values.bookkeeper.waitMetadataTimeout }}", "sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
-        - >
+        - |
           {{- include "pulsar.bookkeeper.init.verify_cluster_id" . | nindent 10 }}
         envFrom:
         - configMapRef:
@@ -176,7 +176,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.bookkeeper.additionalCommand }}
           {{ .Values.bookkeeper.additionalCommand }}
         {{- end }}
