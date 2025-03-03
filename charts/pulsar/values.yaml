@@ -895,13 +895,13 @@ pulsar_metadata:
 
   ## Whether we should enable metadata operations batching
   metadataStoreBatchingEnabled: true
-  
+
   ## Maximum delay to impose on batching grouping (in milliseconds)
   metadataStoreBatchingMaxDelayMillis: 5
-  
+
   ## Maximum number of operations to include in a singular batch
   metadataStoreBatchingMaxOperations: 1000
-  
+
   ## Maximum size of a batch (in KB)
   metadataStoreBatchingMaxSizeKb: 128
 

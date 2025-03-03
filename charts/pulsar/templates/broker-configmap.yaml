@@ -30,16 +30,18 @@ data:
   # Metadata settings
   {{- if .Values.components.zookeeper }}
   metadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- $configMetadataStoreUrl := "" }}
   {{- if .Values.pulsar_metadata.configurationStore }}
-  configurationMetadataStoreUrl: "zk:{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
+  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.configurationStore.connect" .) .Values.pulsar_metadata.configurationStoreMetadataPrefix }}
   {{- else }}
-  configurationMetadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.zookeeper.connect" .) .Values.metadataPrefix }}
   {{- end }}
+  configurationMetadataStoreUrl: "{{ $configMetadataStoreUrl }}"
   # setting bookkeeperMetadataServiceUri causes a NPE in WorkerUtils.initializeDlogNamespace which is a bug in Pulsar
   # omit setting bookkeeperMetadataServiceUri until the bug is fixed when functions are enabled.
   # bookkeeperMetadataServiceUri will default to configurationMetadataStoreUrl + "/ledgers" in that case
   {{- if not .Values.components.functions }}
-  bookkeeperMetadataServiceUri: "metadata-store:zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
+  bookkeeperMetadataServiceUri: "metadata-store:{{ $configMetadataStoreUrl }}/ledgers"
   {{- end }}
   {{- end }}
   {{- if .Values.components.oxia }}
