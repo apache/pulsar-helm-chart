@@ -28,3 +28,31 @@ kube-prometheus-stack:
     enabled: false
   prometheus-node-exporter:
     enabled: true
+
+zookeeper:
+  podMonitor:
+    enabled: true
+
+bookkeeper:
+  podMonitor:
+    enabled: true
+
+broker:
+  podMonitor:
+    enabled: true
+    
+autorecovery:
+  podMonitor:
+    enabled: true
+
+proxy:
+  podMonitor:
+    enabled: true
+
+oxia:
+  coordinator:
+    podMonitor:
+      enabled: true
+  server:
+    podMonitor:
+      enabled: true
