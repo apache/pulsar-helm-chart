@@ -30,7 +30,6 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   jobLabel: recovery
-  # workaround for https://github.com/apache/bookkeeper/pull/4208  
   fallbackScrapeProtocol: PrometheusText0.0.4
   podMetricsEndpoints:
     - port: http
