@@ -151,12 +151,12 @@ jobs:
               kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
           }
           set -o pipefail
-          for k8s_version_part in {23..30}; do
+          for k8s_version_part in {23..32}; do
             k8s_version="1.${k8s_version_part}.0"
+            echo "Validating default values with k8s version $k8s_version"
             validate_helm_template_with_k8s_version $k8s_version
-            echo "Validating all CI configurations"
             for config in .ci/clusters/*.yaml; do
-              echo "Validating with $config"
+              echo "Validating $config with k8s version $k8s_version"
               validate_helm_template_with_k8s_version $k8s_version --values .ci/values-common.yaml --values $config
             done
           done
