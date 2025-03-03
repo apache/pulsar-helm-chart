@@ -30,6 +30,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   jobLabel: oxia-server
+  fallbackScrapeProtocol: PrometheusText0.0.4
   podMetricsEndpoints:
     - port: metrics
       path: /metrics

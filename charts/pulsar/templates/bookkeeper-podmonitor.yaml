@@ -30,6 +30,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   jobLabel: bookie
+  fallbackScrapeProtocol: PrometheusText0.0.4
   podMetricsEndpoints:
     - port: http
       path: /metrics
