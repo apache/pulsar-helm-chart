@@ -107,6 +107,11 @@ zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
 {{- else if .Values.components.oxia }}
 metadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
 {{- end }}
+{{- /* metadataStoreSessionTimeoutMillis maps to zkTimeout in bookkeeper.conf for both zookeeper and oxia metadata stores */}}
+{{- if (and (hasKey .Values.pulsar_metadata "bookkeeper") (hasKey .Values.pulsar_metadata.bookkeeper "metadataStoreSessionTimeoutMillis")) }}
+zkTimeout: "{{ .Values.pulsar_metadata.bookkeeper.metadataStoreSessionTimeoutMillis }}"
+{{- end }}
+
 # enable bookkeeper http server
 httpServerEnabled: "true"
 httpServerPort: "{{ .Values.bookkeeper.ports.http }}"

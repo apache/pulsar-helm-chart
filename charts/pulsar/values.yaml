@@ -54,13 +54,6 @@ useReleaseStatus: true
 ## be stored under the provided path
 metadataPrefix: ""
 
-## Controls whether to use the PIP-45 metadata driver (PulsarMetadataBookieDriver) for BookKeeper components
-## when using ZooKeeper as a metadata store.
-## This is a global setting that applies to all BookKeeper components.
-## When set to true, BookKeeper components will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
-## When set to false, BookKeeper components will use BookKeeper's default ZooKeeper connection implementation.
-usePulsarMetadataBookieDriver: true
-
 ## Port name prefix
 ##
 ## Used for Istio support which depends on a standard naming of ports
@@ -886,6 +879,44 @@ pulsar_metadata:
   waitBookkeeperTimeout: 120
   ## Timeout for running metadata initialization
   initTimeout: 60
+
+  ## Allow read-only operations on the metadata store when the metadata store is not available.
+  ## This is useful when you want to continue serving requests even if the metadata store is not fully available with quorum.
+  metadataStoreAllowReadOnlyOperations: false
+
+  ## The session timeout for the metadata store in milliseconds.
+  metadataStoreSessionTimeoutMillis: 30000
+
+  ## Metadata store operation timeout in seconds.
+  metadataStoreOperationTimeoutSeconds: 30
+
+  ## The expiry time for the metadata store cache in seconds.
+  metadataStoreCacheExpirySeconds: 300
+
+  ## Whether we should enable metadata operations batching
+  metadataStoreBatchingEnabled: true
+  
+  ## Maximum delay to impose on batching grouping (in milliseconds)
+  metadataStoreBatchingMaxDelayMillis: 5
+  
+  ## Maximum number of operations to include in a singular batch
+  metadataStoreBatchingMaxOperations: 1000
+  
+  ## Maximum size of a batch (in KB)
+  metadataStoreBatchingMaxSizeKb: 128
+
+  ## BookKeeper metadata configuration settings with Pulsar Helm Chart deployments
+  bookkeeper:
+    ## Controls whether to use the PIP-45 metadata driver (PulsarMetadataBookieDriver) for BookKeeper components
+    ## when using ZooKeeper as a metadata store.
+    ## This is a global setting that applies to all BookKeeper components.
+    ## When set to true, BookKeeper components will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
+    ## When set to false, BookKeeper components will use BookKeeper's default ZooKeeper connection implementation.
+    usePulsarMetadataBookieDriver: true
+
+    ## The session timeout for the metadata store in milliseconds. This setting is mapped to `zkTimeout` in `bookkeeper.conf`.
+    ## due to implementation details in the PulsarMetadataBookieDriver, it also applies when Oxia metadata store is enabled.
+    metadataStoreSessionTimeoutMillis: 30000
 
   # resources for bin/pulsar initialize-cluster-metadata
   resources:

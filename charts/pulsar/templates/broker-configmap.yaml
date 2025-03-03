@@ -43,11 +43,35 @@ data:
   bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
   {{- end }}
 
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreAllowReadOnlyOperations" }}
+  PULSAR_PREFIX_metadataStoreAllowReadOnlyOperations: "{{ .Values.pulsar_metadata.metadataStoreAllowReadOnlyOperations }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreSessionTimeoutMillis" }}
+  metadataStoreSessionTimeoutMillis: "{{ .Values.pulsar_metadata.metadataStoreSessionTimeoutMillis }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreOperationTimeoutSeconds" }}
+  metadataStoreOperationTimeoutSeconds: "{{ .Values.pulsar_metadata.metadataStoreOperationTimeoutSeconds }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreCacheExpirySeconds" }}
+  metadataStoreCacheExpirySeconds: "{{ .Values.pulsar_metadata.metadataStoreCacheExpirySeconds }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingEnabled" }}
+  metadataStoreBatchingEnabled: "{{ .Values.pulsar_metadata.metadataStoreBatchingEnabled }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxDelayMillis" }}
+  metadataStoreBatchingMaxDelayMillis: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxDelayMillis }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxOperations" }}
+  metadataStoreBatchingMaxOperations: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxOperations }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxSizeKb" }}
+  metadataStoreBatchingMaxSizeKb: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxSizeKb }}"
+  {{- end }}
+
   # Broker settings
   clusterName: {{ template "pulsar.cluster.name" . }}
   exposeTopicLevelMetricsInPrometheus: "true"
   numHttpServerThreads: "8"
-  metadataStoreSessionTimeoutMillis: "30000"
   statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
 
   # Tiered storage settings
