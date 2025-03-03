@@ -156,6 +156,8 @@ jobs:
             validate_helm_template_with_k8s_version $k8s_version
             echo "Validating with Oxia enabled"
             validate_helm_template_with_k8s_version $k8s_version --set components.zookeeper=false --set components.oxia=true
+            echo "Validating with kube-prometheus-stack enabled"
+            validate_helm_template_with_k8s_version $k8s_version --values .ci/values-common.yaml --values .ci/clusters/values-prometheus-grafana.yaml
           done
 
       - name: Validate kustomize yaml for extra new lines in pulsar-init commands
