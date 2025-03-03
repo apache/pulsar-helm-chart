@@ -1378,11 +1378,15 @@ toolset:
 ## https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
 ## For sample values, please see their documentation.
 kube-prometheus-stack:
+  ## Enable the kube-prometheus-stack chart
   enabled: true
+  ## Manages Prometheus and Alertmanager components
   prometheusOperator:
     enabled: true
+  ## Prometheus component
   prometheus:
     enabled: true
+  ## Grafana component
   grafana:
     enabled: true
     # Use random password at installation time for Grafana by default by setting empty value to `adminPassword`.
@@ -1453,10 +1457,15 @@ kube-prometheus-stack:
         zookeeper:
           url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/zookeeper-3.6.json
           datasource: Prometheus
+        offloader:
+          url: https://raw.githubusercontent.com/apache/pulsar/refs/heads/master/grafana/dashboards/offloader.json
+          datasource: Prometheus
+  ## Prometheus node exporter component
   prometheus-node-exporter:
     enabled: true
     hostRootFsMount:
       enabled: false
+  ## Alertmanager component
   alertmanager:
     enabled: false
 
