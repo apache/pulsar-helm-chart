@@ -127,7 +127,7 @@ jobs:
             --validate-maintainers=false \
             --target-branch ${{ github.event.repository.default_branch }}
 
-      - name: Run kubeconform check for helm template with every major k8s version 1.23.0-1.30.0
+      - name: Run kubeconform check for helm template with every major k8s version 1.23.0-1.32.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
           PULSAR_CHART_HOME=$(pwd)
@@ -151,11 +151,14 @@ jobs:
               kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
           }
           set -o pipefail
-          for k8s_version_part in {23..30}; do
+          for k8s_version_part in {23..32}; do
             k8s_version="1.${k8s_version_part}.0"
+            echo "Validating default values with k8s version $k8s_version"
             validate_helm_template_with_k8s_version $k8s_version
-            echo "Validating with Oxia enabled"
-            validate_helm_template_with_k8s_version $k8s_version --set components.zookeeper=false --set components.oxia=true
+            for config in .ci/clusters/*.yaml; do
+              echo "Validating $config with k8s version $k8s_version"
+              validate_helm_template_with_k8s_version $k8s_version --values .ci/values-common.yaml --values $config
+            done
           done
 
       - name: Validate kustomize yaml for extra new lines in pulsar-init commands
