@@ -19,6 +19,8 @@
 
 kube-prometheus-stack:
   enabled: true
+  prometheusOperator:
+    enabled: true
   prometheus:
     enabled: true
   grafana:

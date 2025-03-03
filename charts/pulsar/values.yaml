@@ -1379,6 +1379,8 @@ toolset:
 ## For sample values, please see their documentation.
 kube-prometheus-stack:
   enabled: true
+  prometheusOperator:
+    enabled: true
   prometheus:
     enabled: true
   grafana:
