@@ -29,13 +29,13 @@ metadata:
 data:
   # Metadata settings
   {{- if .Values.components.zookeeper }}
-  metadataStoreUrl: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  metadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
   {{- if .Values.pulsar_metadata.configurationStore }}
-  configurationMetadataStoreUrl: "{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
+  configurationMetadataStoreUrl: "zk:{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
   {{- else }}
-  configurationMetadataStoreUrl: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  configurationMetadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
   {{- end }}
-  bookkeeperMetadataServiceUri: "metadata-store:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
+  bookkeeperMetadataServiceUri: "metadata-store:zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
   {{- end }}
   {{- if .Values.components.oxia }}
   metadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"

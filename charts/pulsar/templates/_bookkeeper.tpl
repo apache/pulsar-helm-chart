@@ -99,7 +99,7 @@ Define bookie common config
 {{- define "pulsar.bookkeeper.config.common" -}}
 {{- if .Values.components.zookeeper }}
 {{- if .Values.usePulsarMetadataBookieDriver }}
-metadataServiceUri: "metadata-store:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
+metadataServiceUri: "metadata-store:zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
 {{- else }}
 zkServers: "{{ template "pulsar.zookeeper.connect" . }}"
 zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
