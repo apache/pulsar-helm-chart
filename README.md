@@ -245,6 +245,20 @@ helm upgrade -f pulsar.yaml \
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
+## Upgrading from Helm Chart version 3.x.x to 4.0.0 version and above
+
+The kube-prometheus-stack version has been upgraded to 69.x.x in Pulsar Helm Chart version 4.0.0 .
+Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-68x-to-69x). 
+
+There's a script to run the required commands:
+
+```shell
+./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.80.0
+```
+
+After, this you can proceed with `helm upgrade`.
+
 ## Upgrading from Helm Chart version 3.0.0-3.6.0 to 3.7.0 version and above
 
 The kube-prometheus-stack version has been upgraded to 65.x.x in Pulsar Helm Chart version 3.7.0 .
