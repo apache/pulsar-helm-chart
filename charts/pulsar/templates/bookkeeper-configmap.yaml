@@ -61,19 +61,5 @@ data:
   {{- end }}
   # TLS config
   {{- include "pulsar.bookkeeper.config.tls" . | nindent 2 }}
-  {{- if .Values.bookkeeper.useRocksDBConfigInConfigData }}
-  # Set RocksDB default format version to 5
-  # RocksDB format_version 5 has been supported since RocksDB 6.6 . It's required for certain performance optimizations.
-  PULSAR_PREFIX_dbStorage_rocksDB_format_version: "5"
-  # Specify non-existing files to avoid Bookkeeper from loading RocksDB config from existing files
-  PULSAR_PREFIX_defaultRocksdbConf: "conf/non_existing_default_rocksdb.conf"
-  PULSAR_PREFIX_entryLocationRocksdbConf: "conf/non_existing_entry_location_rocksdb.conf"
-  PULSAR_PREFIX_ledgerMetadataRocksdbConf: "conf/non_existing_ledger_metadata_rocksdb.conf"
-  {{- else }}
-  # Specify existing files to load RocksDB config from existing files
-  PULSAR_PREFIX_defaultRocksdbConf: "conf/default_rocksdb.conf"
-  PULSAR_PREFIX_entryLocationRocksdbConf: "conf/entry_location_rocksdb.conf"
-  PULSAR_PREFIX_ledgerMetadataRocksdbConf: "conf/ledger_metadata_rocksdb.conf"
-  {{- end }}
 {{ toYaml .Values.bookkeeper.configData | indent 2 }}
 {{- end }}
