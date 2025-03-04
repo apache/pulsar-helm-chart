@@ -243,10 +243,10 @@ Public keys are available at: https://www.apache.org/dist/pulsar/KEYS
 
 For convenience "index.yaml" has been uploaded (though excluded from voting), so you can also run the below commands.
 
-helm repo add --force-update \
+helm repo add --force-update \\
  apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 helm repo update
-helm install pulsar apache-pulsar-dist-dev/pulsar \
+helm install pulsar apache-pulsar-dist-dev/pulsar \\
  --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false
 
 pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though it is not strictly required for releasing the artifact based on ASF Guidelines. 
