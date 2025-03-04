@@ -49,7 +49,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             until nslookup {{ .Values.pulsar_metadata.configurationStore}}; do
               sleep 3;
             done;
@@ -60,7 +60,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             {{- if $zk := .Values.pulsar_metadata.userProvidedZookeepers }}
             export PULSAR_MEM="-Xmx128M";
             until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
@@ -79,7 +79,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitOxiaTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
@@ -93,7 +93,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-        - >-
+        - |
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           echo Default BOOKIE_MEM settings are set very high, which can cause the init container to fail.;
           echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;

@@ -119,7 +119,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.autorecovery.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-        - >
+        - |
           {{- include "pulsar.autorecovery.init.verify_cluster_id" . | nindent 10 }}
         envFrom:
         - configMapRef:
@@ -144,7 +144,7 @@ spec:
       {{- end}}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/bookkeeper autorecovery

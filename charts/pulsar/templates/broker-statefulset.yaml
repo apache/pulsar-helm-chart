@@ -136,7 +136,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.broker.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             export PULSAR_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
@@ -161,7 +161,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.broker.waitOxiaTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
@@ -175,7 +175,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.broker.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-          - >
+          - |
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             export BOOKIE_MEM="-Xmx128M";
@@ -244,7 +244,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.broker.additionalCommand }}
           {{ .Values.broker.additionalCommand }}
         {{- end }}
