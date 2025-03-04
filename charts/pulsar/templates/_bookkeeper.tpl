@@ -99,8 +99,9 @@ Define bookie common config
 {{- define "pulsar.bookkeeper.config.common" -}}
 {{- if .Values.components.zookeeper }}
 {{- if (and (hasKey .Values.pulsar_metadata "bookkeeper") .Values.pulsar_metadata.bookkeeper.usePulsarMetadataBookieDriver) }}
+# there's a bug when using PulsarMetadataBookieDriver since it always appends /ledgers to the metadataServiceUri
+# Possibly a bug in org.apache.pulsar.metadata.bookkeeper.AbstractMetadataDriver#resolveLedgersRootPath in Pulsar code base
 metadataServiceUri: "metadata-store:zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
-zkLedgersRootPath: "/ledgers"
 {{- else }}
 zkServers: "{{ template "pulsar.zookeeper.connect" . }}"
 zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
