@@ -20,8 +20,11 @@
 
 set -e
 
-CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
+SCRIPT_DIR="$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+CHART_HOME=$(unset CDPATH && cd "$SCRIPT_DIR/../.." && pwd)
 cd ${CHART_HOME}
+
+source "${SCRIPT_DIR}/common_auth.sh"
 
 usage() {
     cat <<EOF
@@ -74,10 +77,6 @@ case $key in
 esac
 done
 
-source ${CHART_HOME}/scripts/pulsar/common_auth.sh
-
-pulsar::ensure_pulsarctl
-
 namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
 local_cmd=${file:+-o yaml --dry-run=client >secret.yaml}
@@ -85,31 +84,38 @@ local_cmd=${file:+-o yaml --dry-run=client >secret.yaml}
 function pulsar::jwt::generate_symmetric_key() {
     local secret_name="${release}-token-symmetric-key"
 
-    tmpfile=$(mktemp)
-    trap "test -f $tmpfile && rm $tmpfile" RETURN
-    ${PULSARCTL_BIN} token create-secret-key --output-file ${tmpfile}
-    mv $tmpfile SECRETKEY
-    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=SECRETKEY ${local:+ -o yaml --dry-run=client}
-    if [[ "${local}" != "true" ]]; then
-        rm SECRETKEY
+    local tmpdir=$(mktemp -d)
+    trap "test -d $tmpdir && rm -rf $tmpdir" RETURN
+    local tmpfile=${tmpdir}/SECRETKEY
+    docker run --rm -t ${PULSAR_TOKENS_CONTAINER_IMAGE} bin/pulsar tokens create-secret-key > "${tmpfile}"
+    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=$tmpfile ${local:+ -o yaml --dry-run=client}
+    # if local is true, keep the file available for debugging purposes
+    if [[ "${local}" == "true" ]]; then
+        mv $tmpfile SECRETKEY
     fi
+    rm -rf $tmpdir
 }
 
 function pulsar::jwt::generate_asymmetric_key() {
     local secret_name="${release}-token-asymmetric-key"
 
-    privatekeytmpfile=$(mktemp)
-    trap "test -f $privatekeytmpfile && rm $privatekeytmpfile" RETURN
-    publickeytmpfile=$(mktemp)
-    trap "test -f $publickeytmpfile && rm $publickeytmpfile" RETURN
-    ${PULSARCTL_BIN} token create-key-pair -a RS256 --output-private-key ${privatekeytmpfile} --output-public-key ${publickeytmpfile}
-    mv $privatekeytmpfile PRIVATEKEY
-    mv $publickeytmpfile PUBLICKEY
-    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=PRIVATEKEY --from-file=PUBLICKEY ${local:+ -o yaml --dry-run=client}
-    if [[ "${local}" != "true" ]]; then
-        rm PRIVATEKEY
-        rm PUBLICKEY
+    local tmpdir=$(mktemp -d)
+    trap "test -d $tmpdir && rm -rf $tmpdir" RETURN
+
+    privatekeytmpfile=${tmpdir}/PRIVATEKEY
+    publickeytmpfile=${tmpdir}/PUBLICKEY
+
+    # Generate key pair
+    docker run --user 0 --rm -t -v ${tmpdir}:/keydir ${PULSAR_TOKENS_CONTAINER_IMAGE} bin/pulsar tokens create-key-pair --output-private-key=/keydir/PRIVATEKEY --output-public-key=/keydir/PUBLICKEY
+
+    kubectl create secret generic ${secret_name} -n ${namespace} --from-file=$privatekeytmpfile --from-file=$publickeytmpfile ${local:+ -o yaml --dry-run=client}
+
+    # if local is true, keep the files available for debugging purposes
+    if [[ "${local}" == "true" ]]; then
+        mv $privatekeytmpfile PRIVATEKEY
+        mv $publickeytmpfile PUBLICKEY
     fi
+    rm -rf $tmpdir
 }
 
 if [[ "${symmetric}" == "true" ]]; then
