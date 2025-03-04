@@ -728,6 +728,10 @@ bookkeeper:
   ## templates/bookkeeper-service-account.yaml
   service_account:
     annotations: {}
+  ## Use RocksDB config in configData
+  ## Use dbStorage_rocksDB_* / PULSAR_PREFIX_dbStorage_rocksDB_* settings defined in configData instead of conf/*_rocksdb.conf files in the Pulsar docker image
+  ## See https://github.com/apache/bookkeeper/pull/3523 as reference
+  useRocksDBConfigInConfigData: true
   ## Bookkeeper configmap
   ## templates/bookkeeper-configmap.yaml
   ##
