@@ -912,7 +912,7 @@ pulsar_metadata:
     ## This is a global setting that applies to all BookKeeper components.
     ## When set to true, BookKeeper components will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
     ## When set to false, BookKeeper components will use BookKeeper's default ZooKeeper connection implementation.
-    usePulsarMetadataBookieDriver: true
+    usePulsarMetadataBookieDriver: false
 
     ## The session timeout for the metadata store in milliseconds. This setting is mapped to `zkTimeout` in `bookkeeper.conf`.
     ## due to implementation details in the PulsarMetadataBookieDriver, it also applies when Oxia metadata store is enabled.
