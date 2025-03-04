@@ -29,12 +29,19 @@ metadata:
 data:
   # Metadata settings
   {{- if .Values.components.zookeeper }}
-  zookeeperServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  metadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- $configMetadataStoreUrl := "" }}
   {{- if .Values.pulsar_metadata.configurationStore }}
-  configurationStoreServers: "{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
+  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.configurationStore.connect" .) .Values.pulsar_metadata.configurationStoreMetadataPrefix }}
+  {{- else }}
+  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.zookeeper.connect" .) .Values.metadataPrefix }}
   {{- end }}
-  {{- if not .Values.pulsar_metadata.configurationStore }}
-  configurationStoreServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  configurationMetadataStoreUrl: "{{ $configMetadataStoreUrl }}"
+  # setting bookkeeperMetadataServiceUri causes a NPE in WorkerUtils.initializeDlogNamespace which is a bug in Pulsar
+  # omit setting bookkeeperMetadataServiceUri until the bug is fixed when functions are enabled.
+  # bookkeeperMetadataServiceUri will default to configurationMetadataStoreUrl + "/ledgers" in that case
+  {{- if not .Values.components.functions }}
+  bookkeeperMetadataServiceUri: "metadata-store:{{ $configMetadataStoreUrl }}/ledgers"
   {{- end }}
   {{- end }}
   {{- if .Values.components.oxia }}
@@ -43,11 +50,35 @@ data:
   bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
   {{- end }}
 
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreAllowReadOnlyOperations" }}
+  PULSAR_PREFIX_metadataStoreAllowReadOnlyOperations: "{{ .Values.pulsar_metadata.metadataStoreAllowReadOnlyOperations }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreSessionTimeoutMillis" }}
+  metadataStoreSessionTimeoutMillis: "{{ .Values.pulsar_metadata.metadataStoreSessionTimeoutMillis }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreOperationTimeoutSeconds" }}
+  metadataStoreOperationTimeoutSeconds: "{{ .Values.pulsar_metadata.metadataStoreOperationTimeoutSeconds }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreCacheExpirySeconds" }}
+  metadataStoreCacheExpirySeconds: "{{ .Values.pulsar_metadata.metadataStoreCacheExpirySeconds }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingEnabled" }}
+  metadataStoreBatchingEnabled: "{{ .Values.pulsar_metadata.metadataStoreBatchingEnabled }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxDelayMillis" }}
+  metadataStoreBatchingMaxDelayMillis: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxDelayMillis }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxOperations" }}
+  metadataStoreBatchingMaxOperations: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxOperations }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxSizeKb" }}
+  metadataStoreBatchingMaxSizeKb: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxSizeKb }}"
+  {{- end }}
+
   # Broker settings
   clusterName: {{ template "pulsar.cluster.name" . }}
   exposeTopicLevelMetricsInPrometheus: "true"
   numHttpServerThreads: "8"
-  zooKeeperSessionTimeoutMillis: "30000"
   statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
 
   # Tiered storage settings

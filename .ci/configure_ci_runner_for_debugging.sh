@@ -27,7 +27,7 @@ function k9s() {
     # install k9s on the fly
     if [ ! -x /usr/local/bin/k9s ]; then
         echo "Installing k9s..."
-        curl -L -s https://github.com/derailed/k9s/releases/download/v0.32.5/k9s_Linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin k9s
+        curl -L -s https://github.com/derailed/k9s/releases/download/v0.40.5/k9s_Linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin k9s
     fi
     command k9s "$@"
 }
