@@ -177,9 +177,25 @@ spec:
         command: ["sh", "-c"]
         args:
         - |
-        {{- if .Values.bookkeeper.additionalCommand }}
+          # set required environment variables to use rocksdb config files provided in the Pulsar image
+          export PULSAR_PREFIX_defaultRocksdbConf=${PULSAR_PREFIX_defaultRocksdbConf:-conf/default_rocksdb.conf}
+          export PULSAR_PREFIX_entryLocationRocksdbConf=${PULSAR_PREFIX_entryLocationRocksdbConf:-conf/entry_location_rocksdb.conf}
+          export PULSAR_PREFIX_ledgerMetadataRocksdbConf=${PULSAR_PREFIX_ledgerMetadataRocksdbConf:-conf/ledger_metadata_rocksdb.conf}
+          if [ -x bin/update-rocksdb-conf-from-env.py ] && [ -f "${PULSAR_PREFIX_entryLocationRocksdbConf}" ]; then
+            echo "Updating ${PULSAR_PREFIX_entryLocationRocksdbConf} from environment variables starting with dbStorage_rocksDB_*"
+            bin/update-rocksdb-conf-from-env.py "${PULSAR_PREFIX_entryLocationRocksdbConf}"
+          else
+            # Ensure that Bookkeeper will not load RocksDB config from existing files and fallback to use default RocksDB config
+            # See https://github.com/apache/bookkeeper/pull/3523 as reference
+            export PULSAR_PREFIX_defaultRocksdbConf=conf/non_existing_default_rocksdb.conf
+            export PULSAR_PREFIX_entryLocationRocksdbConf=conf/non_existing_entry_location_rocksdb.conf
+            export PULSAR_PREFIX_ledgerMetadataRocksdbConf=conf/non_existing_ledger_metadata_rocksdb.conf
+            # Ensure that Bookkeeper will use RocksDB format_version 5 (this currently applies only to the entry location rocksdb due to a bug in Bookkeeper)
+            export PULSAR_PREFIX_dbStorage_rocksDB_format_version=${PULSAR_PREFIX_dbStorage_rocksDB_format_version:-5}
+          fi
+          {{- if .Values.bookkeeper.additionalCommand }}
           {{ .Values.bookkeeper.additionalCommand }}
-        {{- end }}
+          {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
