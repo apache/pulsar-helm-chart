@@ -17,5 +17,3 @@ charts/**/*.lock
 PRIVATEKEY
 PUBLICKEY
 .vagrant/
-pulsarctl-*-*.tar.gz
-pulsarctl-*-*/
