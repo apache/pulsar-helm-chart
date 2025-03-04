@@ -130,15 +130,6 @@ nodes:
     hostPort: 5000
     listenAddress: 127.0.0.1
     protocol: TCP
-  # increase the limits to make upgrade tests less flaky pass
-  # To avoid helm error "Error: UPGRADE FAILED: client rate limiter Wait returned an error: context deadline exceeded"
-  kubeadmConfigPatches:
-  - |
-    kind: ClusterConfiguration
-    apiServer:
-      extraArgs:
-        max-requests-inflight: "800"       # Default is 400
-        max-mutating-requests-inflight: "400"  # Default is 200    
 EOF
 
 for ((i=0;i<${nodeNum};i++))
