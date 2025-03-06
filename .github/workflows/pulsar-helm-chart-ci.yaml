@@ -34,7 +34,7 @@ concurrency:
 jobs:
   preconditions:
     name: Preconditions
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: (github.event_name != 'schedule') || (github.repository == 'apache/pulsar-helm-chart')
     outputs:
       docs_only: ${{ steps.check_changes.outputs.docs_only }}
@@ -62,7 +62,7 @@ jobs:
   license-check:
     needs: preconditions
     name: License Check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     steps:
@@ -83,7 +83,7 @@ jobs:
   ct-lint:
     needs: ['preconditions', 'license-check']
     name: chart-testing lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     steps:
@@ -107,13 +107,17 @@ jobs:
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         uses: azure/setup-helm@v4
         with:
-          version: v3.14.4
+          version: v3.16.4
 
       - name: Set up Python
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
+
+      - name: Install uv, a fast modern package manager for Python
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Set up chart-testing
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
@@ -176,19 +180,20 @@ jobs:
 
   install-chart-tests:
     name: ${{ matrix.testScenario.name }} - k8s ${{ matrix.k8sVersion.version }} - ${{ matrix.testScenario.type || 'install' }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: ${{ matrix.testScenario.timeout || 45 }}
     needs: ['preconditions', 'ct-lint']
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.22.0 for the list of supported k8s versions for kind 0.22.0
+        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.27.0 for the list of supported k8s versions for kind 0.27.0
+        # docker images are available at https://hub.docker.com/r/kindest/node/tags
         k8sVersion:
           - version: "1.23.17"
             kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
-          - version: "1.29.2"
-            kind_image_tag: v1.29.2@sha256:51a1434a5397193442f0be2a297b488b6c919ce8a3931be0ce822606ea5ca245
+          - version: "1.32.2"
+            kind_image_tag: v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f
         testScenario:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
@@ -333,7 +338,7 @@ jobs:
   pulsar-helm-chart-ci-checks-completed:
     name: "CI checks completed"
     if: ${{ always() && ((github.event_name != 'schedule') || (github.repository == 'apache/pulsar-helm-chart')) }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     needs: [
       'preconditions',
