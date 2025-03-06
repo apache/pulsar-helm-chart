@@ -1498,6 +1498,12 @@ kube-prometheus-stack:
         offloader:
           url: https://raw.githubusercontent.com/apache/pulsar/refs/heads/master/grafana/dashboards/offloader.json
           datasource: Prometheus
+        broker-cache:
+          url: https://raw.githubusercontent.com/datastax/pulsar-helm-chart/refs/heads/master/helm-chart-sources/pulsar/grafana-dashboards/broker-cache-by-broker.json
+          datasource: Prometheus
+        sockets:
+          url: https://raw.githubusercontent.com/datastax/pulsar-helm-chart/refs/heads/master/helm-chart-sources/pulsar/grafana-dashboards/sockets.json
+          datasource: Prometheus
   ## Prometheus node exporter component
   prometheus-node-exporter:
     enabled: true
