@@ -28,6 +28,7 @@ TLS=${TLS:-"false"}
 SYMMETRIC=${SYMMETRIC:-"false"}
 FUNCTION=${FUNCTION:-"false"}
 MANAGER=${MANAGER:-"false"}
+ALLOW_LOADBALANCERS=${ALLOW_LOADBALANCERS:-"false"}
 
 source ${PULSAR_HOME}/.ci/helm.sh
 
@@ -56,6 +57,7 @@ fi
 install_type="install"
 test_action="produce-consume"
 if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
+    ALLOW_LOADBALANCERS="true"
     # install older version of pulsar chart
     PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
     ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} "${extra_opts[@]}"
@@ -82,6 +84,11 @@ ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml $
 
 echo "Wait 10 seconds"
 sleep 10
+
+# check that there aren't any loadbalancers if ALLOW_LOADBALANCERS is false
+if [[ "${ALLOW_LOADBALANCERS}" == "false" ]]; then
+    ci::check_loadbalancers
+fi
 
 # check pulsar environment
 ci::check_pulsar_environment

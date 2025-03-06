@@ -27,26 +27,106 @@ Read [Deploying Pulsar on Kubernetes](http://pulsar.apache.org/docs/deploy-kuber
 
 > :warning: This helm chart is updated outside of the regular Pulsar release cycle and might lag behind a bit. It only supports basic Kubernetes features now. Currently, it can be used as no more than a template and starting point for a Kubernetes deployment. In many cases, it would require some customizations.
 
-## Important Security Disclaimer for Helm Chart Usage
+## Important Security Advisory for Helm Chart Usage
 
 ### Notice of Default Configuration
-This Helm chart is provided with a default configuration that does not meet the security requirements for production environments or sensitive data handling. Users are strongly advised to thoroughly review and customize the security settings to ensure a secure deployment that aligns with their specific operational and security policies.
+
+This Helm chart's default configuration DOES NOT meet production security requirements.
+Users MUST review and customize security settings for their specific environment.
+
+IMPORTANT: This Helm chart provides a starting point for Pulsar deployments but requires
+significant security customization before use in production environments. We strongly
+recommend implementing:
+
+1. Authentication and authorization for all components
+2. TLS encryption for all communication channels
+3. Proper network isolation and access controls
+4. Regular security updates and vulnerability assessments
+
+As an open source project, we welcome contributions to improve security features.
+Please consider submitting pull requests to address security gaps or enhance
+existing security implementations.
 
 ### Pulsar Proxy Security Considerations
+
 As per the [Pulsar Proxy documentation](https://pulsar.apache.org/docs/3.1.x/administration-proxy/), it is explicitly stated that the Pulsar proxy is not designed for exposure to the public internet. The design assumes that deployments will be protected by network perimeter security measures. It is crucial to understand that relying solely on the default configuration can expose your deployment to significant security vulnerabilities.
 
-#### Recommendations:
+### Important Change in 4.0.0 version of the Apache Pulsar Helm chart
+
+The default service type for the Pulsar proxy has changed from `LoadBalancer` to `ClusterIP` for security reasons. This limits access to within the Kubernetes environment by default.
+
+### External Access Recommendations
+
+If you need to expose the Pulsar Proxy outside the cluster:
+
+1. **USE INTERNAL LOAD BALANCERS ONLY**
+   - Set type to LoadBalancer only in secured environments with proper network controls
+   - Add cloud provider-specific annotations for internal load balancers:
+     - Kubernetes documentation about internal load balancers:
+        - [Internal load balancer](https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer)
+     - See cloud provider documentation:
+       - AWS / EKS: [AWS Load Balancer Controller / Service Annotations](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/service/annotations/)
+       - Azure / AKS: [Use an internal load balancer with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/internal-lb)
+       - GCP / GKE: [LoadBalancer service parameters](https://cloud.google.com/kubernetes-engine/docs/concepts/service-load-balancer-parameters)
+     - Examples (verify correctness for your environment):
+       - AWS / EKS:  `service.beta.kubernetes.io/aws-load-balancer-internal: "true"`
+       - Azure / AKS: `service.beta.kubernetes.io/azure-load-balancer-internal: "true"`
+       - GCP / GKE:   `networking.gke.io/load-balancer-type: "Internal"`
+
+2. **IMPLEMENT AUTHENTICATION AND AUTHORIZATION**
+   - Configure all clients to authenticate properly
+   - Set up appropriate authorization policies
+
+3. **USE TLS FOR ALL CONNECTIONS**
+   - Enable TLS for client-to-proxy connections
+   - Enable TLS for proxy-to-broker connections
+   - Enable TLS for all internal cluster communications
+   - Note: TLS alone is NOT sufficient as a security solution. Even with TLS enabled, clusters exposed to untrusted networks remain vulnerable to denial-of-service attacks, authentication bypass attempts, and protocol-level exploits.
+
+4. **NETWORK SECURITY**
+   - Use private networks (VPCs)
+   - Configure firewalls, security groups, and IP restrictions
+
+5. **CLIENT IP ADDRESS BASED ACCESS RESTRICTIONS**
+
+   - When using a LoadBalancer service type, restrict access to specific IP ranges by configuring `proxy.service.loadBalancerSourceRanges` in your values.yaml:
+     ```yaml
+     proxy:
+       service:
+         loadBalancerSourceRanges:
+           - 10.0.0.0/8     # Private network range
+           - 172.16.0.0/12  # Private network range
+           - 192.168.0.0/16 # Private network range
+     ```
+   - This feature:
+     - Provides an additional defense layer by filtering traffic at the load balancer level
+     - Only allows connections from specified CIDR blocks
+     - Works only with LoadBalancer service type and when your cloud provider supports the `loadBalancerSourceRanges` parameter
+   - Important: This should be implemented alongside other security measures (internal load balancer, authentication, TLS, network policies) as part of a defense-in-depth strategy,
+     not as a standalone security solution
+
+### Alternative for External Access
+
+As an alternative method for external access, Pulsar has support for [SNI proxy routing](https://pulsar.apache.org/docs/next/concepts-proxy-sni-routing/). SNI Proxy routing is supported with proxy servers such as Apache Traffic Server, HAProxy and Nginx.
+
+Note: This option isn't currently implemented in the Apache Pulsar Helm chart.
+
+**IMPORTANT**: Pulsar binary protocol cannot be exposed outside of the Kubernetes cluster using Kubernetes Ingress. Kubernetes Ingress works for the Admin REST API and topic lookups, but clients would be connecting to the advertised listener addresses returned by the brokers and it would only work when clients can connect directly to brokers. This is not a supported secure option for exposing Pulsar to untrusted networks.
+
+### General Recommendations
+
 - **Network Perimeter Security:** It is imperative to implement robust network perimeter security to safeguard your deployment. The absence of such security measures can lead to unauthorized access and potential data breaches.
 - **Restricted Access:** For environments where security is less critical, such as certain development or testing scenarios, the use of `loadBalancerSourceRanges` may be employed to restrict access to specified IP addresses or ranges. This, however, should not be considered a substitute for comprehensive security measures in production environments.
 
 ### User Responsibility
+
 The user assumes full responsibility for the security and integrity of their deployment. This includes, but is not limited to, the proper configuration of security features and adherence to best practices for securing network access. The providers of this Helm chart disclaim all warranties, whether express or implied, including any warranties of merchantability, fitness for a particular purpose, and non-infringement of third-party rights.
 
 ### No Security Guarantees
+
 The providers of this Helm chart make no guarantees regarding the security of the chart under any circumstances. It is the user's responsibility to ensure that their deployment is secure and complies with all relevant security standards and regulations.
 
 By using this Helm chart, the user acknowledges the risks associated with its default configuration and the necessity for proper security customization. The user further agrees that the providers of the Helm chart shall not be liable for any security breaches or incidents resulting from the use of the chart.
-
 
 ## Features
 
@@ -114,7 +194,8 @@ Before proceeding to deploying Pulsar, you need to prepare your environment.
 To add this chart to your local Helm repository:
 
 ```bash
-helm repo add apache https://pulsar.apache.org/charts
+helm repo add apachepulsar https://pulsar.apache.org/charts
+helm repo update
 ```
 
 ## Kubernetes cluster preparation
@@ -126,14 +207,49 @@ We provide some instructions to guide you through the preparation: http://pulsar
 ## Deploy Pulsar to Kubernetes
 
 1. Configure your values file. The best way to know which values are available is to read the [values.yaml](./charts/pulsar/values.yaml).
+   A best practice is to start with an empty values file and only set the keys that differ from the default configuration.
+
+   Anti-affinity rules for Zookeeper and Bookie components require at least one node per replica. For Kubernetes clusters with less than 3 nodes,
+   you must disable this feature by adding this to your initial values.yaml file:
+
+    ```yaml
+    affinity:
+      anti_affinity: false
+    ```
 
 2. Install the chart:
 
     ```bash
-    helm install <release-name> -n <namespace> -f your-values.yaml apache/pulsar
+    helm install -n <namespace> --create-namespace <release-name> -f your-values.yaml apachepulsar/pulsar
     ```
 
-3. Access the Pulsar cluster
+3. Observe the deployment progress
+
+    Watching events to view progress of deployment:
+
+    ```shell
+    kubectl get -n <namespace> events -o wide --watch
+    ```
+
+    Watching state of deployed Kubernetes objects, updated every 2 seconds:
+
+    ```shell
+    watch kubectl get -n <namespace> all
+    ```
+
+    Waiting until Pulsar Proxy is available:
+
+    ```shell
+    kubectl wait --timeout=600s --for=condition=ready pod -n <namespace> -l component=proxy
+    ```
+
+    Watching state with k9s (https://k9scli.io/topics/install/):
+
+    ```shell
+    k9s -n <namespace>
+    ```
+
+4. Access the Pulsar cluster
 
     The default values will create a `ClusterIP` for the proxy you can use to interact with the cluster. To find the IP address of proxy use:
 
@@ -144,7 +260,7 @@ We provide some instructions to guide you through the preparation: http://pulsar
 For more information, please follow our detailed
 [quick start guide](https://pulsar.apache.org/docs/getting-started-helm/).
 
-## Customize the deployment 
+## Customize the deployment
 
 We provide a [detailed guideline](https://pulsar.apache.org/docs/helm-deploy/) for you to customize
 the Helm Chart for a production-ready deployment.
@@ -236,20 +352,28 @@ Once your Pulsar Chart is installed, configuration changes and chart
 updates should be done using `helm upgrade`.
 
 ```bash
-helm repo add apache https://pulsar.apache.org/charts
+helm repo add apachepulsar https://pulsar.apache.org/charts
 helm repo update
-helm get values <pulsar-release-name> > pulsar.yaml
-helm upgrade -f pulsar.yaml \
-    <pulsar-release-name> apache/pulsar
+# get the existing values.yaml used for the most recent deployment
+helm get values -n <namespace> <pulsar-release-name> > values.yaml
+# upgrade the deployment
+helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pulsar
 ```
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
 ## Upgrading from Helm Chart version 3.x.x to 4.0.0 version and above
 
+### Pulsar Proxy service's default type has been changed from `LoadBalancer` to `ClusterIP`
+
+Please check the section "External Access Recommendations" for guidance and also check the security advisory section.
+You will need to configure keys under `proxy.service` in your `values.yaml` to preserve existing functionality since the default has been changed.
+
+### kube-prometheus-stack upgrade
+
 The kube-prometheus-stack version has been upgraded to 69.x.x in Pulsar Helm Chart version 4.0.0 .
 Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-68x-to-69x). 
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-68x-to-69x).
 
 There's a script to run the required commands:
 
@@ -263,7 +387,7 @@ After, this you can proceed with `helm upgrade`.
 
 The kube-prometheus-stack version has been upgraded to 65.x.x in Pulsar Helm Chart version 3.7.0 .
 Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-64x-to-65x). 
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-64x-to-65x).
 
 There's a script to run the required commands:
 
@@ -277,7 +401,7 @@ After, this you can proceed with `helm upgrade`.
 
 The kube-prometheus-stack version has been upgraded to 59.x.x in Pulsar Helm Chart version 3.5.0 .
 Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-58x-to-59x). 
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-58x-to-59x).
 
 There's a script to run the required commands:
 
@@ -291,7 +415,7 @@ After, this you can proceed with `helm upgrade`.
 
 The kube-prometheus-stack version has been upgraded to 56.x.x in Pulsar Helm Chart version 3.3.0 .
 Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-55x-to-56x). 
+in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-55x-to-56x).
 
 There's a script to run the required commands:
 

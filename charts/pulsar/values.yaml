@@ -21,9 +21,14 @@
 ### K8S Settings
 ###
 
-### Namespace to deploy pulsar
-# The namespace to use to deploy the pulsar components, if left empty
-# will default to .Release.Namespace (aka helm --namespace).
+### Namespace to deploy Pulsar
+### Note: Prefer using helm's --namespace flag with --create-namespace instead
+## The namespace to use to deploy the Pulsar components. If left empty,
+## it will default to .Release.Namespace (aka helm --namespace).
+## Please note that kube-prometheus-stack will not be able to scrape Pulsar component metrics by default unless
+## it is deployed in the same namespace as Pulsar. The kube-prometheus-stack namespace can be configured by setting
+## the kube-prometheus-stack.namespaceOverride key to match Pulsar's namespace.
+## More details are provided in the comments for the kube-prometheus-stack.namespaceOverride key later in this file.
 namespace: ""
 namespaceCreate: false
 
@@ -35,6 +40,7 @@ clusterDomain: cluster.local
 ###
 
 ## Set to true on install
+## There's no need to set this value unless you're using a system that doesn't track .Release.IsInstall or .Release.IsUpgrade (like argocd)
 initialize: false
 ## Set useReleaseStatus to false if you're deploying this chart using a system that doesn't track .Release.IsInstall or .Release.IsUpgrade (like argocd)
 useReleaseStatus: true
@@ -90,9 +96,8 @@ volumes:
 
 rbac:
   enabled: false
-  psp: false
+  psp: false  # DEPRECATED: PodSecurityPolicy is not supported in Kubernetes 1.25+
   limit_to_namespace: true
-
 
 ## AntiAffinity
 ##
@@ -101,6 +106,8 @@ rbac:
 ## If you need to disable AntiAffinity for a component, you can set
 ## the `affinity.anti_affinity` settings to `false` for that component.
 affinity:
+  ## When set to true, the scheduler will try to spread pods across different nodes.
+  ## It is necessary to set this to false if you're using a Kubernetes cluster with less than 3 nodes, such as local development environments.
   anti_affinity: true
   # Set the anti affinity type. Valid values:
   # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
@@ -1318,8 +1325,48 @@ proxy:
       http: 8080
       https: 8443
   service:
-    annotations: {}
-    type: LoadBalancer
+    # Service type defaults to ClusterIP for security reasons.
+    #
+    # SECURITY NOTICE: The Pulsar proxy is not designed for direct public internet exposure
+    # (see https://pulsar.apache.org/docs/4.0.x/administration-proxy/).
+    #
+    # If you need to expose the proxy outside of the cluster using a LoadBalancer service type:
+    # 1. Set type to LoadBalancer only in secured environments with proper network controls.
+    #    In cloud managed Kubernetes clusters, make sure to add annotations to the service to create an
+    #    internal load balancer so that the load balancer is not exposed to the public internet.
+    #    You must also ensure that the configuration is correct so that the load balancer is not exposed to the public internet.
+    # 2. Configure authentication and authorization
+    # 3. Use TLS for all connections
+    # 4. If you are exposing to unsecure networks, implement additional security measures like
+    #    IP restrictions (loadBalancerSourceRanges)
+    #
+    # Please notice that the the Apache Pulsar project takes no responsibility for any security issues
+    # for your deployment. Exposing the cluster using Pulsar Proxy to unsecure networks is not supported.
+    #
+    # Previous chart versions defaulted to LoadBalancer which could create security risks.
+    type: ClusterIP
+    # When using a LoadBalancer service type, add internal load balancer annotations to the service to create an internal load balancer.
+    annotations: {
+      ## Set internal load balancer annotations when using a LoadBalancer service type because of security reasons.
+      ## You must also ensure that the configuration is correct so that the load balancer is not exposed to the public internet.
+      ## This information below is for reference only and may not be applicable to your cloud provider.
+      ## Please refer to the cloud provider's documentation for the correct annotations.
+      ## Kubernetes documentation about internal load balancers
+      ## https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+      ## AWS / EKS
+      ## Ensure that you have recent AWS Load Balancer Controller installed.
+      ## Docs: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/service/annotations/
+      # service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+      ## Azure / AKS
+      ## Docs: https://learn.microsoft.com/en-us/azure/aks/internal-lb
+      # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      ## GCP / GKE
+      ## Docs: https://cloud.google.com/kubernetes-engine/docs/concepts/service-load-balancer-parameters
+      # networking.gke.io/load-balancer-type: "Internal"
+      ## Allow global access to the internal load balancer when needed.
+      # networking.gke.io/internal-load-balancer-allow-global-access: "true"
+    }
+
     ## Optional. Leave it blank to get next available random IP.
     loadBalancerIP: ""
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
@@ -1419,6 +1466,12 @@ toolset:
 kube-prometheus-stack:
   ## Enable the kube-prometheus-stack chart
   enabled: true
+  ## This applies to deployments which don't use helm's --namespace flag to set the namespace.
+  ## If Pulsar's namespace is manually set using the `namespace` key, this setting should match the same namespace,
+  ## otherwise Prometheus will not be able to scrape the Pulsar metrics due to RBAC restrictions.
+  ## See https://prometheus-operator.dev/kube-prometheus/kube/monitoring-other-namespaces/ if you need to install
+  ## kube-prometheus-stack in a different namespace than Pulsar.
+  # namespaceOverride: ""
   ## Manages Prometheus and Alertmanager components
   prometheusOperator:
     enabled: true
