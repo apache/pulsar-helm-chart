@@ -424,6 +424,18 @@ function ci::test_pulsar_manager() {
   fi
 }
 
+function ci::check_loadbalancers() {
+  (
+  set +e
+  ${KUBECTL} get services -n ${NAMESPACE} | grep LoadBalancer
+  if [ $? -eq 0 ]; then
+    echo "Error: Found service with type LoadBalancer. This is not allowed because of security reasons."
+    exit 1
+  fi
+  exit 0
+  )
+}
+
 function ci::validate_kustomize_yaml() {
   # if kustomize is not installed, install kustomize to a temp directory
   if ! command -v kustomize &> /dev/null; then
