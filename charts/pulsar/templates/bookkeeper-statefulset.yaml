@@ -42,8 +42,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.bookkeeper.component }}
       annotations:
+        {{- if not .Values.bookkeeper.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.bookkeeper.ports.http }}"
+        {{- end }}
         {{- if .Values.bookkeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/bookkeeper-configmap.yaml") . | sha256sum }}
         {{- end }}

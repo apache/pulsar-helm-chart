@@ -44,8 +44,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.proxy.component }}
       annotations:
+        {{- if not .Values.proxy.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.proxy.ports.containerPorts.http }}"
+        {{- end }}
         {{- if .Values.proxy.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/proxy-configmap.yaml") . | sha256sum }}
         {{- end }}
