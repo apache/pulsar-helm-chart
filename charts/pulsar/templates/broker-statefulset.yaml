@@ -62,8 +62,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.broker.component }}
       annotations:
+        {{- if not .Values.broker.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.broker.ports.http }}"
+        {{- end }}
         {{- if .Values.broker.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/broker-configmap.yaml") . | sha256sum }}
         {{- end }}

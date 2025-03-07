@@ -43,8 +43,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.autorecovery.component }}
       annotations:
+        {{- if not .Values.autorecovery.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.autorecovery.ports.http }}"
+        {{- end }}
         {{- if .Values.autorecovery.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/autorecovery-configmap.yaml") . | sha256sum }}
         {{- end }}

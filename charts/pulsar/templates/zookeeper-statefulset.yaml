@@ -43,6 +43,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.zookeeper.component }}
       annotations:
+        {{- if not .Values.zookeeper.podMonitor.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.zookeeper.ports.http }}"
+        {{- end }}
         {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
         {{- end }}

@@ -40,8 +40,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.oxia.component }}-coordinator
       annotations:
+        {{- if not .Values.oxia.coordinator.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
+        {{- end }}
     spec:
     {{- if .Values.oxia.server.nodeSelector }}
       nodeSelector:
