@@ -37,11 +37,10 @@ data:
   {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.zookeeper.connect" .) .Values.metadataPrefix }}
   {{- end }}
   configurationMetadataStoreUrl: "{{ $configMetadataStoreUrl }}"
-  # setting bookkeeperMetadataServiceUri causes a NPE in WorkerUtils.initializeDlogNamespace which is a bug in Pulsar
-  # omit setting bookkeeperMetadataServiceUri until the bug is fixed when functions are enabled.
-  # bookkeeperMetadataServiceUri will default to configurationMetadataStoreUrl + "/ledgers" in that case
-  {{- if not .Values.components.functions }}
+  {{- if .Values.pulsar_metadata.bookkeeper.usePulsarMetadataClientDriver }}
   bookkeeperMetadataServiceUri: "metadata-store:{{ $configMetadataStoreUrl }}/ledgers"
+  {{- else }}
+  bookkeeperMetadataServiceUri: "zk+hierarchical://{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
   {{- end }}
   {{- end }}
   {{- if .Values.components.oxia }}

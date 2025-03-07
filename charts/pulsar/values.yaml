@@ -912,8 +912,15 @@ pulsar_metadata:
   ## Maximum size of a batch (in KB)
   metadataStoreBatchingMaxSizeKb: 128
 
-  ## BookKeeper metadata configuration settings with Pulsar Helm Chart deployments
+  ## BookKeeper client and BookKeeper metadata configuration settings with Pulsar Helm Chart deployments
   bookkeeper:
+    ## Controls whether to use the PIP-45 metadata driver (PulsarMetadataClientDriver) for BookKeeper client
+    ## in the Pulsar Broker when using ZooKeeper as a metadata store.
+    ## This is setting applies to Pulsar Broker's BookKeeper client.
+    ## When set to true, Pulsar Broker's BookKeeper client will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
+    ## When set to false, Pulsar Broker's BookKeeper client will use BookKeeper's default ZooKeeper connection implementation.
+    usePulsarMetadataClientDriver: false
+
     ## Controls whether to use the PIP-45 metadata driver (PulsarMetadataBookieDriver) for BookKeeper components
     ## when using ZooKeeper as a metadata store.
     ## This is a global setting that applies to all BookKeeper components.
