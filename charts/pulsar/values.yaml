@@ -96,7 +96,6 @@ volumes:
 
 rbac:
   enabled: false
-  psp: false  # DEPRECATED: PodSecurityPolicy is not supported in Kubernetes 1.25+
   limit_to_namespace: true
 
 ## AntiAffinity
