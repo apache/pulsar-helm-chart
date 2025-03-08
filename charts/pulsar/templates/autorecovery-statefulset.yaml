@@ -140,10 +140,6 @@ spec:
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end}}
         command: ["sh", "-c"]
         args:
         - |
