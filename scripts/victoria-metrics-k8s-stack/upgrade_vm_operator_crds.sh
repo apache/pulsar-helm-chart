@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,44 +18,6 @@
 # under the License.
 #
 
-kube-prometheus-stack:
-  enabled: true
-  prometheusOperator:
-    enabled: true
-  prometheus:
-    enabled: true
-  grafana:
-    enabled: true
-    adminPassword: pulsar-ci-admin
-  alertmanager:
-    enabled: false
-  prometheus-node-exporter:
-    enabled: true
-
-zookeeper:
-  podMonitor:
-    enabled: true
-
-bookkeeper:
-  podMonitor:
-    enabled: true
-
-broker:
-  podMonitor:
-    enabled: true
-    
-autorecovery:
-  podMonitor:
-    enabled: true
-
-proxy:
-  podMonitor:
-    enabled: true
-
-oxia:
-  coordinator:
-    podMonitor:
-      enabled: true
-  server:
-    podMonitor:
-      enabled: true
+# This script is used to upgrade the Victoria Metrics Operator CRDs before running "helm upgrade"
+VM_OPERATOR_VERSION="${1:-"0.42.4"}"
+kubectl apply --server-side --force-conflicts -f "https://github.com/VictoriaMetrics/operator/releases/download/v${VM_OPERATOR_VERSION}/crd.yaml"

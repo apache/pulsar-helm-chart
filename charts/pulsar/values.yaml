@@ -25,10 +25,8 @@
 ### Note: Prefer using helm's --namespace flag with --create-namespace instead
 ## The namespace to use to deploy the Pulsar components. If left empty,
 ## it will default to .Release.Namespace (aka helm --namespace).
-## Please note that kube-prometheus-stack will not be able to scrape Pulsar component metrics by default unless
-## it is deployed in the same namespace as Pulsar. The kube-prometheus-stack namespace can be configured by setting
-## the kube-prometheus-stack.namespaceOverride key to match Pulsar's namespace.
-## More details are provided in the comments for the kube-prometheus-stack.namespaceOverride key later in this file.
+## Please note that victoria-metrics-k8s-stack might not be able to scrape Pulsar component metrics by default unless
+## it is deployed in the same namespace as Pulsar.
 namespace: ""
 namespaceCreate: false
 
@@ -340,7 +338,7 @@ zookeeper:
     type: RollingUpdate
   podManagementPolicy: Parallel
   initContainers: []
-  # This is how prometheus discovers this component
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -501,7 +499,7 @@ oxia:
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
   coordinator:
-    # This is how prometheus discovers this component
+    # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
       interval: 60s
@@ -523,7 +521,7 @@ oxia:
       # cloud.google.com/gke-nodepool: default-pool
 ## templates/server-statefulset.yaml
   server:
-    # This is how prometheus discovers this component
+    # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
       interval: 60s
@@ -596,7 +594,7 @@ bookkeeper:
     type: RollingUpdate
   podManagementPolicy: Parallel
   initContainers: []
-  # This is how prometheus discovers this component
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -807,7 +805,7 @@ autorecovery:
   component: recovery
   replicaCount: 1
   initContainers: []
-  # This is how prometheus discovers this component
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -972,7 +970,7 @@ broker:
   # The podManagementPolicy cannot be modified for an existing deployment. If you need to change this value, you will need to manually delete the existing broker StatefulSet and then redeploy the chart.
   podManagementPolicy:
   initContainers: []
-  # This is how prometheus discovers this component
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -1219,7 +1217,7 @@ proxy:
     metrics: ~
     behavior: ~
   initContainers: []
-  # This is how prometheus discovers this component
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -1463,115 +1461,222 @@ toolset:
   additionalCommand:
 
 #############################################################
-### Monitoring Stack : kube-prometheus-stack chart
+### Monitoring Stack : victoria-metrics-k8s-stack chart
 #############################################################
 
-## Prometheus, Grafana, and the rest of the kube-prometheus-stack are managed by the dependent chart here:
-## https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-## For sample values, please see their documentation.
-kube-prometheus-stack:
-  ## Enable the kube-prometheus-stack chart
+## Victoria Metrics, Grafana, and the rest of the monitoring stack are managed by the dependent chart here:
+## https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-k8s-stack
+## For sample values, please see: https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-k8s-stack/values.yaml
+victoria-metrics-k8s-stack:
+  ## Enable the victoria-metrics-k8s-stack chart
   enabled: true
-  ## This applies to deployments which don't use helm's --namespace flag to set the namespace.
-  ## If Pulsar's namespace is manually set using the `namespace` key, this setting should match the same namespace,
-  ## otherwise Prometheus will not be able to scrape the Pulsar metrics due to RBAC restrictions.
-  ## See https://prometheus-operator.dev/kube-prometheus/kube/monitoring-other-namespaces/ if you need to install
-  ## kube-prometheus-stack in a different namespace than Pulsar.
-  # namespaceOverride: ""
-  ## Manages Prometheus and Alertmanager components
-  prometheusOperator:
+
+  ## VictoriaMetrics Operator dependency chart configuration
+  victoria-metrics-operator:
     enabled: true
-  ## Prometheus component
-  prometheus:
+    # Install CRDs for VictoriaMetrics Operator
+    crds:
+      plain: true
+    operator:
+      ## By default, operator is configured to not convert Prometheus Operator monitoring.coreos.com/v1 objects
+      ## to Victoria Metrics operator operator.victoriametrics.com/v1beta1 objects.
+      # Enable this if you want to use Prometheus Operator objects for other purposes.
+      disable_prometheus_converter: true
+
+  ## Single-node VM instance
+  vmsingle:
     enabled: true
+    ## -- Full spec for VMSingle CRD. Allowed values describe [here](https://docs.victoriametrics.com/operator/api#vmsinglespec)
+    spec:
+      retentionPeriod: "10d"
+      storage:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+
+  ## VM Agent for scraping metrics
+  vmagent:
+    enabled: true
+    ## Minikube specific settings - uncomment when using minikube
+    # spec:
+    #   volumes:
+    #     - hostPath:
+    #         path: /var/lib/minikube/certs/etcd
+    #         type: DirectoryOrCreate
+    #       name: etcd-certs
+    #   volumeMounts:
+    #     - mountPath: /var/lib/minikube/certs/etcd
+    #       name: etcd-certs
+
+  ## VM Alert for alerting rules - disabled by default
+  vmalert:
+    enabled: false
+
+  ## Alertmanager component - disabled by default
+  alertmanager:
+    enabled: false
+
   ## Grafana component
+  ## Refer to https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
   grafana:
     enabled: true
     # Use random password at installation time for Grafana by default by setting empty value to `adminPassword`.
     # You can find out the actual password by running the following command:
     # kubectl get secret -l app.kubernetes.io/name=grafana -o=jsonpath="{.items[0].data.admin-password}" | base64 --decode
     adminPassword:
-    # Configure Pulsar dashboards for Grafana
+    persistence:
+      enabled: true
+      size: 5Gi
+    ## Disable Grafana sidecar dashboards
+    ## since this cannot be enabled in the same time as dashboards are enabled
+    sidecar:
+      dashboards:
+        enabled: false
+    ## Configure Pulsar dashboards for Grafana
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1
         providers:
-        - name: 'pulsar'
+        - name: oxia
           orgId: 1
-          folder: 'Pulsar'
+          folder: Oxia
           type: file
-          disableDeletion: true
+          disableDeletion: false
           editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/oxia
+        - name: pulsar
+          orgId: 1
+          folder: Pulsar
+          type: file
+          disableDeletion: false
+          editable: true
+          allowUiUpdates: true
           options:
             path: /var/lib/grafana/dashboards/pulsar
     dashboards:
+      oxia:
+        oxia-containers:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-containers.json
+        oxia-coordinator:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-coordinator.json
+        oxia-golang:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-golang.json
+        oxia-grpc:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-grpc.json
+        oxia-nodes:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-nodes.json
+        oxia-overview:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-overview.json
+        oxia-shards:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-shards.json
       pulsar:
-        # Download the maintained dashboards from AL 2.0 licenced repo https://github.com/streamnative/apache-pulsar-grafana-dashboard
+        bookkeeper-compaction:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-compaction.json
+        bookkeeper-read-cache:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-read-cache.json
+        bookkeeper-read-use:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-read-use.json
         bookkeeper:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/bookkeeper.json
-          datasource: Prometheus
-        broker:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/broker.json
-          datasource: Prometheus
-        connector_sink:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/connector_sink.json
-          datasource: Prometheus
-        connector_source:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/connector_source.json
-          datasource: Prometheus
-        container:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/container.json
-          datasource: Prometheus
-        functions:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/functions.json
-          datasource: Prometheus
-        jvm:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/jvm.json
-          datasource: Prometheus
-        loadbalance:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/loadbalance.json
-          datasource: Prometheus
-        messaging:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/messaging.json
-          datasource: Prometheus
-        node:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/node.json
-          datasource: Prometheus
-        overview:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/overview.json
-          datasource: Prometheus
-        proxy:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/proxy.json
-          datasource: Prometheus
-        recovery:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/recovery.json
-          datasource: Prometheus
-        topic:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/topic.json
-          datasource: Prometheus
-        transaction:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/transaction.json
-          datasource: Prometheus
-        zookeeper:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/zookeeper-3.6.json
-          datasource: Prometheus
-        offloader:
-          url: https://raw.githubusercontent.com/apache/pulsar/refs/heads/master/grafana/dashboards/offloader.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper.json
+        broker-cache-by-broker:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/broker-cache-by-broker.json
         broker-cache:
-          url: https://raw.githubusercontent.com/datastax/pulsar-helm-chart/refs/heads/master/helm-chart-sources/pulsar/grafana-dashboards/broker-cache-by-broker.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/broker-cache.json
+        connector-sink:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/connector-sink.json
+        connector-source:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/connector-source.json
+        functions:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/functions.json
+        jvm:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/jvm.json
+        load-balancing:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/load-balancing.json
+        messaging:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/messaging.json
+        namespace:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/namespace.json
+        node:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/node.json
+        offloader:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/offloader.json
+        overview-by-broker:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/overview-by-broker.json
+        overview:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/overview.json
+        proxy:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/proxy.json
         sockets:
-          url: https://raw.githubusercontent.com/datastax/pulsar-helm-chart/refs/heads/master/helm-chart-sources/pulsar/grafana-dashboards/sockets.json
-          datasource: Prometheus
-  ## Prometheus node exporter component
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/sockets.json
+        tenant:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/tenant.json
+        topic:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/topic.json
+        zookeeper:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/zookeeper.json
+
+  ## Node exporter component
   prometheus-node-exporter:
     enabled: true
     hostRootFsMount:
       enabled: false
-  ## Alertmanager component
-  alertmanager:
-    enabled: false
+
+  ## Kube state metrics component
+  kube-state-metrics:
+    enabled: true
+
+  ## Components scraping Kubernetes services
+  kubelet:
+    enabled: true
+
+  kubeApiServer:
+    enabled: true
+
+  kubeControllerManager:
+    enabled: true
+    ## Additional settings for minikube environments
+    vmScrape:
+      spec:
+        endpoints:
+          - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+            port: http-metrics
+            scheme: https
+            tlsConfig:
+              caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecureSkipVerify: true  # For development environments like minikube
+
+  coreDns:
+    enabled: true
+
+  kubeEtcd:
+    enabled: true
+    ## Minikube specific settings - uncomment or adjust when using minikube
+    # service:
+    #   port: 2381
+    #   targetPort: 2381
+    # vmScrape:
+    #   spec:
+    #     endpoints:
+    #       - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    #         port: http-metrics
+    #         scheme: http  # Minikube often uses http instead of https for etcd
+
+  kubeScheduler:
+    enabled: true
+    ## Additional settings for minikube environments
+    vmScrape:
+      spec:
+        endpoints:
+          - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+            port: http-metrics
+            scheme: https
+            tlsConfig:
+              caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecureSkipVerify: true  # For development environments like minikube
 
 ## Components Stack: pulsar_manager
 ## templates/pulsar-manager.yaml

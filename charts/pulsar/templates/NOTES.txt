@@ -102,7 +102,7 @@ Watching events to view progress of deployment:
 kubectl get -n {{ .Values.namespace | default .Release.Namespace }} events -o wide --watch
 
 Watching state of deployed Kubernetes objects, updated every 2 seconds:
-watch kubectl get -n  {{ .Values.namespace | default .Release.Namespace }} all
+watch kubectl get -n {{ .Values.namespace | default .Release.Namespace }} all
 
 {{- if .Values.components.proxy }}
 

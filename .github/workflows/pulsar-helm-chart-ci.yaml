@@ -151,7 +151,7 @@ jobs:
             else
               echo ""
             fi
-            helm template charts/pulsar --set kube-prometheus-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" | \
+            helm template charts/pulsar --set victoria-metrics-k8s-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" | \
               kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
           }
           set -o pipefail
@@ -242,9 +242,9 @@ jobs:
               version: "1.25.16"
               kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
             testScenario:
-              name: "Upgrade kube-prometheus-stack for previous LTS"
-              values_file: .ci/clusters/values-prometheus-grafana.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
-              shortname: prometheus-grafana
+              name: "Upgrade victoria-metrics-k8s-stack for previous LTS"
+              values_file: .ci/clusters/values-victoria-metrics-grafana.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
+              shortname: victoria-metrics-grafana
               type: upgrade
               upgradeFromVersion: 3.2.0
           - k8sVersion:

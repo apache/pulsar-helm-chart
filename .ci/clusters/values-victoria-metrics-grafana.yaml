@@ -17,9 +17,44 @@
 # under the License.
 #
 
-# deploy zookeeper PodMonitor only when `$.Values.zookeeper.podMonitor.enabled` is true
-{{- if .Values.components.zookeeper }}
-{{- if $.Values.zookeeper.podMonitor.enabled }}
-{{- include "pulsar.podMonitor" (list . "zookeeper" (printf "component: %s" .Values.zookeeper.component)) }}
-{{- end }}
-{{- end }}
+victoria-metrics-k8s-stack:
+  enabled: true
+  victoria-metrics-operator:
+    enabled: true
+  vmsingle:
+    enabled: true
+  vmagent:
+    enabled: true
+  grafana:
+    enabled: true
+    adminPassword: pulsar-ci-admin
+  prometheus-node-exporter:
+    enabled: true
+
+zookeeper:
+  podMonitor:
+    enabled: true
+
+bookkeeper:
+  podMonitor:
+    enabled: true
+
+broker:
+  podMonitor:
+    enabled: true
+    
+autorecovery:
+  podMonitor:
+    enabled: true
+
+proxy:
+  podMonitor:
+    enabled: true
+
+oxia:
+  coordinator:
+    podMonitor:
+      enabled: true
+  server:
+    podMonitor:
+      enabled: true

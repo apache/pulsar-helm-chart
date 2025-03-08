@@ -32,7 +32,7 @@ maintainers:
   - name: The Apache Pulsar Team
     email: dev@pulsar.apache.org
 dependencies:
-  - name: kube-prometheus-stack
-    version: 67.x.x
-    repository: https://prometheus-community.github.io/helm-charts
-    condition: kube-prometheus-stack.enabled
+  - name: victoria-metrics-k8s-stack
+    version: 0.38.x
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: victoria-metrics-k8s-stack.enabled

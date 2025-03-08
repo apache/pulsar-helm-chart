@@ -25,7 +25,7 @@ helmCharts:
   - name: pulsar
     releaseName: pulsar
     valuesInline:
-      kube-prometheus-stack:
+      victoria-metrics-k8s-stack:
         enabled: false
       components:
         pulsar_manager: true
