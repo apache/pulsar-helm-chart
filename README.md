@@ -141,7 +141,7 @@ This Helm Chart includes all the components of Apache Pulsar for a complete expe
 - [x] Management & monitoring components:
     - [x] Pulsar Manager
     - [x] Optional PodMonitors for each component (enabled by default)
-    - [x] [Kube-Prometheus-Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) (as of 3.0.0)
+    - [x] [victoria-metrics-k8s-stack](hhttps://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-k8s-stack) (as of 4.0.0)
 
 It includes support for:
 
@@ -276,25 +276,26 @@ You can also checkout out the example values file for different deployments.
 - [Deploy a Pulsar cluster with JWT authentication using symmetric key](examples/values-jwt-symmetric.yaml)
 - [Deploy a Pulsar cluster with JWT authentication using asymmetric key](examples/values-jwt-asymmetric.yaml)
 
-## Disabling Kube-Prometheus-Stack CRDs
+## Disabling victoria-metrics-k8s-stack components
 
-In order to disable the kube-prometheus-stack fully, it is necessary to add the following to your `values.yaml`:
+In order to disable the victoria-metrics-k8s-stack, you can add the following to your `values.yaml`.
+Victoria Metrics components can also be disabled and enabled individually if you only need specific monitoring features.
+Please refer to the default [`values.yaml`](charts/pulsar/values.yaml).
 
 ```yaml
-kube-prometheus-stack:
+victoria-metrics-k8s-stack:
   enabled: false
-  prometheusOperator:
+  victoria-metrics-operator:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
     enabled: false
   grafana:
     enabled: false
-  alertmanager:
-    enabled: false
-  prometheus:
-    enabled: false
 ```
 
-Otherwise, the helm chart installation will attempt to install the CRDs for the kube-prometheus-stack. Additionally,
-you'll need to disable each of the component's `PodMonitors`. This is shown in some [examples](./examples) and is
+Additionally, you'll need to set each component's `podMonitor` property to `false`. This is shown in some [examples](./examples) and is
 verified in some [tests](./.ci/clusters).
 
 ## Pulsar Manager
@@ -319,12 +320,12 @@ kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_P
 
 ## Grafana Dashboards
 
-The Apache Pulsar Helm Chart uses the `kube-prometheus-stack` Helm Chart to deploy Grafana.
+The Apache Pulsar Helm Chart uses the `victoria-metrics-k8s-stack` Helm Chart to deploy Grafana.
 
-There are several ways to configure Grafana dashboards. The default `values.yaml` comes with examples of Pulsar dashboards which get downloaded from the Apache-2.0 licensed [streamnative/apache-pulsar-grafana-dashboard OSS project](https://github.com/streamnative/apache-pulsar-grafana-dashboard) by URL.
+There are several ways to configure Grafana dashboards. The default [`values.yaml`](charts/pulsar/values.yaml) comes with examples of Pulsar dashboards which get downloaded from the Apache-2.0 licensed [lhotari/pulsar-grafana-dashboards OSS project](https://github.com/lhotari/pulsar-grafana-dashboards) by URL.
 
-Dashboards can be configured in `values.yaml` or by adding `ConfigMap` items with the label `grafana_dashboard: "1"`.
-In `values.yaml`, it's possible to include dashboards by URL or by grafana.com dashboard id (`gnetId` and `revision`).
+Dashboards can be configured in [`values.yaml`](charts/pulsar/values.yaml) or by adding `ConfigMap` items with the label `grafana_dashboard: "1"`.
+In [`values.yaml`](charts/pulsar/values.yaml), it's possible to include dashboards by URL or by grafana.com dashboard id (`gnetId` and `revision`).
 Please see the [Grafana Helm chart documentation for importing dashboards](https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md#import-dashboards).
 
 You can connect to Grafana by forwarding port 3000
@@ -354,6 +355,8 @@ updates should be done using `helm upgrade`.
 ```bash
 helm repo add apachepulsar https://pulsar.apache.org/charts
 helm repo update
+# If you are using the provided victoria-metrics-k8s-stack for monitoring, this installs or upgrades the required CRDs
+./scripts/victoria-metrics-k8s-stack/upgrade_vm_operator_crds.sh
 # get the existing values.yaml used for the most recent deployment
 helm get values -n <namespace> <pulsar-release-name> > values.yaml
 # upgrade the deployment
@@ -362,65 +365,29 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
-## Upgrading from Helm Chart version 3.x.x to 4.0.0 version and above
+## Upgrading from Helm Chart versions before 4.0.0 to 4.0.0 version and above
 
 ### Pulsar Proxy service's default type has been changed from `LoadBalancer` to `ClusterIP`
 
 Please check the section "External Access Recommendations" for guidance and also check the security advisory section.
 You will need to configure keys under `proxy.service` in your `values.yaml` to preserve existing functionality since the default has been changed.
 
-### kube-prometheus-stack upgrade
+### kube-prometheus-stack replaced with victoria-metrics-k8s-stack
 
-The kube-prometheus-stack version has been upgraded to 69.x.x in Pulsar Helm Chart version 4.0.0 .
-Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-68x-to-69x).
+The kube-prometheus-stack version has been removed in Pulsar Helm Chart version 4.0.0 due to
+Prometheus incompatibility with Pulsar metrics since Pulsar 2.11.0 . Pulsar exposes metrics in a format that is partially OpenMetrics 1.0.0 text format,
+but isn't fully compatible. Prometheus doesn't provide proper support for OpenMetrics 1.0.0 text format, even in Prometheus version 3.2.1 where it was
+extensively tested before switching to Victoria Metrics in Pulsar Helm chart version 4.0.0 . Victoria Metrics is Apache 2.0 Licensed OSS and it's fully
+compatible with Prometheus.
 
-There's a script to run the required commands:
-
-```shell
-./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.80.0
-```
-
-After, this you can proceed with `helm upgrade`.
-
-## Upgrading from Helm Chart version 3.0.0-3.6.0 to 3.7.0 version and above
-
-The kube-prometheus-stack version has been upgraded to 65.x.x in Pulsar Helm Chart version 3.7.0 .
-Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-64x-to-65x).
-
-There's a script to run the required commands:
+Before upgrading to Pulsar Helm Chart version 4.0.0, it is recommended to disable kube-prometheus-stack in the original Helm chart version that
+is used:
 
 ```shell
-./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.77.1
-```
-
-After, this you can proceed with `helm upgrade`.
-
-## Upgrading from Helm Chart version 3.0.0-3.4.x to 3.5.0 version and above
-
-The kube-prometheus-stack version has been upgraded to 59.x.x in Pulsar Helm Chart version 3.5.0 .
-Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-58x-to-59x).
-
-There's a script to run the required commands:
-
-```shell
-./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.74.0
-```
-
-After, this you can proceed with `helm upgrade`.
-
-## Upgrading from Helm Chart version 3.0.0-3.2.x to 3.3.0 version and above
-
-The kube-prometheus-stack version has been upgraded to 56.x.x in Pulsar Helm Chart version 3.3.0 .
-Before running "helm upgrade", you should first upgrade the Prometheus Operator CRDs as [instructed
-in kube-prometheus-stack upgrade notes](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#from-55x-to-56x).
-
-There's a script to run the required commands:
-
-```shell
-./scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh 0.71.0
+# get the existing values.yaml used for the most recent deployment
+helm get values -n <namespace> <pulsar-release-name> > values.yaml
+# disable kube-prometheus-stack in the currently used version before upgrading to Pulsar Helm chart 4.0.0
+helm upgrade -n <namespace> -f values.yaml --version <your-current-chart-version> --set kube-prometheus-stack.enabled=false  <pulsar-release-name> apachepulsar/pulsar
 ```
 
 After, this you can proceed with `helm upgrade`.
@@ -430,7 +397,7 @@ After, this you can proceed with `helm upgrade`.
 The 2.10.0+ Apache Pulsar docker image is a non-root container, by default. That complicates an upgrade to 2.10.0
 because the existing files are owned by the root user but are not writable by the root group. In order to leverage this
 new security feature, the Bookkeeper and Zookeeper StatefulSet [securityContexts](https://kubernetes.io/docs/tasks/configure-pod-container/security-context)
-are configurable in the `values.yaml`. They default to:
+are configurable in the [`values.yaml`](charts/pulsar/values.yaml). They default to:
 
 ```yaml
   securityContext:
@@ -478,6 +445,7 @@ Caused by: org.rocksdb.RocksDBException: while open a file for lock: /pulsar/dat
 ### Recovering from `helm upgrade` error "unable to build kubernetes objects from current release manifest"
 
 Example of the error message:
+
 ```bash
 Error: UPGRADE FAILED: unable to build kubernetes objects from current release manifest:
 [resource mapping not found for name: "pulsar-bookie" namespace: "pulsar" from "":

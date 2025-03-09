@@ -84,6 +84,7 @@ function ci::install_cert_manager() {
 function ci::helm_repo_add() {
     echo "Adding the helm repo ..."
     ${HELM} repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    ${HELM} repo add vm https://victoriametrics.github.io/helm-charts/
     ${HELM} repo update
     echo "Successfully added the helm repo."
 }
@@ -117,7 +118,7 @@ function ci::install_pulsar_chart() {
     local extra_opts=()
     local values_next=false
     for arg in "$@"; do
-        if [[ "$arg" == "--values" ]]; then
+        if [[ "$arg" == "--values" || "$arg" == "--set" ]]; then
             extra_values+=("$arg")
             values_next=true
         elif [[ "$values_next" == true ]]; then
