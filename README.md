@@ -497,6 +497,36 @@ We've done our best to make these charts as seamless as possible,
 occasionally troubles do surface outside of our control. We've collected
 tips and tricks for troubleshooting common issues. Please examine these first before raising an [issue](https://github.com/apache/pulsar-helm-chart/issues/new/choose), and feel free to add to them by raising a [Pull Request](https://github.com/apache/pulsar-helm-chart/compare)!
 
+### VictoriaMetrics Troubleshooting
+
+In example commands, k8s is namespace `pulsar` replace with your deployment namespace.
+
+#### VictoriaMetrics Web UI
+
+Connecting to `vmsingle` pod for web UI.
+
+```shell
+kubectl port-forward -n pulsar $(kubectl get pods -n pulsar -l app.kubernetes.io/name=vmsingle -o jsonpath='{.items[0].metadata.name}') 8429:8429
+```
+
+Now you can access the UI at http://localhost:8429 and http://localhost:8429/vmui (for similar UI as in Prometheus)
+
+#### VictoriaMetrics Scraping debugging UI - Active Targets
+
+Connection to `vmagent` pod for debugging targets.
+
+```shell
+kubectl port-forward -n pulsar $(kubectl get pods -n pulsar -l app.kubernetes.io/name=vmagent -o jsonpath='{.items[0].metadata.name}') 8429:8429
+```
+
+Now you can access the UI at http://localhost:8429
+
+Active Targets UI
+- http://localhost:8429/targets
+
+Scraping Configuration
+- http://localhost:8429/config
+
 ## Release Process
 
 See [RELEASE.md](RELEASE.md)
