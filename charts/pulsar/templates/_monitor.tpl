@@ -55,6 +55,8 @@ spec:
       scheme: http
       interval: {{ $valuesPath.podMonitor.interval }}
       scrapeTimeout: {{ $valuesPath.podMonitor.scrapeTimeout }}
+      # Set honor labels to true to allow overriding namespace label with Pulsar's namespace label
+      honorLabels: true
       {{- if index $root.Values "victoria-metrics-k8s-stack" "enabled" }}
       relabelConfigs:
       {{- else }}
