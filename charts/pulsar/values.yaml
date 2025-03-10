@@ -1602,10 +1602,6 @@ victoria-metrics-k8s-stack:
       pulsar:
         bookkeeper-compaction:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-compaction.json
-        bookkeeper-read-cache:
-          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-read-cache.json
-        bookkeeper-read-use:
-          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-read-use.json
         bookkeeper:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper.json
         broker-cache-by-broker:
@@ -1638,13 +1634,10 @@ victoria-metrics-k8s-stack:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/proxy.json
         sockets:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/sockets.json
-        tenant:
-          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/tenant.json
         topic:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/topic.json
         zookeeper:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/zookeeper.json
-
   ## Node exporter component
   prometheus-node-exporter:
     enabled: true
