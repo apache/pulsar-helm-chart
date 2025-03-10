@@ -1560,16 +1560,26 @@ victoria-metrics-k8s-stack:
         check_for_updates: false
       dashboards:
         default_home_dashboard_path: /var/lib/grafana/dashboards/pulsar/overview.json
+
     ## Configure Pulsar dashboards for Grafana
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1
         providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: true
+          editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/default
         - name: oxia
           orgId: 1
           folder: Oxia
           type: file
-          disableDeletion: false
+          disableDeletion: true
           editable: true
           allowUiUpdates: true
           options:
@@ -1578,12 +1588,20 @@ victoria-metrics-k8s-stack:
           orgId: 1
           folder: Pulsar
           type: file
-          disableDeletion: false
+          disableDeletion: true
           editable: true
           allowUiUpdates: true
           options:
             path: /var/lib/grafana/dashboards/pulsar
     dashboards:
+      default:
+        victoriametrics:
+          gnetId: 10229
+          revision: 38
+          datasource: VictoriaMetrics
+        kubernetes:
+          gnetId: 14205
+          datasource: VictoriaMetrics
       oxia:
         oxia-containers:
           url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-containers.json
