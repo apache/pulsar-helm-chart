@@ -1554,6 +1554,12 @@ victoria-metrics-k8s-stack:
     sidecar:
       dashboards:
         enabled: false
+    # grafana.ini settings
+    grafana.ini:
+      analytics:
+        check_for_updates: false
+      dashboards:
+        default_home_dashboard_path: /var/lib/grafana/dashboards/pulsar/overview.json
     ## Configure Pulsar dashboards for Grafana
     dashboardProviders:
       dashboardproviders.yaml:
