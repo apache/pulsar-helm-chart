@@ -73,6 +73,7 @@ spec:
         - sourceLabels: [__meta_kubernetes_pod_name]
           action: replace
           targetLabel: kubernetes_pod_name
+      {{- if or $valuesPath.podMonitor.metricRelabelings (and $valuesPath.podMonitor.dropUnderscoreCreatedMetrics (index $valuesPath.podMonitor.dropUnderscoreCreatedMetrics "enabled")) }}
       {{- if index $root.Values "victoria-metrics-k8s-stack" "enabled" }}
       metricRelabelConfigs:
       {{- else }}
@@ -90,6 +91,7 @@ spec:
       {{- end }}
       {{- with $valuesPath.podMonitor.metricRelabelings }}
 {{ toYaml . | indent 8 }}
+      {{- end }}
       {{- end }}
   selector:
     matchLabels:
