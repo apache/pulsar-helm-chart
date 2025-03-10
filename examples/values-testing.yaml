@@ -21,6 +21,10 @@
 affinity:
   anti_affinity: false
 
+victoria-metrics-k8s-stack:
+  grafana:
+    adminPassword: verysecureword123
+
 bookkeeper:
   configData:
     # more aggressive disk cleanup
