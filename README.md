@@ -280,12 +280,16 @@ You can also checkout out the example values file for different deployments.
 
 In order to disable the victoria-metrics-k8s-stack, you can add the following to your `values.yaml`.
 Victoria Metrics components can also be disabled and enabled individually if you only need specific monitoring features.
-Please refer to the default [`values.yaml`](charts/pulsar/values.yaml).
 
 ```yaml
+# disable VictoriaMetrics and related components
 victoria-metrics-k8s-stack:
   enabled: false
   victoria-metrics-operator:
+    enabled: false
+  vmsingle:
+    enabled: false
+  vmagent:
     enabled: false
   kube-state-metrics:
     enabled: false
@@ -293,10 +297,36 @@ victoria-metrics-k8s-stack:
     enabled: false
   grafana:
     enabled: false
+
+Additionally, you'll need to set each component's `podMonitor` property to `false`. 
+
+```yaml
+# disable pod monitors
+autorecovery:
+  podMonitor:
+    enabled: false
+bookkeeper:
+  podMonitor:
+    enabled: false
+oxia:
+  server:
+    podMonitor:
+      enabled: false
+  coordinator:
+    podMonitor:
+      enabled: false
+broker:
+  podMonitor:
+    enabled: false
+proxy:
+  podMonitor:
+    enabled: false
+zookeeper:
+  podMonitor:
+    enabled: false
 ```
 
-Additionally, you'll need to set each component's `podMonitor` property to `false`. This is shown in some [examples](./examples) and is
-verified in some [tests](./.ci/clusters).
+This is shown in some [examples/values-disable-monitoring.yaml](examples/values-disable-monitoring.yaml).
 
 ## Pulsar Manager
 
