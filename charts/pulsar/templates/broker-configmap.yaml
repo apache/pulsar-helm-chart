@@ -76,7 +76,21 @@ data:
 
   # Broker settings
   clusterName: {{ template "pulsar.cluster.name" . }}
+  
+  # Enable all metrics by default
   exposeTopicLevelMetricsInPrometheus: "true"
+  exposeConsumerLevelMetricsInPrometheus: "true"
+  exposeProducerLevelMetricsInPrometheus: "true"
+  exposeManagedLedgerMetricsInPrometheus: "true"
+  exposeManagedCursorMetricsInPrometheus: "true"
+  exposeBundlesMetricsInPrometheus: "true"
+  exposePublisherStats: "true"
+  exposePreciseBacklogInPrometheus: "true"
+  replicationMetricsEnabled: "true"
+  splitTopicAndPartitionLabelInPrometheus: "true"
+  aggregatePublisherStatsByProducerName: "true"
+  bookkeeperClientExposeStatsToPrometheus: "true"
+
   numHttpServerThreads: "8"
   statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
 
