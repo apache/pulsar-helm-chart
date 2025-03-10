@@ -55,6 +55,8 @@ spec:
       scheme: http
       interval: {{ $valuesPath.podMonitor.interval }}
       scrapeTimeout: {{ $valuesPath.podMonitor.scrapeTimeout }}
+      # Set honor labels to true to allow overriding namespace label with Pulsar's namespace label
+      honorLabels: true
       {{- if index $root.Values "victoria-metrics-k8s-stack" "enabled" }}
       relabelConfigs:
       {{- else }}
@@ -71,13 +73,25 @@ spec:
         - sourceLabels: [__meta_kubernetes_pod_name]
           action: replace
           targetLabel: kubernetes_pod_name
-      {{- with $valuesPath.podMonitor.metricRelabelings }}
+      {{- if or $valuesPath.podMonitor.metricRelabelings (and $valuesPath.podMonitor.dropUnderscoreCreatedMetrics (index $valuesPath.podMonitor.dropUnderscoreCreatedMetrics "enabled")) }}
       {{- if index $root.Values "victoria-metrics-k8s-stack" "enabled" }}
       metricRelabelConfigs:
       {{- else }}
       metricRelabelings:
       {{- end }}
+      {{- if and $valuesPath.podMonitor.dropUnderscoreCreatedMetrics (index $valuesPath.podMonitor.dropUnderscoreCreatedMetrics "enabled") }}
+        # Drop metrics that end with _created, auto-created by metrics library to match OpenMetrics format
+        - sourceLabels: [__name__]
+          {{- if and (hasKey $valuesPath.podMonitor.dropUnderscoreCreatedMetrics "excludePatterns") $valuesPath.podMonitor.dropUnderscoreCreatedMetrics.excludePatterns }}
+          regex: "(?!{{ $valuesPath.podMonitor.dropUnderscoreCreatedMetrics.excludePatterns | join "|" }}).*_created$"
+          {{- else }}
+          regex: ".*_created$"
+          {{- end }}
+          action: drop
+      {{- end }}
+      {{- with $valuesPath.podMonitor.metricRelabelings }}
 {{ toYaml . | indent 8 }}
+      {{- end }}
       {{- end }}
   selector:
     matchLabels:

@@ -280,12 +280,16 @@ You can also checkout out the example values file for different deployments.
 
 In order to disable the victoria-metrics-k8s-stack, you can add the following to your `values.yaml`.
 Victoria Metrics components can also be disabled and enabled individually if you only need specific monitoring features.
-Please refer to the default [`values.yaml`](charts/pulsar/values.yaml).
 
 ```yaml
+# disable VictoriaMetrics and related components
 victoria-metrics-k8s-stack:
   enabled: false
   victoria-metrics-operator:
+    enabled: false
+  vmsingle:
+    enabled: false
+  vmagent:
     enabled: false
   kube-state-metrics:
     enabled: false
@@ -293,10 +297,36 @@ victoria-metrics-k8s-stack:
     enabled: false
   grafana:
     enabled: false
+
+Additionally, you'll need to set each component's `podMonitor` property to `false`. 
+
+```yaml
+# disable pod monitors
+autorecovery:
+  podMonitor:
+    enabled: false
+bookkeeper:
+  podMonitor:
+    enabled: false
+oxia:
+  server:
+    podMonitor:
+      enabled: false
+  coordinator:
+    podMonitor:
+      enabled: false
+broker:
+  podMonitor:
+    enabled: false
+proxy:
+  podMonitor:
+    enabled: false
+zookeeper:
+  podMonitor:
+    enabled: false
 ```
 
-Additionally, you'll need to set each component's `podMonitor` property to `false`. This is shown in some [examples](./examples) and is
-verified in some [tests](./.ci/clusters).
+This is shown in some [examples/values-disable-monitoring.yaml](examples/values-disable-monitoring.yaml).
 
 ## Pulsar Manager
 
@@ -496,6 +526,36 @@ These items we require you to *conciously* remove them, as they affect re-deploy
 We've done our best to make these charts as seamless as possible,
 occasionally troubles do surface outside of our control. We've collected
 tips and tricks for troubleshooting common issues. Please examine these first before raising an [issue](https://github.com/apache/pulsar-helm-chart/issues/new/choose), and feel free to add to them by raising a [Pull Request](https://github.com/apache/pulsar-helm-chart/compare)!
+
+### VictoriaMetrics Troubleshooting
+
+In example commands, k8s is namespace `pulsar` replace with your deployment namespace.
+
+#### VictoriaMetrics Web UI
+
+Connecting to `vmsingle` pod for web UI.
+
+```shell
+kubectl port-forward -n pulsar $(kubectl get pods -n pulsar -l app.kubernetes.io/name=vmsingle -o jsonpath='{.items[0].metadata.name}') 8429:8429
+```
+
+Now you can access the UI at http://localhost:8429 and http://localhost:8429/vmui (for similar UI as in Prometheus)
+
+#### VictoriaMetrics Scraping debugging UI - Active Targets
+
+Connection to `vmagent` pod for debugging targets.
+
+```shell
+kubectl port-forward -n pulsar $(kubectl get pods -n pulsar -l app.kubernetes.io/name=vmagent -o jsonpath='{.items[0].metadata.name}') 8429:8429
+```
+
+Now you can access the UI at http://localhost:8429
+
+Active Targets UI
+- http://localhost:8429/targets
+
+Scraping Configuration
+- http://localhost:8429/config
 
 ## Release Process
 
