@@ -404,11 +404,9 @@ You will need to configure keys under `proxy.service` in your `values.yaml` to p
 
 ### kube-prometheus-stack replaced with victoria-metrics-k8s-stack
 
-The kube-prometheus-stack version has been removed in Pulsar Helm Chart version 4.0.0 due to
-Prometheus incompatibility with Pulsar metrics since Pulsar 2.11.0 . Pulsar exposes metrics in a format that is partially OpenMetrics 1.0.0 text format,
-but isn't fully compatible. Prometheus doesn't provide proper support for OpenMetrics 1.0.0 text format, even in Prometheus version 3.2.1 where it was
-extensively tested before switching to Victoria Metrics in Pulsar Helm chart version 4.0.0 . Victoria Metrics is Apache 2.0 Licensed OSS and it's fully
-compatible with Prometheus.
+The `kube-prometheus-stack` was replaced with `victoria-metrics-k8s-stack` in Pulsar Helm chart version 4.0.0. The trigger for the change was incompatibilities discovered in testing with most recent `kube-prometheus-stack` and Prometheus 3.2.1 which failed to scrape Pulsar metrics in certain cases without providing proper error messages or debug information at debug level logging.
+
+[Victoria Metrics](https://docs.victoriametrics.com/) is Apache 2.0 Licensed OSS and it's a fully compatible drop-in replacement for Prometheus which is fast and efficient.
 
 Before upgrading to Pulsar Helm Chart version 4.0.0, it is recommended to disable kube-prometheus-stack in the original Helm chart version that
 is used:
