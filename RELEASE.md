@@ -247,8 +247,12 @@ helm repo add --force-update apache-pulsar-dist-dev \\
   https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 helm repo update
 helm install pulsar apache-pulsar-dist-dev/pulsar \\
- --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false
+ --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false \\
+ --wait --timeout 10m --debug
 
+ For observing the deployment progress, you can use the k9s tool to view the cluster state changes in a different terminal window.
+ The k9s tool is available at https://k9scli.io/topics/install/.
+ 
 pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though it is not strictly required for releasing the artifact based on ASF Guidelines. 
 
 You can optionally verify this file using this helm plugin https://github.com/technosophos/helm-gpg, or by using helm --verify (https://helm.sh/docs/helm/helm_verify/).
