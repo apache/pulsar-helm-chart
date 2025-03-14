@@ -87,7 +87,7 @@ official Apache releases must not include the rcN suffix.
 - Tag your release
 
     ```shell
-    git tag -s pulsar-${VERSION_RC} -m "Apache Pulsar Helm Chart $VERSION_RC"
+    git tag -u $APACHE_USER@apache.org -s pulsar-${VERSION_RC} -m "Apache Pulsar Helm Chart $VERSION_RC"
     ```
 
 - Tarball the repo
@@ -490,9 +490,7 @@ Verify that the packages appear in [Pulsar Helm Chart](https://dist.apache.org/r
 Create and push the release tag:
 
 ```shell
-cd "${PULSAR_REPO_ROOT}"
-git checkout pulsar-${VERSION_RC}
-git tag -s pulsar-${VERSION_WITHOUT_RC} -m "Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC}"
+git tag -u $APACHE_USER@apache.org pulsar-$VERSION_WITHOUT_RC $(git rev-parse pulsar-$VERSION_RC^{}) -m "Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC}"
 git push origin pulsar-${VERSION_WITHOUT_RC}
 ```
 
