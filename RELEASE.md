@@ -513,7 +513,7 @@ cd pulsar-site
 # Run on a branch based on main branch
 cd static/charts
 # need the chart file temporarily to update the index
-wget https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz
+wget https://dist.apache.org/repos/dist/release/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz
 # store the license header temporarily
 head -n 17 index.yaml > license_header.txt
 # update the index
@@ -526,14 +526,29 @@ rm license_header.txt index.yaml.new
 rm pulsar-${VERSION_WITHOUT_RC}.tgz
 ```
 
-Verify that the updated `index.yaml` file has the most recent version. Then run:
+Verify that the updated `index.yaml` file has the most recent version. 
+
+Wait until the file is available:
+
+```shell
+while ! curl -fIL https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz; do
+  echo "Waiting for pulsar-${VERSION_WITHOUT_RC}.tgz to become available..."
+  sleep 10
+done
+```
+
+Then run:
 
 ```shell
 git add index.yaml
 git commit -m "Adding Pulsar Helm Chart ${VERSION_WITHOUT_RC} to index.yaml"
 ```
 
-Then open a PR.
+Then commit the change.
+```
+git push origin main
+```
+
 
 ## Create release notes for the tag in GitHub UI
 
