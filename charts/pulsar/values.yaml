@@ -210,8 +210,8 @@ images:
     hasCommand: false
   oxia:
     repository: streamnative/oxia
-    tag: 0.11.9
-    pullPolicy: Always
+    tag: 0.11.15
+    pullPolicy:
 
 ## TLS
 ## templates/tls-certs.yaml

@@ -114,8 +114,8 @@ spec:
             {{- if .Values.oxia.pprofEnabled }}
             - "--profile"
             {{- end}}
-          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.images.oxia.pullPolicy }}
+          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           name: server
           ports:
             {{- range $key, $value := .Values.oxia.server.ports }}
