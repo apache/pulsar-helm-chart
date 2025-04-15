@@ -245,10 +245,10 @@ spec:
         emptyDir: {}
       {{- end }}
       {{- include "pulsar.bookkeeper.certs.volumes" . | nindent 6 }}
-      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       {{- if .Values.bookkeeper.extraVolumes }}
 {{ toYaml .Values.bookkeeper.extraVolumes | indent 6 }}
       {{- end }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence}}
   volumeClaimTemplates:
   {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
