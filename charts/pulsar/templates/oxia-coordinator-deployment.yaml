@@ -58,7 +58,7 @@ spec:
         - command:
             {{- include "oxia.coordinator.entrypoint" . | nindent 12 }}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
-          imagePullPolicy: {{ .Values.images.oxia.pullPolicy }}
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           name: coordinator
           ports:
             {{- range $key, $value := .Values.oxia.coordinator.ports }}
