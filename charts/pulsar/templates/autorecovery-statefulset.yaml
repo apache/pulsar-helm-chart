@@ -43,8 +43,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.autorecovery.component }}
       annotations:
+        {{- if not .Values.autorecovery.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.autorecovery.ports.http }}"
+        {{- end }}
         {{- if .Values.autorecovery.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/autorecovery-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -61,6 +63,10 @@ spec:
 {{- with .Values.autorecovery.tolerations }}
 {{ toYaml . | indent 8 }}
 {{- end }}
+    {{- end }}
+    {{- if .Values.autorecovery.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.autorecovery.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.autorecovery.affinity.anti_affinity}}
@@ -106,36 +112,37 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
       initContainers:
+      {{- if and .Values.autorecovery.waitBookkeeperTimeout (gt (.Values.autorecovery.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
-        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.autorecovery.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-        - >
+        - |
           {{- include "pulsar.autorecovery.init.verify_cluster_id" . | nindent 10 }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.autorecovery.initContainers }}
+        {{- toYaml .Values.autorecovery.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
-        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
       {{- if .Values.autorecovery.resources }}
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end}}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/bookkeeper autorecovery

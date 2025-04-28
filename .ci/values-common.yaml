@@ -17,15 +17,35 @@
 # under the License.
 #
 
-kube-prometheus-stack:
+victoria-metrics-k8s-stack:
   enabled: false
-  prometheusOperator:
+  victoria-metrics-operator:
     enabled: false
-  grafana:
+  vmsingle:
+    enabled: false
+  vmagent:
+    enabled: false
+  vmalert:
     enabled: false
   alertmanager:
     enabled: false
-  prometheus:
+  grafana:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  kubelet:
+    enabled: false
+  kubeApiServer:
+    enabled: false
+  kubeControllerManager:
+    enabled: false
+  coreDns:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeScheduler:
     enabled: false
 
 # disabled AntiAffinity
@@ -55,6 +75,12 @@ bookkeeper:
     diskUsageWarnThreshold: "0.999"
     PULSAR_PREFIX_diskUsageThreshold: "0.999"
     PULSAR_PREFIX_diskUsageWarnThreshold: "0.999"
+    # minimal memory use for bookkeeper
+    # https://bookkeeper.apache.org/docs/reference/config#db-ledger-storage-settings
+    dbStorage_writeCacheMaxSizeMb: "32"
+    dbStorage_readAheadCacheMaxSizeMb: "32"
+    dbStorage_rocksDB_writeBufferSizeMB: "8"
+    dbStorage_rocksDB_blockCacheSize: "8388608"    
 
 broker:
   replicaCount: 1
@@ -86,3 +112,11 @@ proxy:
 
 toolset:
   useProxy: false
+
+oxia:
+  coordinator:
+    podMonitor:
+      enabled: false
+  server:
+    podMonitor:
+      enabled: false

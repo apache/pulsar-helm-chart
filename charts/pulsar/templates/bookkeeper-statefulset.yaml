@@ -42,8 +42,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.bookkeeper.component }}
       annotations:
+        {{- if not .Values.bookkeeper.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.bookkeeper.ports.http }}"
+        {{- end }}
         {{- if .Values.bookkeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/bookkeeper-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -59,10 +61,14 @@ spec:
       tolerations:
 {{ toYaml .Values.bookkeeper.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.bookkeeper.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.bookkeeper.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.bookkeeper.affinity.anti_affinity}}
         podAntiAffinity:
-          {{ if eq .Values.bookkeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{- if eq .Values.bookkeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.bookkeeper.affinity.type }}:
           - labelSelector:
               matchExpressions:
@@ -79,7 +85,7 @@ spec:
                 values:
                 - {{ .Values.bookkeeper.component }}
             topologyKey: {{ .Values.bookkeeper.affinity.anti_affinity_topology_key }}
-        {{ else }}
+        {{- else }}
           {{ .Values.bookkeeper.affinity.type }}:
             - weight: 100
               podAffinityTerm:
@@ -106,31 +112,32 @@ spec:
       securityContext:
 {{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
       {{- end }}
+      {{- if and .Values.bookkeeper.waitMetadataTimeout (gt (.Values.bookkeeper.waitMetadataTimeout | int) 0) }}
       initContainers:
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
-        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.bookkeeper.waitMetadataTimeout }}", "sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
-        - >
+        - |
           {{- include "pulsar.bookkeeper.init.verify_cluster_id" . | nindent 10 }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end}}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.bookkeeper.initContainers }}
+        {{- toYaml .Values.bookkeeper.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
-        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
         {{- if .Values.bookkeeper.probe.liveness.enabled }}
         livenessProbe:
           httpGet:
@@ -167,17 +174,29 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
-        {{- if .Values.bookkeeper.additionalCommand }}
+        - |
+          # set required environment variables to use rocksdb config files provided in the Pulsar image
+          export PULSAR_PREFIX_defaultRocksdbConf=${PULSAR_PREFIX_defaultRocksdbConf:-conf/default_rocksdb.conf}
+          export PULSAR_PREFIX_entryLocationRocksdbConf=${PULSAR_PREFIX_entryLocationRocksdbConf:-conf/entry_location_rocksdb.conf}
+          export PULSAR_PREFIX_ledgerMetadataRocksdbConf=${PULSAR_PREFIX_ledgerMetadataRocksdbConf:-conf/ledger_metadata_rocksdb.conf}
+          if [ -x bin/update-rocksdb-conf-from-env.py ] && [ -f "${PULSAR_PREFIX_entryLocationRocksdbConf}" ]; then
+            echo "Updating ${PULSAR_PREFIX_entryLocationRocksdbConf} from environment variables starting with dbStorage_rocksDB_*"
+            bin/update-rocksdb-conf-from-env.py "${PULSAR_PREFIX_entryLocationRocksdbConf}"
+          else
+            # Ensure that Bookkeeper will not load RocksDB config from existing files and fallback to use default RocksDB config
+            # See https://github.com/apache/bookkeeper/pull/3523 as reference
+            export PULSAR_PREFIX_defaultRocksdbConf=conf/non_existing_default_rocksdb.conf
+            export PULSAR_PREFIX_entryLocationRocksdbConf=conf/non_existing_entry_location_rocksdb.conf
+            export PULSAR_PREFIX_ledgerMetadataRocksdbConf=conf/non_existing_ledger_metadata_rocksdb.conf
+            # Ensure that Bookkeeper will use RocksDB format_version 5 (this currently applies only to the entry location rocksdb due to a bug in Bookkeeper)
+            export PULSAR_PREFIX_dbStorage_rocksDB_format_version=${PULSAR_PREFIX_dbStorage_rocksDB_format_version:-5}
+          fi
+          {{- if .Values.bookkeeper.additionalCommand }}
           {{ .Values.bookkeeper.additionalCommand }}
-        {{- end }}
+          {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end}}
         ports:
         - name: "{{ .Values.tcpPrefix }}bookie"
           containerPort: {{ .Values.bookkeeper.ports.bookie }}
@@ -226,10 +245,10 @@ spec:
         emptyDir: {}
       {{- end }}
       {{- include "pulsar.bookkeeper.certs.volumes" . | nindent 6 }}
-      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       {{- if .Values.bookkeeper.extraVolumes }}
 {{ toYaml .Values.bookkeeper.extraVolumes | indent 6 }}
       {{- end }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence}}
   volumeClaimTemplates:
   {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}

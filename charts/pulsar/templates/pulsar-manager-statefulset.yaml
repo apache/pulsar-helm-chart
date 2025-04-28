@@ -54,11 +54,19 @@ spec:
       tolerations:
 {{ toYaml .Values.pulsar_manager.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.pulsar_manager.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.pulsar_manager.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.pulsar_manager.gracePeriod }}
+      {{- if .Values.pulsar_manager.initContainers }}
+      initContainers:
+        {{- toYaml .Values.pulsar_manager.initContainers | nindent 6 }}
+      {{- end }}
       containers:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}"
           image: "{{ .Values.images.pulsar_manager.repository }}:{{ .Values.images.pulsar_manager.tag }}"
-          imagePullPolicy: {{ .Values.images.pulsar_manager.pullPolicy }}
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.pulsar_manager "root" .) }}"
         {{- if .Values.pulsar_manager.resources }}
           resources:
 {{ toYaml .Values.pulsar_manager.resources | indent 12 }}
@@ -69,6 +77,9 @@ spec:
           volumeMounts:
           - name: "{{ template "pulsar.fullname" . }}-{{ .Values.pulsar_manager.component }}-{{ .Values.pulsar_manager.volumes.data.name }}"
             mountPath: /data
+          {{- if .Values.pulsar_manager.extraVolumeMounts }}
+{{ toYaml .Values.pulsar_manager.extraVolumeMounts | indent 10 }}
+          {{- end }}
         {{- if .Values.auth.authentication.enabled }}
         {{- if .Values.auth.authentication.jwt.enabled }}
           - name: pulsar-manager-keys
@@ -110,6 +121,9 @@ spec:
         {{- end }}          
         {{- include "pulsar.imagePullSecrets" . | nindent 6}}
       volumes:
+        {{- if .Values.pulsar_manager.extraVolumes }}
+{{ toYaml .Values.pulsar_manager.extraVolumes | indent 8 }}
+        {{- end }}
       {{- if .Values.auth.authentication.enabled }}
       {{- if .Values.auth.authentication.jwt.enabled }}
         - name: pulsar-manager-keys

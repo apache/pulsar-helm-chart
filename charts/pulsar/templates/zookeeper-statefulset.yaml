@@ -43,6 +43,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.zookeeper.component }}
       annotations:
+        {{- if not .Values.zookeeper.podMonitor.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.zookeeper.ports.http }}"
+        {{- end }}
         {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -57,6 +61,10 @@ spec:
     {{- if .Values.zookeeper.tolerations }}
       tolerations:
 {{ toYaml .Values.zookeeper.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.zookeeper.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.zookeeper.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
@@ -105,17 +113,21 @@ spec:
       securityContext:
 {{ toYaml .Values.zookeeper.securityContext | indent 8 }}
       {{- end }}
+      {{- if .Values.zookeeper.initContainers }}
+      initContainers:
+        {{- toYaml .Values.zookeeper.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.zookeeper "root" .) }}"
-        imagePullPolicy: {{ .Values.images.zookeeper.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.zookeeper "root" .) }}"
       {{- if .Values.zookeeper.resources }}
         resources:
 {{ toYaml .Values.zookeeper.resources | indent 10 }}
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.zookeeper.additionalCommand }}
           {{ .Values.zookeeper.additionalCommand }}
         {{- end }}
@@ -133,6 +145,10 @@ spec:
           containerPort: {{ .Values.zookeeper.ports.follower }}
         - name: leader-election
           containerPort: {{ .Values.zookeeper.ports.leaderElection }}
+        {{- if .Values.zookeeper.ports.admin }}
+        - name: admin
+          containerPort: {{ .Values.zookeeper.ports.admin }}
+        {{- end }}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
         - name: client-tls
           containerPort: {{ .Values.zookeeper.ports.clientTls }}
@@ -161,15 +177,9 @@ spec:
         {{- $zkConnectCommand = print "nc 127.0.0.1 " .Values.zookeeper.ports.client -}}
         {{- end }}
         {{- if .Values.zookeeper.probe.readiness.enabled }}
-        {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-        {{- end}}
         readinessProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
             - bash
             - -c
             - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
@@ -182,8 +192,6 @@ spec:
         livenessProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.liveness.timeoutSeconds }}"
             - bash
             - -c
             - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
@@ -196,8 +204,6 @@ spec:
         startupProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.startup.timeoutSeconds }}"
             - bash
             - -c
             - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
@@ -246,7 +252,12 @@ spec:
               path: tls.key
       - name: ca
         secret:
+          {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
           secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+          {{- end }}
+          {{- if eq .Values.certs.internal_issuer.type "ca" }}
+          secretName: "{{ .Values.certs.issuers.ca.secretName }}"
+          {{- end }}
           items:
             - key: ca.crt
               path: ca.crt

@@ -84,6 +84,7 @@ function ci::install_cert_manager() {
 function ci::helm_repo_add() {
     echo "Adding the helm repo ..."
     ${HELM} repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    ${HELM} repo add vm https://victoriametrics.github.io/helm-charts/
     ${HELM} repo update
     echo "Successfully added the helm repo."
 }
@@ -112,15 +113,29 @@ function ci::install_pulsar_chart() {
     local install_type=$1
     local common_value_file=$2
     local value_file=$3
-    local extra_opts="$4 $5 $6 $7 $8"
+    shift 3
+    local extra_values=()
+    local extra_opts=()
+    local values_next=false
+    for arg in "$@"; do
+        if [[ "$arg" == "--values" || "$arg" == "--set" ]]; then
+            extra_values+=("$arg")
+            values_next=true
+        elif [[ "$values_next" == true ]]; then
+            extra_values+=("$arg")
+            values_next=false
+        else
+            extra_opts+=("$arg")
+        fi
+    done
     local install_args
 
     if [[ "${install_type}" == "install" ]]; then
       echo "Installing the pulsar chart"
       ${KUBECTL} create namespace ${NAMESPACE}
       ci::install_cert_manager
-      echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
-      ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} ${extra_opts}
+      echo ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} "${extra_opts[@]}"
+      ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh -k ${CLUSTER} -n ${NAMESPACE} "${extra_opts[@]}"
       sleep 10
 
       # install metallb for loadbalancer support
@@ -154,8 +169,8 @@ function ci::install_pulsar_chart() {
       fi
     fi
     set -x
-    ${HELM} template --values ${common_value_file} --values ${value_file} ${CLUSTER} ${CHART_ARGS}
-    ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
+    ${HELM} template --values ${common_value_file} --values ${value_file} "${extra_values[@]}" ${CLUSTER} ${CHART_ARGS}
+    ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} "${extra_values[@]}" --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
     set +x
 
     if [[ "${install_type}" == "install" ]]; then
@@ -409,3 +424,87 @@ function ci::test_pulsar_manager() {
     exit 1
   fi
 }
+
+function ci::check_loadbalancers() {
+  (
+  set +e
+  ${KUBECTL} get services -n ${NAMESPACE} | grep LoadBalancer
+  if [ $? -eq 0 ]; then
+    echo "Error: Found service with type LoadBalancer. This is not allowed because of security reasons."
+    exit 1
+  fi
+  exit 0
+  )
+}
+
+function ci::validate_kustomize_yaml() {
+  # if kustomize is not installed, install kustomize to a temp directory
+  if ! command -v kustomize &> /dev/null; then
+    KUSTOMIZE_VERSION=5.6.0
+    KUSTOMIZE_DIR=$(mktemp -d)
+    echo "Installing kustomize ${KUSTOMIZE_VERSION} to ${KUSTOMIZE_DIR}"
+    curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash -s ${KUSTOMIZE_VERSION} ${KUSTOMIZE_DIR}
+    export PATH=${KUSTOMIZE_DIR}:$PATH
+  fi
+  # prevent regression of https://github.com/apache/pulsar-helm-chart/issues/569
+  local kustomize_yaml_dir=$(mktemp -d)
+  cp ${PULSAR_HOME}/.ci/kustomization.yaml ${kustomize_yaml_dir}
+  PULSAR_HOME=${PULSAR_HOME} yq -i '.helmGlobals.chartHome = env(PULSAR_HOME) + "/charts"' ${kustomize_yaml_dir}/kustomization.yaml
+  failures=0
+  # validate zookeeper init
+  echo "Validating kustomize yaml output with zookeeper init"
+  _ci::validate_kustomize_yaml ${kustomize_yaml_dir} || ((failures++))
+  # validate oxia init
+  yq -i '.helmCharts[0].valuesInline.components += {"zookeeper": false, "oxia": true}' ${kustomize_yaml_dir}/kustomization.yaml
+  echo "Validating kustomize yaml output with oxia init"
+  _ci::validate_kustomize_yaml ${kustomize_yaml_dir} || ((failures++)) 
+  if [ $failures -gt 0 ]; then
+    exit 1
+  fi
+}
+
+function _ci::validate_kustomize_yaml() {
+  local kustomize_yaml_dir=$1
+  kustomize build --enable-helm --helm-kube-version 1.23.0 --load-restrictor=LoadRestrictionsNone ${kustomize_yaml_dir} | yq 'select(.spec.template.spec.containers[0].args != null) | .spec.template.spec.containers[0].args' | \
+  awk '{
+    if (prev_line ~ /\\$/ && $0 ~ /^$/) {
+      print "Found issue: backslash at end of line followed by empty line. Must use pipe character for multiline strings to support kustomize due to kubernetes-sigs/kustomize#4201.";
+      print "Line: " prev_line;
+      has_issue = 1;
+    }
+    prev_line = $0;
+  }
+  END {
+    if (!has_issue) {
+      print "No issues found: no backslash followed by empty line";
+      exit 0;
+    }
+    exit 1;
+  }'
+}
+
+# lists all available functions in this tool
+function ci::list_functions() {
+  declare -F | awk '{print $NF}' | sort | grep -E '^ci::' | sed 's/^ci:://'
+}
+
+# Only run this section if the script is being executed directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  if [ -z "$1" ]; then
+    echo "usage: $0 [function_name]"
+    echo "Available functions:"
+    ci::list_functions
+    exit 1
+  fi
+  ci_function_name="ci::$1"
+  shift
+  if [[ "$(LC_ALL=C type -t "${ci_function_name}")" == "function" ]]; then
+    eval "$ci_function_name" "$@"
+    exit $?
+  else
+    echo "Invalid ci function"
+    echo "Available functions:"
+    ci::list_functions
+    exit 1
+  fi
+fi

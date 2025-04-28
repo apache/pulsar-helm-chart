@@ -28,7 +28,10 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
   annotations:
-{{ toYaml .Values.zookeeper.service.annotations | indent 4 }}
+{{- with .Values.zookeeper.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   ports:
     # prometheus needs to access /metrics endpoint
@@ -40,6 +43,10 @@ spec:
       port: {{ .Values.zookeeper.ports.leaderElection }}
     - name: "{{ .Values.tcpPrefix }}client"
       port: {{ .Values.zookeeper.ports.client }}
+    {{- if .Values.zookeeper.ports.admin }}
+    - name: admin
+      port: {{ .Values.zookeeper.ports.admin }}
+    {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
     - name: "{{ .Values.tlsPrefix }}client-tls"
       port: {{ .Values.zookeeper.ports.clientTls }}

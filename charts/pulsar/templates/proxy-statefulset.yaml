@@ -44,8 +44,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.proxy.component }}
       annotations:
+        {{- if not .Values.proxy.podMonitor.enabled }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.proxy.ports.http }}"
+        prometheus.io/port: "{{ .Values.proxy.ports.containerPorts.http }}"
+        {{- end }}
         {{- if .Values.proxy.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/proxy-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -60,6 +62,10 @@ spec:
     {{- if .Values.proxy.tolerations }}
       tolerations:
 {{ toYaml .Values.proxy.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.proxy.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.proxy.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.proxy.affinity.anti_affinity}}
@@ -105,34 +111,49 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
       initContainers:
+      {{- if and .Values.components.zookeeper .Values.proxy.waitZookeeperTimeout (gt (.Values.proxy.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
-        imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.proxy.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             export PULSAR_MEM="-Xmx128M";
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
-            until bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else }}
-            until bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.service" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.service" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
               sleep 3;
             done;
             {{- end}}
+      {{- end}}
+      {{- if and .Values.components.oxia .Values.proxy.waitOxiaTimeout (gt (.Values.proxy.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.proxy.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - |
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
+              sleep 3;
+            done;
+      {{- end }}      
+      {{- if and .Values.proxy.waitBrokerTimeout (gt (.Values.proxy.waitBrokerTimeout | int) 0) }}
       # This init container will wait for at least one broker to be ready before
       # deploying the proxy
       - name: wait-broker-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
-        imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.proxy.waitBrokerTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             set -e;
             brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
             until [ ${brokerServiceNumber} -ge 1 ]; do
@@ -140,10 +161,14 @@ spec:
               sleep 10;
               brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
             done;
+      {{- end}}
+      {{- if .Values.proxy.initContainers }}
+        {{- toYaml .Values.proxy.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
-        imagePullPolicy: {{ .Values.images.proxy.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
         {{- if .Values.proxy.probe.liveness.enabled }}
         livenessProbe:
           httpGet:
@@ -180,7 +205,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.proxy.additionalCommand }}
           {{ .Values.proxy.additionalCommand }}
         {{- end }}
@@ -201,13 +226,9 @@ spec:
         - name: "sts-{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.proxy.ports.pulsarssl }}
         {{- end }}
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
-{{- if .Values.proxy.extreEnvs }}
+{{- if .Values.proxy.extraEnvs }}
         env:
-{{ toYaml .Values.proxy.extreEnvs | indent 8 }}
+{{ toYaml .Values.proxy.extraEnvs | indent 8 }}
 {{- end }}
         envFrom:
         - configMapRef:
@@ -273,7 +294,12 @@ spec:
         {{- if .Values.tls.proxy.enabled }}
         - name: ca
           secret:
+            {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
             secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+            {{- end }}
+            {{- if eq .Values.certs.internal_issuer.type "ca" }}
+            secretName: "{{ .Values.certs.issuers.ca.secretName }}"
+            {{- end }}
             items:
               - key: ca.crt
                 path: ca.crt

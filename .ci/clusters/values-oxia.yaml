@@ -17,4 +17,19 @@
 # under the License.
 #
 
-defaultPulsarImageTag: 3.3.0
+components:
+  zookeeper: false
+  oxia: true
+  # disable functions for oxia tests since there's no support for Oxia in 
+  # BookKeeperPackagesStorage which requires Zookeeper
+  functions: false
+
+oxia:
+  initialShardCount: 3
+  replicationFactor: 3
+  server:
+    replicas: 3
+    cpuLimit: 333m
+    memoryLimit: 200Mi
+    dbCacheSizeMb: 100
+    storageSize: 1Gi

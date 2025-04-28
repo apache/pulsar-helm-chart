@@ -48,7 +48,9 @@ spec:
   {{- if $stsObj }}
   podManagementPolicy: {{ $stsObj.spec.podManagementPolicy }}
   {{- else }}
-  {{- if not .Values.components.functions }}
+  {{- if .Values.broker.podManagementPolicy }}
+  podManagementPolicy: {{ .Values.broker.podManagementPolicy }}
+  {{- else if not .Values.components.functions }}
   podManagementPolicy: Parallel
   {{- else }}
   podManagementPolicy: OrderedReady
@@ -60,8 +62,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.broker.component }}
       annotations:
+        {{- if not .Values.broker.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.broker.ports.http }}"
+        {{- end }}
         {{- if .Values.broker.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/broker-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -78,10 +82,14 @@ spec:
       tolerations:
 {{ toYaml .Values.broker.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.broker.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.broker.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.broker.affinity.anti_affinity}}
         podAntiAffinity:
-          {{ if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{- if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
           {{ .Values.broker.affinity.type }}:
           - labelSelector:
               matchExpressions:
@@ -98,7 +106,7 @@ spec:
                 values:
                 - {{ .Values.broker.component }}
             topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
-        {{ else }}
+        {{- else }}
           {{ .Values.broker.affinity.type }}:
             - weight: 100
               podAffinityTerm:
@@ -117,48 +125,59 @@ spec:
                       values:
                       - {{ .Values.broker.component }}
                 topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
-        {{ end }}
+        {{- end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
       initContainers:
+      {{- if and .Values.components.zookeeper .Values.broker.waitZookeeperTimeout (gt (.Values.broker.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.broker.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
-            export BOOKIE_MEM="-Xmx128M";
+            export PULSAR_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
-            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
             {{- if not .Values.pulsar_metadata.configurationStore }}
-            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.components.oxia .Values.broker.waitOxiaTimeout (gt (.Values.broker.waitOxiaTimeout | int) 0) }}
+      - name: wait-oxia-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.broker.waitOxiaTimeout }}", "sh", "-c"]
+        args:
+          - |
+            until nslookup {{ template "pulsar.oxia.server.service" . }}; do
+              sleep 3;
+            done;
+      {{- end }}
+      {{- if and .Values.broker.waitBookkeeperTimeout (gt (.Values.broker.waitBookkeeperTimeout | int) 0) }}
       # This init container will wait for bookkeeper to be ready before
       # deploying the broker
       - name: wait-bookkeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
-        command: ["sh", "-c"]
+        command: ["timeout", "{{ .Values.broker.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-          - >
+          - |
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             export BOOKIE_MEM="-Xmx128M";
-            until bin/bookkeeper shell whatisinstanceid; do
+            until timeout 15 bin/bookkeeper shell whatisinstanceid; do
               echo "bookkeeper cluster is not initialized yet. backoff for 3 seconds ...";
               sleep 3;
             done;
@@ -173,16 +192,16 @@ spec:
         envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
+      {{- end }}
+      {{- if .Values.broker.initContainers }}
+        {{- toYaml .Values.broker.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
         {{- if .Values.broker.probe.liveness.enabled }}
         livenessProbe:
           httpGet:
@@ -219,20 +238,22 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.broker.additionalCommand }}
           {{ .Values.broker.additionalCommand }}
         {{- end }}
           bin/apply-config-from-env.py conf/broker.conf;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > "${statusFilePath:-status}";
+          {{- if .Values.components.zookeeper }}
           {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 10 }}
-          bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+          timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           while [ $? -eq 0 ]; do
             echo "broker {{ template "pulsar.broker.hostname" . }} znode still exists ... check in 10 seconds ...";
             sleep 10;
-            bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+            timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
+          {{- end }}
           cat conf/pulsar_env.sh;
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar broker;
         ports:
@@ -249,10 +270,6 @@ spec:
         - name: "{{ .Values.tlsPrefix }}pulsarssl"
           containerPort: {{ .Values.broker.ports.pulsarssl }}
         {{- end }}
-{{- if .Values.broker.extreEnvs }}
-        env:
-{{ toYaml .Values.broker.extreEnvs | indent 8 }}
-{{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
@@ -278,10 +295,6 @@ spec:
 {{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
           {{- end }}
           {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         env:
           {{- if and (and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3")) .Values.broker.storageOffload.secret }}
           - name: AWS_ACCESS_KEY_ID
@@ -307,6 +320,9 @@ spec:
                 name: {{ .Values.broker.storageOffload.secret }}
                 key: AZURE_STORAGE_ACCESS_KEY
           {{- end }}
+        {{- if .Values.broker.extraEnvs }}
+{{- toYaml .Values.broker.extraEnvs | nindent 10 }}
+        {{- end }}
       volumes:
       {{- if .Values.broker.extraVolumes }}
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}

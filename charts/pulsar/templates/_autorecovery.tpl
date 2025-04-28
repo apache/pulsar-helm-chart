@@ -74,7 +74,12 @@ Define autorecovery tls certs volumes
       path: tls.key
 - name: ca
   secret:
+    {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
     secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    {{- end }}
+    {{- if eq .Values.certs.internal_issuer.type "ca" }}
+    secretName: "{{ .Values.certs.issuers.ca.secretName }}"
+    {{- end }}
     items:
     - key: ca.crt
       path: ca.crt
@@ -92,8 +97,9 @@ Define autorecovery init container : verify cluster id
 */}}
 {{- define "pulsar.autorecovery.init.verify_cluster_id" -}}
 bin/apply-config-from-env.py conf/bookkeeper.conf;
+export BOOKIE_MEM="-Xmx128M";
 {{- include "pulsar.autorecovery.zookeeper.tls.settings" . -}}
-until bin/bookkeeper shell whatisinstanceid; do
+until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 {{- end }}

@@ -57,19 +57,32 @@ spec:
       tolerations:
 {{ toYaml .Values.toolset.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.toolset.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.toolset.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+      {{- if .Values.toolset.initContainers }}
+      initContainers:
+        {{- toYaml .Values.toolset.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
+        {{- if (and .Values.images.toolset .Values.images.toolset.repository) }}
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.toolset "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.toolset "root" .) }}"
+        {{- else }}
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
-        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
+        {{- end }}
       {{- if .Values.toolset.resources }}
         resources:
 {{ toYaml .Values.toolset.resources | indent 10 }}
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.toolset.additionalCommand }}
           {{ .Values.toolset.additionalCommand }}
         {{- end }}
@@ -77,10 +90,6 @@ spec:
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
           sleep 10000000000
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
@@ -115,7 +124,12 @@ spec:
       {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
       - name: proxy-ca
         secret:
+          {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
           secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+          {{- end }}
+          {{- if eq .Values.certs.internal_issuer.type "ca" }}
+          secretName: "{{ .Values.certs.issuers.ca.secretName }}"
+          {{- end }}
           items:
             - key: ca.crt
               path: ca.crt

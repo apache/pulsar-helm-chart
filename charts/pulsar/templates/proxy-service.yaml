@@ -35,6 +35,9 @@ spec:
   {{- with .Values.proxy.service.loadBalancerIP }}
   loadBalancerIP: {{ . }}
   {{- end }}
+  {{- with .Values.proxy.service.loadBalancerClass }}
+  loadBalancerClass: {{ . }}
+  {{- end }}
   {{- if .Values.proxy.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.proxy.service.externalTrafficPolicy }}
   {{- end }}

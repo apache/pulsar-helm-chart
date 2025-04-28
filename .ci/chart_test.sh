@@ -28,6 +28,7 @@ TLS=${TLS:-"false"}
 SYMMETRIC=${SYMMETRIC:-"false"}
 FUNCTION=${FUNCTION:-"false"}
 MANAGER=${MANAGER:-"false"}
+ALLOW_LOADBALANCERS=${ALLOW_LOADBALANCERS:-"false"}
 
 source ${PULSAR_HOME}/.ci/helm.sh
 
@@ -36,42 +37,62 @@ ci::create_cluster
 
 ci::helm_repo_add
 
-extra_opts=""
+extra_opts=()
+
+# Add any arguments after $1 to extra_opts
+shift # Remove $1 from the argument list
+while [[ $# -gt 0 ]]; do
+    extra_opts+=("$1")
+    shift
+done
+
 if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
-    extra_opts="-s"
+    extra_opts+=("-s")
 fi
 
 if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
-    extra_opts="${extra_opts} --pulsar-superusers proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}"
+    extra_opts+=("--pulsar-superusers" "proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}")
 fi
 
 install_type="install"
 test_action="produce-consume"
 if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
+    ALLOW_LOADBALANCERS="true"
     # install older version of pulsar chart
     PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
-    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}    
+
+    # Install Prometheus Operator CRDs using the upgrade script since kube-prometheus-stack is now disabled before the upgrade
+    ${PULSAR_HOME}/scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh
+
+    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} --set kube-prometheus-stack.enabled=false "${extra_opts[@]}"
     install_type="upgrade"
     echo "Wait 10 seconds"
     sleep 10
+    # check pulsar environment
+    ci::check_pulsar_environment
     # test that we can access the admin api
     ci::test_pulsar_admin_api_access
     # produce messages with old version of pulsar and consume with new version
     ci::test_pulsar_producer_consumer "produce"
     test_action="consume"
 
-    if [[ "$(ci::helm_values_for_deployment | yq .kube-prometheus-stack.enabled)" == "true" ]]; then
-        echo "Upgrade Prometheus Operator CRDs before upgrading the deployment"
-        ${PULSAR_HOME}/scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh
+    if [[ "$(ci::helm_values_for_deployment | yq .victoria-metrics-k8s-stack.enabled)" == "true" ]]; then
+        echo "Upgrade Victoria Metrics Operator CRDs before upgrading the deployment"
+        ${PULSAR_HOME}/scripts/victoria-metrics-k8s-stack/upgrade_vm_operator_crds.sh
     fi
 fi
 
 PULSAR_CHART_VERSION="local"
 # install (or upgrade) pulsar chart
-ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} ${extra_opts}
+ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} "${extra_opts[@]}"
 
 echo "Wait 10 seconds"
 sleep 10
+
+# check that there aren't any loadbalancers if ALLOW_LOADBALANCERS is false
+if [[ "${ALLOW_LOADBALANCERS}" == "false" ]]; then
+    ci::check_loadbalancers
+fi
 
 # check pulsar environment
 ci::check_pulsar_environment

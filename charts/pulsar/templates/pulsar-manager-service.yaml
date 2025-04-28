@@ -26,12 +26,17 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_manager.component }}
+{{- with .Values.pulsar_manager.service.annotations }}
   annotations:
-{{ toYaml .Values.pulsar_manager.service.annotations | indent 4 }}
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   type: {{ .Values.pulsar_manager.service.type }}
   {{- if .Values.pulsar_manager.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.pulsar_manager.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- with .Values.pulsar_manager.service.loadBalancerClass }}
+  loadBalancerClass: {{ . }}
   {{- end }}
   {{- if .Values.pulsar_manager.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.pulsar_manager.service.loadBalancerSourceRanges | nindent 4 }}
@@ -55,8 +60,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_manager.component }}
+{{- with .Values.pulsar_manager.adminService.annotations }}
   annotations:
-{{ toYaml .Values.pulsar_manager.adminService.annotations | indent 4 }}
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   type: {{ .Values.pulsar_manager.adminService.type }}
   ports:

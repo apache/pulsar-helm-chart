@@ -26,8 +26,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
+{{- with .Values.broker.service.annotations }}
   annotations:
-{{ toYaml .Values.broker.service.annotations | indent 4 }}
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   type: ClusterIP
   ports:

@@ -17,4 +17,29 @@
 # under the License.
 #
 
-defaultPulsarImageTag: 3.1.1
+{{- if .Values.components.oxia }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-svc
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-server
+{{- with .Values.oxia.server.service.internal.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    {{- range $key, $value := .Values.oxia.server.ports }}
+    - name: {{ $key }}
+      port: {{ $value }}
+      targetPort: {{ $key }}
+    {{- end}}
+  selector:
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-server
+{{- end}}

@@ -17,14 +17,7 @@
 # under the License.
 #
 
-kube-prometheus-stack:
-  enabled: true
-  prometheus:
-    enabled: true
-  grafana:
-    enabled: true
-    adminPassword: pulsar-ci-admin
-  alertmanager:
-    enabled: false
-  prometheus-node-exporter:
-    enabled: true
+# deploy oxia-coordinator PodMonitor only when `$.Values.oxia.coordinator.podMonitor.enabled` is true
+{{- if and $.Values.components.oxia $.Values.oxia.coordinator.podMonitor.enabled }}
+{{- include "pulsar.podMonitor" (list . "oxia.coordinator" "app.kubernetes.io/component: oxia-coordinator" "metrics") }}
+{{- end }}

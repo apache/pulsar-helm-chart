@@ -17,6 +17,16 @@
 # under the License.
 #
 
-rbac:
-  enabled: true
-  psp: true
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmGlobals:
+  chartHome: ../charts
+helmCharts:
+  - name: pulsar
+    releaseName: pulsar
+    valuesInline:
+      victoria-metrics-k8s-stack:
+        enabled: false
+      components:
+        pulsar_manager: true
+        zookeeper: true

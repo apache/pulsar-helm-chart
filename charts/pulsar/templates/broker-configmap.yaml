@@ -28,19 +28,70 @@ metadata:
     component: {{ .Values.broker.component }}
 data:
   # Metadata settings
-  zookeeperServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- if .Values.components.zookeeper }}
+  metadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- $configMetadataStoreUrl := "" }}
   {{- if .Values.pulsar_metadata.configurationStore }}
-  configurationStoreServers: "{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
+  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.configurationStore.connect" .) .Values.pulsar_metadata.configurationStoreMetadataPrefix }}
+  {{- else }}
+  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.zookeeper.connect" .) .Values.metadataPrefix }}
   {{- end }}
-  {{- if not .Values.pulsar_metadata.configurationStore }}
-  configurationStoreServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  configurationMetadataStoreUrl: "{{ $configMetadataStoreUrl }}"
+  {{- if .Values.pulsar_metadata.bookkeeper.usePulsarMetadataClientDriver }}
+  bookkeeperMetadataServiceUri: "metadata-store:{{ $configMetadataStoreUrl }}/ledgers"
+  {{- else }}
+  bookkeeperMetadataServiceUri: "zk+hierarchical://{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
+  {{- end }}
+  {{- end }}
+  {{- if .Values.components.oxia }}
+  metadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
+  configurationMetadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
+  bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
+  {{- end }}
+
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreAllowReadOnlyOperations" }}
+  PULSAR_PREFIX_metadataStoreAllowReadOnlyOperations: "{{ .Values.pulsar_metadata.metadataStoreAllowReadOnlyOperations }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreSessionTimeoutMillis" }}
+  metadataStoreSessionTimeoutMillis: "{{ .Values.pulsar_metadata.metadataStoreSessionTimeoutMillis }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreOperationTimeoutSeconds" }}
+  metadataStoreOperationTimeoutSeconds: "{{ .Values.pulsar_metadata.metadataStoreOperationTimeoutSeconds }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreCacheExpirySeconds" }}
+  metadataStoreCacheExpirySeconds: "{{ .Values.pulsar_metadata.metadataStoreCacheExpirySeconds }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingEnabled" }}
+  metadataStoreBatchingEnabled: "{{ .Values.pulsar_metadata.metadataStoreBatchingEnabled }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxDelayMillis" }}
+  metadataStoreBatchingMaxDelayMillis: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxDelayMillis }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxOperations" }}
+  metadataStoreBatchingMaxOperations: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxOperations }}"
+  {{- end }}
+  {{- if hasKey .Values.pulsar_metadata "metadataStoreBatchingMaxSizeKb" }}
+  metadataStoreBatchingMaxSizeKb: "{{ .Values.pulsar_metadata.metadataStoreBatchingMaxSizeKb }}"
   {{- end }}
 
   # Broker settings
   clusterName: {{ template "pulsar.cluster.name" . }}
+  
+  # Enable all metrics by default
   exposeTopicLevelMetricsInPrometheus: "true"
+  exposeConsumerLevelMetricsInPrometheus: "true"
+  exposeProducerLevelMetricsInPrometheus: "true"
+  exposeManagedLedgerMetricsInPrometheus: "true"
+  exposeManagedCursorMetricsInPrometheus: "true"
+  exposeBundlesMetricsInPrometheus: "true"
+  exposePublisherStats: "true"
+  exposePreciseBacklogInPrometheus: "true"
+  replicationMetricsEnabled: "true"
+  splitTopicAndPartitionLabelInPrometheus: "true"
+  aggregatePublisherStatsByProducerName: "true"
+  bookkeeperClientExposeStatsToPrometheus: "true"
+
   numHttpServerThreads: "8"
-  zooKeeperSessionTimeoutMillis: "30000"
   statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
 
   # Tiered storage settings
@@ -114,6 +165,7 @@ data:
   PF_functionRuntimeFactoryConfigs_pulsarRootDir: {{ template "pulsar.home" . }}
   PF_kubernetesContainerFactory_pulsarRootDir: {{ template "pulsar.home" . }}
   PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+  PF_functionRuntimeFactoryConfigs_imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.functions "root" .) }}"
   PF_functionRuntimeFactoryConfigs_submittingInsidePod: "true"
   PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
   PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
@@ -127,6 +179,7 @@ data:
   {{- end }}
   # support version < 2.5.0
   PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+  PF_kubernetesContainerFactory_imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.functions "root" .) }}"
   PF_kubernetesContainerFactory_submittingInsidePod: "true"
   PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
   PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}

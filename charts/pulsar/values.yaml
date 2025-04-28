@@ -21,9 +21,12 @@
 ### K8S Settings
 ###
 
-### Namespace to deploy pulsar
-# The namespace to use to deploy the pulsar components, if left empty
-# will default to .Release.Namespace (aka helm --namespace).
+### Namespace to deploy Pulsar
+### Note: Prefer using helm's --namespace flag with --create-namespace instead
+## The namespace to use to deploy the Pulsar components. If left empty,
+## it will default to .Release.Namespace (aka helm --namespace).
+## Please note that victoria-metrics-k8s-stack might not be able to scrape Pulsar component metrics by default unless
+## it is deployed in the same namespace as Pulsar.
 namespace: ""
 namespaceCreate: false
 
@@ -35,6 +38,7 @@ clusterDomain: cluster.local
 ###
 
 ## Set to true on install
+## There's no need to set this value unless you're using a system that doesn't track .Release.IsInstall or .Release.IsUpgrade (like argocd)
 initialize: false
 ## Set useReleaseStatus to false if you're deploying this chart using a system that doesn't track .Release.IsInstall or .Release.IsUpgrade (like argocd)
 useReleaseStatus: true
@@ -90,9 +94,7 @@ volumes:
 
 rbac:
   enabled: false
-  psp: false
   limit_to_namespace: true
-
 
 ## AntiAffinity
 ##
@@ -101,6 +103,8 @@ rbac:
 ## If you need to disable AntiAffinity for a component, you can set
 ## the `affinity.anti_affinity` settings to `false` for that component.
 affinity:
+  ## When set to true, the scheduler will try to spread pods across different nodes.
+  ## It is necessary to set this to false if you're using a Kubernetes cluster with less than 3 nodes, such as local development environments.
   anti_affinity: true
   # Set the anti affinity type. Valid values:
   # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
@@ -113,6 +117,8 @@ affinity:
 components:
   # zookeeper
   zookeeper: true
+  # oxia
+  oxia: false
   # bookkeeper
   bookkeeper: true
   # bookkeeper - autorecovery
@@ -137,6 +143,9 @@ defaultPulsarImageRepository: apachepulsar/pulsar-all
 # uses chart's appVersion when unspecified
 defaultPulsarImageTag:
 
+# default pull policy for all images
+defaultPullPolicy: IfNotPresent
+
 ## Images
 ##
 ## Control what images to use for each component
@@ -149,41 +158,60 @@ images:
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   bookie:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   autorecovery:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   broker:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
+  toolset:
+    # uses defaultPulsarImageRepository when unspecified
+    repository:
+    # uses defaultPulsarImageTag when unspecified
+    tag:
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   proxy:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   functions:
     # uses defaultPulsarImageRepository when unspecified
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   pulsar_manager:
     repository: apachepulsar/pulsar-manager
     tag: v0.4.0
-    pullPolicy: IfNotPresent
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
     hasCommand: false
+  oxia:
+    repository: streamnative/oxia
+    tag: 0.11.15
+    pullPolicy:
 
 ## TLS
 ## templates/tls-certs.yaml
@@ -208,10 +236,18 @@ tls:
   proxy:
     enabled: false
     cert_name: tls-proxy
+    # set to false if you want to use an existing certificate
+    createCert: true
+    # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
+    dnsNames:
+    # - example.com
   # settings for generating certs for broker
   broker:
     enabled: false
     cert_name: tls-broker
+    # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
+    dnsNames:
+    # - example.com
   # settings for generating certs for bookies
   bookie:
     enabled: false
@@ -229,6 +265,8 @@ tls:
   # TLS setting for function runtime instance
   function_instance:
     # controls the use of TLS for function runtime connections towards brokers
+    enabled: false
+  oxia:
     enabled: false
 
 # Enable or disable broker authentication and authorization.
@@ -286,13 +324,18 @@ certs:
     apiVersion: cert-manager.io/v1
     enabled: false
     component: internal-cert-issuer
+    # The type of issuer, supports selfsigning and ca
     type: selfsigning
     # 90d
     duration: 2160h
     # 15d
     renewBefore: 360h
   issuers:
+    # Used for certs.type as selfsigning, the selfsigned issuer has no dependency on any other resource.
     selfsigning:
+    # used for certs.type as ca, the CA issuer needs to reference a Secret which contains your CA certificate and signing private key.
+    ca:
+      secretName:
 
 ######################################################################
 # Below are settings for each component
@@ -310,7 +353,8 @@ zookeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  # This is how prometheus discovers this component
+  initContainers: []
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -326,6 +370,7 @@ zookeeper:
     clientTls: 2281
     follower: 2888
     leaderElection: 3888
+    # admin: 9990
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   probe:
@@ -354,6 +399,8 @@ zookeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -461,7 +508,81 @@ zookeeper:
     usePolicy: true
     maxUnavailable: 1
 
-
+## Pulsar: Oxia cluster
+oxia:
+  component: oxia
+  initialShardCount: 3
+  replicationFactor: 3
+## templates/coordinator-deployment.yaml
+  coordinator:
+    # This is how Victoria Metrics or Prometheus discovers this component
+    podMonitor:
+      enabled: true
+      interval: 60s
+      scrapeTimeout: 60s
+      metricRelabelings:
+        # - action: labeldrop
+        #   regex: cluster
+    cpuLimit: 100m
+    memoryLimit: 128Mi
+    ports:
+      internal: 6649
+      metrics: 8080
+    service:
+      annotations: {}
+    service_account:
+      annotations: {}
+    tolerations: []
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
+## templates/server-statefulset.yaml
+  server:
+    # This is how Victoria Metrics or Prometheus discovers this component
+    podMonitor:
+      enabled: true
+      interval: 60s
+      scrapeTimeout: 60s
+      metricRelabelings:
+        # - action: labeldrop
+        #   regex: cluster
+    replicas: 3
+    # CPU limit for the server pod
+    cpuLimit: 1
+    # Memory limit for the server pod
+    memoryLimit: 1Gi
+    # Oxia database cache size in MB
+    dbCacheSizeMb: 512
+    # Storage size for the PVC of the server pod
+    storageSize: 8Gi
+    # Storage class name for the PVC of the server pod
+    # storageClassName: existent-storage-class
+    ports:
+      public: 6648
+      internal: 6649
+      metrics: 8080
+    service:
+      public:
+        annotations: {}
+      internal:
+        annotations: {}
+    service_account:
+      annotations: {}
+    securityContext:
+      fsGroup: 0
+      fsGroupChangePolicy: "OnRootMismatch"
+    affinity:
+      anti_affinity: true
+      anti_affinity_topology_key: kubernetes.io/hostname
+      # Set the anti affinity type. Valid values:
+      # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
+      # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
+      type: requiredDuringSchedulingIgnoredDuringExecution
+    # set topologySpreadConstraint to deploy pods across different zones
+    topologySpreadConstraints: []
+    tolerations: []
+    # nodeSelector:
+      # cloud.google.com/gke-nodepool: default-pool
+  pprofEnabled: false
 ## Pulsar: Bookkeeper cluster
 ## templates/bookkeeper-statefulset.yaml
 ##
@@ -472,6 +593,12 @@ bookkeeper:
   ## BookKeeper Cluster Initialize
   ## templates/bookkeeper-cluster-initialize.yaml
   metadata:
+    ## Timeout for waiting for zookeeper to become available before running metadata initialization
+    waitZookeeperTimeout: 600
+    ## Timeout for running metadata initialization
+    initTimeout: 60
+    ## Timeout for waiting for oxia to be available before running metadata initialization. This setting applies only when oxia is enabled.
+    waitOxiaTimeout: 600
     ## Set the resources used for running `bin/bookkeeper shell initnewcluster`
     ##
     resources:
@@ -482,7 +609,8 @@ bookkeeper:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  # This is how prometheus discovers this component
+  initContainers: []
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -524,9 +652,13 @@ bookkeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for bookkeeper cluster metadata to be initialized before starting a bookie
+  waitMetadataTimeout: 600
   resources:
     requests:
       memory: 512Mi
@@ -688,7 +820,8 @@ autorecovery:
   # so the metrics are correctly rendered in grafana dashboard
   component: recovery
   replicaCount: 1
-  # This is how prometheus discovers this component
+  initContainers: []
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
@@ -709,13 +842,21 @@ autorecovery:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   # tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for bookkeeper to become available before starting a broker
+  waitBookkeeperTimeout: 120
   resources:
     requests:
       memory: 64Mi
       cpu: 0.05
+  ## Bookkeeper auto-recovery service
+  ## templates/autorecovery-service.yaml
+  service:
+    annotations: {}
   ## Bookkeeper auto-recovery service account
   ## templates/autorecovery-service-account.yaml
   service_account:
@@ -742,11 +883,68 @@ pulsar_metadata:
     repository:
     # uses defaultPulsarImageTag when unspecified
     tag:
-    pullPolicy: IfNotPresent
-  ## set an existing configuration store
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
+  ## set an existing configuration store. This setting applies only when zookeeper is enabled.
   # configurationStore:
+  # the prefix for the configuration store metadata. This setting applies only when zookeeper is enabled.
   configurationStoreMetadataPrefix: ""
+  # the configuration store port. This setting applies only when zookeeper is enabled.
   configurationStorePort: 2181
+  # the zookeeper timeout. This setting applies only when zookeeper is enabled.
+  waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before running metadata initialization. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
+  ## Timeout for waiting for bookkeeper to be initialized before running metadata initialization
+  waitBookkeeperTimeout: 120
+  ## Timeout for running metadata initialization
+  initTimeout: 60
+
+  ## Allow read-only operations on the metadata store when the metadata store is not available.
+  ## This is useful when you want to continue serving requests even if the metadata store is not fully available with quorum.
+  metadataStoreAllowReadOnlyOperations: false
+
+  ## The session timeout for the metadata store in milliseconds.
+  metadataStoreSessionTimeoutMillis: 30000
+
+  ## Metadata store operation timeout in seconds.
+  metadataStoreOperationTimeoutSeconds: 30
+
+  ## The expiry time for the metadata store cache in seconds.
+  metadataStoreCacheExpirySeconds: 300
+
+  ## Whether we should enable metadata operations batching
+  metadataStoreBatchingEnabled: true
+
+  ## Maximum delay to impose on batching grouping (in milliseconds)
+  metadataStoreBatchingMaxDelayMillis: 5
+
+  ## Maximum number of operations to include in a singular batch
+  metadataStoreBatchingMaxOperations: 1000
+
+  ## Maximum size of a batch (in KB)
+  metadataStoreBatchingMaxSizeKb: 128
+
+  ## BookKeeper client and BookKeeper metadata configuration settings with Pulsar Helm Chart deployments
+  bookkeeper:
+    ## Controls whether to use the PIP-45 metadata driver (PulsarMetadataClientDriver) for BookKeeper client
+    ## in the Pulsar Broker when using ZooKeeper as a metadata store.
+    ## This is setting applies to Pulsar Broker's BookKeeper client.
+    ## When set to true, Pulsar Broker's BookKeeper client will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
+    ## When set to false, Pulsar Broker's BookKeeper client will use BookKeeper's default ZooKeeper connection implementation.
+    usePulsarMetadataClientDriver: false
+
+    ## Controls whether to use the PIP-45 metadata driver (PulsarMetadataBookieDriver) for BookKeeper components
+    ## when using ZooKeeper as a metadata store.
+    ## This is a global setting that applies to all BookKeeper components.
+    ## When set to true, BookKeeper components will use the PIP-45 metadata driver (PulsarMetadataBookieDriver).
+    ## When set to false, BookKeeper components will use BookKeeper's default ZooKeeper connection implementation.
+    ## Warning: Do not enable this feature unless you are aware of the risks and have tested it in non-production environments.
+    usePulsarMetadataBookieDriver: false
+
+    ## The session timeout for the metadata store in milliseconds. This setting is mapped to `zkTimeout` in `bookkeeper.conf`.
+    ## due to implementation details in the PulsarMetadataBookieDriver, it also applies when Oxia metadata store is enabled.
+    metadataStoreSessionTimeoutMillis: 30000
 
   # resources for bin/pulsar initialize-cluster-metadata
   resources:
@@ -785,11 +983,24 @@ broker:
     maxReplicas: 3
     metrics: ~
     behavior: ~
-  # This is how prometheus discovers this component
+  # The podManagementPolicy cannot be modified for an existing deployment. If you need to change this value, you will need to manually delete the existing broker StatefulSet and then redeploy the chart.
+  podManagementPolicy:
+  initContainers: []
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
     scrapeTimeout: 60s
+    # Removes metrics that end with _created suffix
+    # These metrics are automatically generated by the Prometheus client library to comply with OpenMetrics format
+    # and aren't currently used. Disable this if you need to use these metrics or add an exclusion pattern when
+    # a specific metric is needed.
+    dropUnderscoreCreatedMetrics:
+      enabled: true
+      # Optional regex pattern to exclude specific metrics from being dropped
+      # excludePatterns:
+      #  - pulsar_topic_load_times_created
+    # Custom metric relabelings to apply to all metrics
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
@@ -828,9 +1039,17 @@ broker:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: preferredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for zookeeper to become available before starting a broker
+  waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before starting a broker. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
+  ## Timeout for waiting for bookkeeper to become available before starting a broker
+  waitBookkeeperTimeout: 120
   resources:
     requests:
       memory: 512Mi
@@ -848,12 +1067,12 @@ broker:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  extreEnvs: []
-#    - name: POD_NAME
-#      valueFrom:
-#        fieldRef:
-#          apiVersion: v1
-#          fieldPath: metadata.name
+  extraEnvs: []
+  #  - name: POD_NAME
+  #    valueFrom:
+  #      fieldRef:
+  #        apiVersion: v1
+  #        fieldPath: metadata.name
   ## Broker configmap
   ## templates/broker-configmap.yaml
   ## Keys in broker.conf can be overridden here. Use PULSAR_PREFIX_ to add keys to broker.conf.
@@ -877,9 +1096,9 @@ broker:
       -XX:-ResizePLAB
       -XX:+ExitOnOutOfMemoryError
       -XX:+PerfDisableSharedMem
-    managedLedgerDefaultEnsembleSize: "1"
-    managedLedgerDefaultWriteQuorum: "1"
-    managedLedgerDefaultAckQuorum: "1"
+    managedLedgerDefaultEnsembleSize: "2"
+    managedLedgerDefaultWriteQuorum: "2"
+    managedLedgerDefaultAckQuorum: "2"
 
   ## Add a custom command to the start up process of the broker pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
@@ -1023,11 +1242,22 @@ proxy:
     maxReplicas: 3
     metrics: ~
     behavior: ~
-  # This is how prometheus discovers this component
+  initContainers: []
+  # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
     enabled: true
     interval: 60s
     scrapeTimeout: 60s
+    # Removes metrics that end with _created suffix
+    # These metrics are automatically generated by the Prometheus client library to comply with OpenMetrics format
+    # and aren't currently used. Disable this if you need to use these metrics or add an exclusion pattern when
+    # a specific metric is needed.
+    dropUnderscoreCreatedMetrics:
+      enabled: true
+      # Optional regex pattern to exclude specific metrics from being dropped
+      # excludePatterns:
+      #  - pulsar_proxy_new_connections_created
+    # Custom metric relabelings to apply to all metrics
     metricRelabelings:
       # - action: labeldrop
       #   regex: cluster
@@ -1061,9 +1291,17 @@ proxy:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
+  ## Timeout for waiting for zookeeper to become available before starting a proxy
+  waitZookeeperTimeout: 600
+  ## Timeout for waiting for oxia to be available before starting a proxy. This setting applies only when oxia is enabled.
+  waitOxiaTimeout: 600
+  ## Timeout for waiting for brokers to become available before starting a proxy
+  waitBrokerTimeout: 120
   resources:
     requests:
       memory: 128Mi
@@ -1081,7 +1319,7 @@ proxy:
   #     readOnly: true
   extraVolumes: []
   extraVolumeMounts: []
-  extreEnvs: []
+  extraEnvs: []
 #    - name: POD_IP
 #      valueFrom:
 #        fieldRef:
@@ -1127,8 +1365,48 @@ proxy:
       http: 8080
       https: 8443
   service:
-    annotations: {}
-    type: LoadBalancer
+    # Service type defaults to ClusterIP for security reasons.
+    #
+    # SECURITY NOTICE: The Pulsar proxy is not designed for direct public internet exposure
+    # (see https://pulsar.apache.org/docs/4.0.x/administration-proxy/).
+    #
+    # If you need to expose the proxy outside of the cluster using a LoadBalancer service type:
+    # 1. Set type to LoadBalancer only in secured environments with proper network controls.
+    #    In cloud managed Kubernetes clusters, make sure to add annotations to the service to create an
+    #    internal load balancer so that the load balancer is not exposed to the public internet.
+    #    You must also ensure that the configuration is correct so that the load balancer is not exposed to the public internet.
+    # 2. Configure authentication and authorization
+    # 3. Use TLS for all connections
+    # 4. If you are exposing to unsecure networks, implement additional security measures like
+    #    IP restrictions (loadBalancerSourceRanges)
+    #
+    # Please notice that the the Apache Pulsar project takes no responsibility for any security issues
+    # for your deployment. Exposing the cluster using Pulsar Proxy to unsecure networks is not supported.
+    #
+    # Previous chart versions defaulted to LoadBalancer which could create security risks.
+    type: ClusterIP
+    # When using a LoadBalancer service type, add internal load balancer annotations to the service to create an internal load balancer.
+    annotations: {
+      ## Set internal load balancer annotations when using a LoadBalancer service type because of security reasons.
+      ## You must also ensure that the configuration is correct so that the load balancer is not exposed to the public internet.
+      ## This information below is for reference only and may not be applicable to your cloud provider.
+      ## Please refer to the cloud provider's documentation for the correct annotations.
+      ## Kubernetes documentation about internal load balancers
+      ## https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+      ## AWS / EKS
+      ## Ensure that you have recent AWS Load Balancer Controller installed.
+      ## Docs: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/service/annotations/
+      # service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+      ## Azure / AKS
+      ## Docs: https://learn.microsoft.com/en-us/azure/aks/internal-lb
+      # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      ## GCP / GKE
+      ## Docs: https://cloud.google.com/kubernetes-engine/docs/concepts/service-load-balancer-parameters
+      # networking.gke.io/load-balancer-type: "Internal"
+      ## Allow global access to the internal load balancer when needed.
+      # networking.gke.io/internal-load-balancer-allow-global-access: "true"
+    }
+
     ## Optional. Leave it blank to get next available random IP.
     loadBalancerIP: ""
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
@@ -1137,6 +1415,8 @@ proxy:
     ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
     # loadBalancerSourceRanges:
     #   - 10.0.0.0/8
+    # Set a loadBalancerClass for loadbalancer service. (example: loadBalancerClass is needed by metallb)
+    # loadBalancerClass: ""
     # Optional. When setting proxy.service.type is set to NodePort, nodePorts allows to choose the port that will be open on each node to proxy requests to each destination proxy service.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
     nodePorts:
@@ -1159,6 +1439,7 @@ proxy:
 
     hostname: ""
     path: "/"
+    pathType: ImplementationSpecific
   ## Proxy PodDisruptionBudget
   ## templates/proxy-pdb.yaml
   ##
@@ -1167,16 +1448,19 @@ proxy:
     maxUnavailable: 1
 
 ## Pulsar ToolSet
-## templates/toolset-deployment.yaml
+## templates/toolset-statefulset.yaml
 ##
 toolset:
   component: toolset
   useProxy: true
   replicaCount: 1
+  initContainers: []
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1213,92 +1497,239 @@ toolset:
   additionalCommand:
 
 #############################################################
-### Monitoring Stack : kube-prometheus-stack chart
+### Monitoring Stack : victoria-metrics-k8s-stack chart
 #############################################################
 
-## Prometheus, Grafana, and the rest of the kube-prometheus-stack are managed by the dependent chart here:
-## https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-## For sample values, please see their documentation.
-kube-prometheus-stack:
+## Victoria Metrics, Grafana, and the rest of the monitoring stack are managed by the dependent chart here:
+## https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-k8s-stack
+## For sample values, please see: https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-k8s-stack/values.yaml
+victoria-metrics-k8s-stack:
+  ## Enable the victoria-metrics-k8s-stack chart
   enabled: true
-  prometheus:
+
+  ## VictoriaMetrics Operator dependency chart configuration
+  victoria-metrics-operator:
     enabled: true
+    # Install CRDs for VictoriaMetrics Operator
+    crds:
+      plain: true
+    operator:
+      ## By default, operator is configured to not convert Prometheus Operator monitoring.coreos.com/v1 objects
+      ## to Victoria Metrics operator operator.victoriametrics.com/v1beta1 objects.
+      # Enable this if you want to use Prometheus Operator objects for other purposes.
+      disable_prometheus_converter: true
+
+  ## Single-node VM instance
+  vmsingle:
+    enabled: true
+    ## -- Full spec for VMSingle CRD. Allowed values describe [here](https://docs.victoriametrics.com/operator/api#vmsinglespec)
+    spec:
+      retentionPeriod: "10d"
+      storage:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+
+  ## VM Agent for scraping metrics
+  vmagent:
+    enabled: true
+    ## Minikube specific settings - uncomment when using minikube
+    # spec:
+    #   volumes:
+    #     - hostPath:
+    #         path: /var/lib/minikube/certs/etcd
+    #         type: DirectoryOrCreate
+    #       name: etcd-certs
+    #   volumeMounts:
+    #     - mountPath: /var/lib/minikube/certs/etcd
+    #       name: etcd-certs
+
+  ## VM Alert for alerting rules - disabled by default
+  vmalert:
+    enabled: false
+
+  ## Alertmanager component - disabled by default
+  alertmanager:
+    enabled: false
+
+  ## Grafana component
+  ## Refer to https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
   grafana:
     enabled: true
     # Use random password at installation time for Grafana by default by setting empty value to `adminPassword`.
     # You can find out the actual password by running the following command:
     # kubectl get secret -l app.kubernetes.io/name=grafana -o=jsonpath="{.items[0].data.admin-password}" | base64 --decode
     adminPassword:
-    # Configure Pulsar dashboards for Grafana
+    persistence:
+      enabled: true
+      size: 5Gi
+    ## Disable Grafana sidecar dashboards
+    ## since this cannot be enabled in the same time as dashboards are enabled
+    sidecar:
+      dashboards:
+        enabled: false
+    # grafana.ini settings
+    grafana.ini:
+      analytics:
+        check_for_updates: false
+      dashboards:
+        default_home_dashboard_path: /var/lib/grafana/dashboards/pulsar/overview.json
+
+    ## Configure Pulsar dashboards for Grafana
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1
         providers:
-        - name: 'pulsar'
+        - name: 'default'
           orgId: 1
-          folder: 'Pulsar'
+          folder: ''
           type: file
           disableDeletion: true
           editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+        - name: oxia
+          orgId: 1
+          folder: Oxia
+          type: file
+          disableDeletion: true
+          editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/oxia
+        - name: pulsar
+          orgId: 1
+          folder: Pulsar
+          type: file
+          disableDeletion: true
+          editable: true
+          allowUiUpdates: true
           options:
             path: /var/lib/grafana/dashboards/pulsar
     dashboards:
+      default:
+        victoriametrics:
+          gnetId: 10229
+          revision: 38
+          datasource: VictoriaMetrics
+        kubernetes:
+          gnetId: 14205
+          datasource: VictoriaMetrics
+      oxia:
+        oxia-containers:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-containers.json
+        oxia-coordinator:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-coordinator.json
+        oxia-golang:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-golang.json
+        oxia-grpc:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-grpc.json
+        oxia-nodes:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-nodes.json
+        oxia-overview:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-overview.json
+        oxia-shards:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/oxia/oxia-shards.json
       pulsar:
-        # Download the maintained dashboards from AL 2.0 licenced repo https://github.com/streamnative/apache-pulsar-grafana-dashboard
+        bookkeeper-compaction:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper-compaction.json
         bookkeeper:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/bookkeeper.json
-          datasource: Prometheus
-        broker:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/broker.json
-          datasource: Prometheus
-        connector_sink:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/connector_sink.json
-          datasource: Prometheus
-        connector_source:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/connector_source.json
-          datasource: Prometheus
-        container:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/container.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/bookkeeper.json
+        broker-cache-by-broker:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/broker-cache-by-broker.json
+        broker-cache:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/broker-cache.json
+        connector-sink:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/connector-sink.json
+        connector-source:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/connector-source.json
         functions:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/functions.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/functions.json
         jvm:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/jvm.json
-          datasource: Prometheus
-        loadbalance:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/loadbalance.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/jvm.json
+        load-balancing:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/load-balancing.json
         messaging:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/messaging.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/messaging.json
+        namespace:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/namespace.json
         node:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/node.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/node.json
+        offloader:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/offloader.json
+        overview-by-broker:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/overview-by-broker.json
         overview:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/overview.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/overview.json
         proxy:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/proxy.json
-          datasource: Prometheus
-        recovery:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/recovery.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/proxy.json
+        sockets:
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/sockets.json
         topic:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/topic.json
-          datasource: Prometheus
-        transaction:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/transaction.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/topic.json
         zookeeper:
-          url: https://raw.githubusercontent.com/streamnative/apache-pulsar-grafana-dashboard/master/dashboards.kubernetes/zookeeper-3.6.json
-          datasource: Prometheus
+          url: https://raw.githubusercontent.com/lhotari/pulsar-grafana-dashboards/master/pulsar/zookeeper.json
+  ## Node exporter component
   prometheus-node-exporter:
     enabled: true
     hostRootFsMount:
       enabled: false
-  alertmanager:
-    enabled: false
+
+  ## Kube state metrics component
+  kube-state-metrics:
+    enabled: true
+
+  ## Components scraping Kubernetes services
+  kubelet:
+    enabled: true
+
+  kubeApiServer:
+    enabled: true
+
+  kubeControllerManager:
+    enabled: true
+    ## Additional settings for minikube environments
+    vmScrape:
+      spec:
+        endpoints:
+          - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+            port: http-metrics
+            scheme: https
+            tlsConfig:
+              caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecureSkipVerify: true  # For development environments like minikube
+
+  coreDns:
+    enabled: true
+
+  kubeEtcd:
+    enabled: true
+    ## Minikube specific settings - uncomment or adjust when using minikube
+    # service:
+    #   port: 2381
+    #   targetPort: 2381
+    # vmScrape:
+    #   spec:
+    #     endpoints:
+    #       - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    #         port: http-metrics
+    #         scheme: http  # Minikube often uses http instead of https for etcd
+
+  kubeScheduler:
+    enabled: true
+    ## Additional settings for minikube environments
+    vmScrape:
+      spec:
+        endpoints:
+          - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+            port: http-metrics
+            scheme: https
+            tlsConfig:
+              caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecureSkipVerify: true  # For development environments like minikube
 
 ## Components Stack: pulsar_manager
 ## templates/pulsar-manager.yaml
@@ -1306,12 +1737,17 @@ kube-prometheus-stack:
 pulsar_manager:
   component: pulsar-manager
   replicaCount: 1
+  initContainers: []
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
   # cloud.google.com/gke-nodepool: default-pool
+  # set topologySpreadConstraint to deploy pods across different zones
+  topologySpreadConstraints: []
   annotations: {}
   tolerations: []
+  extraVolumes: []
+  extraVolumeMounts: []
   gracePeriod: 30
   resources:
     requests:
@@ -1355,6 +1791,8 @@ pulsar_manager:
     ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
     # loadBalancerSourceRanges:
     #   - 10.0.0.0/8
+    # Set a loadBalancerClass for loadbalancer service. (example: loadBalancerClass is needed by metallb)
+    # loadBalancerClass: ""
   adminService:
     type: ClusterIP
     port: 7750
@@ -1375,6 +1813,7 @@ pulsar_manager:
 
     hostname: ""
     path: "/"
+    pathType: ImplementationSpecific
 
   ## On first install, the helm chart tries to reuse an existing secret with matching name by default
   ## if this should fail it uses the given username and password to create a new secret
