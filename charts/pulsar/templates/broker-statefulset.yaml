@@ -25,6 +25,7 @@ metadata:
   name: {{ $stsName | quote }}
   {{- $namespace := include "pulsar.namespace" . }}
   namespace: {{ $namespace | quote }}
+  annotations: {{ .Values.broker.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}

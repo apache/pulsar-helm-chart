@@ -24,6 +24,7 @@ kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.zookeeper.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}

@@ -23,6 +23,7 @@ kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.autorecovery.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.autorecovery.component }}
