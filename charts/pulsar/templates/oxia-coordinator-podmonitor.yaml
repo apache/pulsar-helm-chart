@@ -19,5 +19,5 @@
 
 # deploy oxia-coordinator PodMonitor only when `$.Values.oxia.coordinator.podMonitor.enabled` is true
 {{- if and $.Values.components.oxia $.Values.oxia.coordinator.podMonitor.enabled }}
-{{- include "pulsar.podMonitor" (list . "oxia.coordinator" "app.kubernetes.io/component: oxia-coordinator" "metrics") }}
+{{- include "pulsar.podMonitor" (list . "oxia.server" (printf "component: %s-coordinator" .Values.oxia.component)) }}
 {{- end }}
