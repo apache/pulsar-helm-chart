@@ -118,7 +118,7 @@ components:
   # zookeeper
   zookeeper: true
   # oxia
-  oxia: false
+  oxia: true
   # bookkeeper
   bookkeeper: true
   # bookkeeper - autorecovery
@@ -519,6 +519,8 @@ oxia:
     tolerations: []
     # nodeSelector:
       # cloud.google.com/gke-nodepool: default-pool
+    # customConfigMapName: ""
+    # entrypoint: {}
 ## templates/server-statefulset.yaml
   server:
     # This is how Victoria Metrics or Prometheus discovers this component

@@ -45,18 +45,22 @@ spec:
         prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
         {{- end }}
     spec:
-    {{- if .Values.oxia.server.nodeSelector }}
+    {{- if .Values.oxia.coordinator.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.oxia.server.nodeSelector | indent 8 }}
+{{ toYaml .Values.oxia.coordinator.nodeSelector | indent 8 }}
     {{- end }}
-    {{- if .Values.oxia.server.tolerations }}
+    {{- if .Values.oxia.coordinator.tolerations }}
       tolerations:
-{{ toYaml .Values.oxia.server.tolerations | indent 8 }}
+{{ toYaml .Values.oxia.coordinator.tolerations | indent 8 }}
     {{- end }}    
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:
         - command:
+{{- if .Values.oxia.coordinator.entrypoint }}
+{{ toYaml .Values.oxia.coordinator.entrypoint | indent 12 }}
+{{- else }}
             {{- include "oxia.coordinator.entrypoint" . | nindent 12 }}
+{{- end }}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
           imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           name: coordinator
