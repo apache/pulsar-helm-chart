@@ -62,7 +62,7 @@ keycloak:
       kind: ConfigMap
       metadata:
         name: realm-config
-        namespace: {{ .Release.Namespace }}
+        namespace: "{{ .Release.Namespace }}"
       data:
         pulsar-realm.json: |-
           {
@@ -308,6 +308,5 @@ keycloak:
                           "microprofile-jwt"
                       ]
                   }
-              ],
-              "keycloakVersion": "14.0.0"
+              ]
           }
