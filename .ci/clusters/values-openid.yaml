@@ -1,0 +1,313 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+
+auth:
+  authentication:
+    enabled: true
+    openid:
+      # Enable openid authentication
+      enabled: true
+  authorization:
+    enabled: true
+  superUsers:
+    # broker to broker communication
+    broker: "broker-admin"
+    # proxy to broker communication
+    proxy: "proxy-admin"
+    # pulsar-admin client to broker/proxy communication
+    client: "admin"
+    # pulsar manager to broker
+    manager: "manager-admin"
+
+components:
+  pulsar_manager: true
+
+# Deploy keycloak to test the openid authentication
+keycloak:
+  enabled: true
+  tls:
+    enabled: false
+  # This block sets up an example Pulsar Realm
+  # https://www.keycloak.org/server/importExport#_importing_a_realm_from_a_directory
+  extraEnvVars:
+    - name: KEYCLOAK_EXTRA_ARGS
+      value: "--import-realm"
+  extraVolumes:
+    - name: realm-config
+      configMap:
+        name: realm-config
+  extraVolumeMounts:
+    - name: realm-config
+      mountPath: "/opt/bitnami/keycloak/data/import"
+      readOnly: true
+  extraDeploy:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: realm-config
+        namespace: {{ .Release.Namespace }}
+      data:
+        pulsar-realm.json: |-
+          {
+              "id": "pulsar",
+              "realm": "pulsar",
+              "enabled": true,
+              "groups": [
+                  {
+                      "id": "3504da3f-6548-4423-9f1b-6153b8518731",
+                      "name": "producer",
+                      "path": "/producer",
+                      "attributes": {
+                          "sub": [
+                              "producer"
+                          ]
+                      },
+                      "realmRoles": [],
+                      "clientRoles": {},
+                      "subGroups": []
+                  },
+                  {
+                      "id": "94d5911d-8394-4387-8b36-9d1102b1d519",
+                      "name": "superuser",
+                      "path": "/superuser",
+                      "attributes": {
+                          "sub": [
+                              "superuser"
+                          ]
+                      },
+                      "realmRoles": [],
+                      "clientRoles": {},
+                      "subGroups": []
+                  }
+              ],
+              "users": [
+                  {
+                      "id": "1bdaebc5-30ca-455b-b1b2-a064e11c9896",
+                      "createdTimestamp": 1627407272587,
+                      "username": "service-account-pulsar-admin-example-client",
+                      "enabled": true,
+                      "totp": false,
+                      "emailVerified": false,
+                      "serviceAccountClientId": "pulsar-admin-example-client",
+                      "disableableCredentialTypes": [],
+                      "requiredActions": [],
+                      "realmRoles": [
+                          "default-roles-pulsar"
+                      ],
+                      "notBefore": 0,
+                      "groups": []
+                  }
+              ],
+              "clients": [
+                  {
+                      "id": "6767dd5d-28e0-421e-a276-c917dc46a8af",
+                      "clientId": "pulsar-admin-console",
+                      "surrogateAuthRequired": false,
+                      "enabled": true,
+                      "alwaysDisplayInConsole": false,
+                      "clientAuthenticatorType": "client-secret",
+                      "redirectUris": [],
+                      "webOrigins": [],
+                      "notBefore": 0,
+                      "bearerOnly": false,
+                      "consentRequired": false,
+                      "standardFlowEnabled": false,
+                      "implicitFlowEnabled": false,
+                      "directAccessGrantsEnabled": true,
+                      "serviceAccountsEnabled": false,
+                      "publicClient": true,
+                      "frontchannelLogout": false,
+                      "protocol": "openid-connect",
+                      "attributes": {
+                          "id.token.as.detached.signature": "false",
+                          "saml.assertion.signature": "false",
+                          "saml.force.post.binding": "false",
+                          "saml.multivalued.roles": "false",
+                          "saml.encrypt": "false",
+                          "oauth2.device.authorization.grant.enabled": "false",
+                          "backchannel.logout.revoke.offline.tokens": "false",
+                          "saml.server.signature": "false",
+                          "saml.server.signature.keyinfo.ext": "false",
+                          "use.refresh.tokens": "true",
+                          "exclude.session.state.from.auth.response": "false",
+                          "oidc.ciba.grant.enabled": "false",
+                          "saml.artifact.binding": "false",
+                          "backchannel.logout.session.required": "true",
+                          "client_credentials.use_refresh_token": "false",
+                          "saml_force_name_id_format": "false",
+                          "saml.client.signature": "false",
+                          "tls.client.certificate.bound.access.tokens": "false",
+                          "saml.authnstatement": "false",
+                          "display.on.consent.screen": "false",
+                          "saml.onetimeuse.condition": "false"
+                      },
+                      "authenticationFlowBindingOverrides": {},
+                      "fullScopeAllowed": true,
+                      "nodeReRegistrationTimeout": -1,
+                      "protocolMappers": [
+                          {
+                              "id": "42b5bd7c-235a-46c7-a712-40cd54fd0791",
+                              "name": "user-attribute-to-sub",
+                              "protocol": "openid-connect",
+                              "protocolMapper": "oidc-usermodel-attribute-mapper",
+                              "consentRequired": false,
+                              "config": {
+                                  "userinfo.token.claim": "true",
+                                  "user.attribute": "sub",
+                                  "id.token.claim": "true",
+                                  "access.token.claim": "true",
+                                  "claim.name": "sub",
+                                  "jsonType.label": "String"
+                              }
+                          }
+                      ],
+                      "defaultClientScopes": [
+                          "web-origins",
+                          "roles",
+                          "profile",
+                          "email"
+                      ],
+                      "optionalClientScopes": [
+                          "address",
+                          "phone",
+                          "offline_access",
+                          "microprofile-jwt"
+                      ]
+                  },
+                  {
+                      "id": "da5d898e-5d3a-4df9-9d5f-3c7f42c408e9",
+                      "clientId": "pulsar-admin-example-client",
+                      "surrogateAuthRequired": false,
+                      "enabled": true,
+                      "alwaysDisplayInConsole": false,
+                      "clientAuthenticatorType": "client-secret",
+                      "redirectUris": [],
+                      "webOrigins": [],
+                      "notBefore": 0,
+                      "bearerOnly": false,
+                      "consentRequired": false,
+                      "standardFlowEnabled": false,
+                      "implicitFlowEnabled": false,
+                      "directAccessGrantsEnabled": false,
+                      "serviceAccountsEnabled": true,
+                      "publicClient": false,
+                      "frontchannelLogout": false,
+                      "protocol": "openid-connect",
+                      "attributes": {
+                          "id.token.as.detached.signature": "false",
+                          "saml.assertion.signature": "false",
+                          "saml.force.post.binding": "false",
+                          "saml.multivalued.roles": "false",
+                          "saml.encrypt": "false",
+                          "oauth2.device.authorization.grant.enabled": "false",
+                          "backchannel.logout.revoke.offline.tokens": "false",
+                          "saml.server.signature": "false",
+                          "saml.server.signature.keyinfo.ext": "false",
+                          "use.refresh.tokens": "true",
+                          "exclude.session.state.from.auth.response": "false",
+                          "oidc.ciba.grant.enabled": "false",
+                          "saml.artifact.binding": "false",
+                          "backchannel.logout.session.required": "true",
+                          "client_credentials.use_refresh_token": "false",
+                          "saml_force_name_id_format": "false",
+                          "saml.client.signature": "false",
+                          "tls.client.certificate.bound.access.tokens": "false",
+                          "saml.authnstatement": "false",
+                          "display.on.consent.screen": "false",
+                          "saml.onetimeuse.condition": "false"
+                      },
+                      "authenticationFlowBindingOverrides": {},
+                      "fullScopeAllowed": true,
+                      "nodeReRegistrationTimeout": -1,
+                      "protocolMappers": [
+                          {
+                              "id": "b6986d12-fe9e-488a-958d-21968a3f327b",
+                              "name": "hard-coded-sub",
+                              "protocol": "openid-connect",
+                              "protocolMapper": "oidc-hardcoded-claim-mapper",
+                              "consentRequired": false,
+                              "config": {
+                                  "claim.value": "admin",
+                                  "userinfo.token.claim": "true",
+                                  "id.token.claim": "true",
+                                  "access.token.claim": "true",
+                                  "claim.name": "sub",
+                                  "access.tokenResponse.claim": "false"
+                              }
+                          },
+                          {
+                              "id": "1e3c4968-cb0e-4494-856a-d3b43b86b22f",
+                              "name": "Client ID",
+                              "protocol": "openid-connect",
+                              "protocolMapper": "oidc-usersessionmodel-note-mapper",
+                              "consentRequired": false,
+                              "config": {
+                                  "user.session.note": "clientId",
+                                  "id.token.claim": "true",
+                                  "access.token.claim": "true",
+                                  "claim.name": "clientId",
+                                  "jsonType.label": "String"
+                              }
+                          },
+                          {
+                              "id": "6afab66c-438a-4ded-a57b-77f5f24c50af",
+                              "name": "Client Host",
+                              "protocol": "openid-connect",
+                              "protocolMapper": "oidc-usersessionmodel-note-mapper",
+                              "consentRequired": false,
+                              "config": {
+                                  "user.session.note": "clientHost",
+                                  "id.token.claim": "true",
+                                  "access.token.claim": "true",
+                                  "claim.name": "clientHost",
+                                  "jsonType.label": "String"
+                              }
+                          },
+                          {
+                              "id": "9091332a-42e9-4fa1-82ea-b8fa4049897a",
+                              "name": "Client IP Address",
+                              "protocol": "openid-connect",
+                              "protocolMapper": "oidc-usersessionmodel-note-mapper",
+                              "consentRequired": false,
+                              "config": {
+                                  "user.session.note": "clientAddress",
+                                  "id.token.claim": "true",
+                                  "access.token.claim": "true",
+                                  "claim.name": "clientAddress",
+                                  "jsonType.label": "String"
+                              }
+                          }
+                      ],
+                      "defaultClientScopes": [
+                          "web-origins",
+                          "roles",
+                          "profile",
+                          "email"
+                      ],
+                      "optionalClientScopes": [
+                          "address",
+                          "phone",
+                          "offline_access",
+                          "microprofile-jwt"
+                      ]
+                  }
+              ],
+              "keycloakVersion": "14.0.0"
+          }
