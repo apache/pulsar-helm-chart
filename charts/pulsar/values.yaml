@@ -520,7 +520,7 @@ oxia:
     # nodeSelector:
       # cloud.google.com/gke-nodepool: default-pool
     # customConfigMapName: ""
-    # entrypoint: {}
+    # entrypoint: []
 ## templates/server-statefulset.yaml
   server:
     # This is how Victoria Metrics or Prometheus discovers this component
