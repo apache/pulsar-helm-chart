@@ -501,6 +501,8 @@ oxia:
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
   coordinator:
+    # annotations for the app (statefulset/deployment)
+    appAnnotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
@@ -523,6 +525,8 @@ oxia:
       # cloud.google.com/gke-nodepool: default-pool
 ## templates/server-statefulset.yaml
   server:
+    # annotations for the app (statefulset/deployment)
+    appAnnotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true

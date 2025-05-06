@@ -26,6 +26,7 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.oxia.component }}-server
+  annotations: {{ .Values.oxia.server.appAnnotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.oxia.server.replicas }}
   selector:
