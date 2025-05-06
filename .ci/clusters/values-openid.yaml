@@ -20,12 +20,12 @@
 
 auth:
   authentication:
-    enabled: true
+    enabled: false
     openid:
       # Enable openid authentication
-      enabled: true
+      enabled: false
   authorization:
-    enabled: true
+    enabled: false
   superUsers:
     # broker to broker communication
     broker: "broker-admin"
@@ -41,7 +41,7 @@ components:
 
 # Deploy keycloak to test the openid authentication
 keycloak:
-  enabled: false
+  enabled: true
   tls:
     enabled: false
   # This block sets up an example Pulsar Realm
