@@ -229,9 +229,9 @@ jobs:
           - name: Oxia
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
-          #- name: OpenID
-          #  values_file: .ci/clusters/values-openid.yaml
-          #  shortname: openid
+          - name: OpenID
+            values_file: .ci/clusters/values-openid.yaml
+            shortname: openid
         include:
           - k8sVersion:
               version: "1.25.16"
