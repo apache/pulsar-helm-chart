@@ -1849,3 +1849,6 @@ initContainer:
     requests:
       memory: 256Mi
       cpu: 0.1
+
+keycloak:
+  enabled: false
