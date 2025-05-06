@@ -41,7 +41,7 @@ components:
 
 # Deploy keycloak to test the openid authentication
 keycloak:
-  enabled: true
+  enabled: false
   tls:
     enabled: false
   # This block sets up an example Pulsar Realm
