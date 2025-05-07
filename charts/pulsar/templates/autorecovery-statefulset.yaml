@@ -127,6 +127,9 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
+        {{- if .Values.autorecovery.extraVolumeMounts }}
+{{ toYaml .Values.autorecovery.extraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
       {{- if .Values.autorecovery.initContainers }}
@@ -156,6 +159,9 @@ spec:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
+      {{- if .Values.autorecovery.extraVolumes }}
+{{ toYaml .Values.autorecovery.extraVolumes | indent 6 }}
+      {{- end }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
 
