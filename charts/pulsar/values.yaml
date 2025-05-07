@@ -385,6 +385,8 @@ zookeeper:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -499,6 +501,8 @@ oxia:
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
   coordinator:
+    # annotations for the app (statefulset/deployment)
+    appAnnotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
@@ -521,6 +525,8 @@ oxia:
       # cloud.google.com/gke-nodepool: default-pool
 ## templates/server-statefulset.yaml
   server:
+    # annotations for the app (statefulset/deployment)
+    appAnnotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
@@ -638,6 +644,8 @@ bookkeeper:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -828,6 +836,8 @@ autorecovery:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   # tolerations: []
   gracePeriod: 30
@@ -1027,6 +1037,8 @@ broker:
     type: preferredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1279,6 +1291,8 @@ proxy:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1447,6 +1461,8 @@ toolset:
     # cloud.google.com/gke-nodepool: default-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1730,6 +1746,8 @@ pulsar_manager:
   # cloud.google.com/gke-nodepool: default-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   extraVolumes: []
