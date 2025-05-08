@@ -36,7 +36,7 @@ spec:
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- with .Values.pulsar_metadata.nodeSelector }}
+      {{- if .Values.pulsar_metadata.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
