@@ -385,6 +385,8 @@ zookeeper:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -499,6 +501,8 @@ oxia:
   replicationFactor: 3
 ## templates/coordinator-deployment.yaml
   coordinator:
+    # annotations for the app (statefulset/deployment)
+    appAnnotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
@@ -523,6 +527,8 @@ oxia:
     # entrypoint: []
 ## templates/server-statefulset.yaml
   server:
+    # annotations for the app (statefulset/deployment)
+    appAnnotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
@@ -640,6 +646,8 @@ bookkeeper:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -830,6 +838,8 @@ autorecovery:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   # tolerations: []
   gracePeriod: 30
@@ -854,6 +864,8 @@ autorecovery:
     BOOKIE_MEM: >
       -Xms64m -Xmx64m
     PULSAR_PREFIX_useV2WireProtocol: "true"
+  extraVolumes: []
+  extraVolumeMounts: []
 
 ## Pulsar Zookeeper metadata. The metadata will be deployed as
 ## soon as the last zookeeper node is reachable. The deployment
@@ -1027,6 +1039,8 @@ broker:
     type: preferredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1279,6 +1293,8 @@ proxy:
     type: requiredDuringSchedulingIgnoredDuringExecution
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1447,6 +1463,8 @@ toolset:
     # cloud.google.com/gke-nodepool: default-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   gracePeriod: 30
@@ -1730,6 +1748,8 @@ pulsar_manager:
   # cloud.google.com/gke-nodepool: default-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # annotations for the app (statefulset/deployment)
+  appAnnotations: {}
   annotations: {}
   tolerations: []
   extraVolumes: []
