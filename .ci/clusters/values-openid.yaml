@@ -17,13 +17,32 @@
 # under the License.
 #
 
+components:
+  # disable functions until broker authentication works
+  functions: false
 
 auth:
   authentication:
-    enabled: false
+    enabled: true
     openid:
       # Enable openid authentication
-      enabled: false
+      enabled: true
+      # https://pulsar.apache.org/docs/next/security-openid-connect/#enable-openid-connect-authentication-in-the-broker-and-proxy
+      openIDAllowedTokenIssuers:
+        - http://keycloak:8080/realms/pulsar
+      openIDAllowedAudiences:
+        - account
+      #openIDTokenIssuerTrustCertsFilePath:
+      openIDRoleClaim: "sub"
+      openIDAcceptedTimeLeewaySeconds: "0"
+      openIDCacheSize: "5"
+      openIDCacheRefreshAfterWriteSeconds: "64800"
+      openIDCacheExpirationSeconds: "86400"
+      openIDHttpConnectionTimeoutMillis: "10000"
+      openIDHttpReadTimeoutMillis: "10000"
+      openIDKeyIdCacheMissRefreshSeconds: "300"
+      openIDRequireIssuersUseHttps: "false"
+      openIDFallbackDiscoveryMode: "DISABLED"
   authorization:
     enabled: false
   superUsers:
@@ -35,9 +54,6 @@ auth:
     client: "admin"
     # pulsar manager to broker
     manager: "manager-admin"
-
-components:
-  pulsar_manager: true
 
 # Deploy keycloak to test the openid authentication
 keycloak:
@@ -119,6 +135,7 @@ keycloak:
                   {
                       "id": "6767dd5d-28e0-421e-a276-c917dc46a8af",
                       "clientId": "pulsar-admin-console",
+                      "secr"
                       "surrogateAuthRequired": false,
                       "enabled": true,
                       "alwaysDisplayInConsole": false,
