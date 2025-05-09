@@ -523,6 +523,8 @@ oxia:
     tolerations: []
     # nodeSelector:
       # cloud.google.com/gke-nodepool: default-pool
+    extraContainers: []
+    extraVolumes: []
 ## templates/server-statefulset.yaml
   server:
     # annotations for the app (statefulset/deployment)

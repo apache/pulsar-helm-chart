@@ -74,4 +74,11 @@ spec:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
           readinessProbe:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
+      {{- if .Values.oxia.coordinator.extraContainers }}
+        {{- toYaml .Values.oxia.coordinator.extraContainers | nindent 8 }}
+      {{- end }}
+      {{- if .Values.oxia.coordinator.extraVolumes }}
+      volumes:
+{{- toYaml .Values.oxia.coordinator.extraVolumes | nindent 8 }}
+      {{- end }}
 {{- end }}
