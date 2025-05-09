@@ -118,7 +118,7 @@ components:
   # zookeeper
   zookeeper: true
   # oxia
-  oxia: true
+  oxia: false
   # bookkeeper
   bookkeeper: true
   # bookkeeper - autorecovery
