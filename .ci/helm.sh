@@ -149,6 +149,11 @@ function ci::install_pulsar_chart() {
       # configure metallb
       ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
       install_args=""
+
+      # create openid resources
+      if [[ "x${AUTHENTICATION_PROVIDER}" == "xopenid" ]]; then
+          ci::create_openid_resources
+      fi
     else
       install_args="--wait --wait-for-jobs --timeout 360s --debug"
     fi

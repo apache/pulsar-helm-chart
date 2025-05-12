@@ -54,10 +54,6 @@ if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
     extra_opts+=("--pulsar-superusers" "proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}")
 fi
 
-if [[ "x${AUTHENTICATION_PROVIDER}" == "xopenid" ]]; then
-    ci::create_openid_resources
-fi
-
 install_type="install"
 test_action="produce-consume"
 if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
