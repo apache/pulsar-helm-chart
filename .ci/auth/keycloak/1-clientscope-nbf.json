@@ -1,0 +1,32 @@
+{
+  "id": "fe4f5583-c511-474f-b86d-850fbb6c9ca5",
+  "name": "nbf-claim",
+  "description": "not-before claim",
+  "protocol": "openid-connect",
+  "attributes": {
+    "include.in.token.scope": "false",
+    "display.on.consent.screen": "false",
+    "gui.order": "",
+    "consent.screen.text": ""
+  },
+  "protocolMappers": [
+    {
+      "id": "3b3ba0f0-aaf2-4683-ae70-a4d2036808be",
+      "name": "nbf-claim",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-hardcoded-claim-mapper",
+      "consentRequired": false,
+      "config": {
+        "introspection.token.claim": "true",
+        "claim.value": "1745971200",
+        "userinfo.token.claim": "true",
+        "id.token.claim": "true",
+        "lightweight.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "nbf",
+        "jsonType.label": "long",
+        "access.tokenResponse.claim": "true"
+      }
+    }
+  ]
+}

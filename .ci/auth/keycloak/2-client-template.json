@@ -1,0 +1,38 @@
+{
+  "clientId": $ARGS.named.CLIENT_ID,
+  "enabled": true,
+  "clientAuthenticatorType": "client-secret",
+  "secret": $ARGS.named.CLIENT_SECRET,
+  "standardFlowEnabled" : false,
+  "implicitFlowEnabled" : false,
+  "serviceAccountsEnabled": true,
+  "protocol": "openid-connect",
+  "attributes": {
+    "realm_client": "false",
+    "oidc.ciba.grant.enabled": "false",
+    "client.secret.creation.time": "1746777925",
+    "backchannel.logout.session.required": "true",
+    "standard.token.exchange.enabled": "false",
+    "frontchannel.logout.session.required": "true",
+    "oauth2.device.authorization.grant.enabled": "false",
+    "display.on.consent.screen": "false",
+    "backchannel.logout.revoke.offline.tokens": "false"
+  },
+  "defaultClientScopes": [
+    "web-origins",
+    "service_account",
+    "acr",
+    "profile",
+    "roles",
+    "nbf-claim",
+    "basic",
+    "email"
+  ],
+  "optionalClientScopes": [
+    "address",
+    "phone",
+    "organization",
+    "offline_access",
+    "microprofile-jwt"
+  ]
+}

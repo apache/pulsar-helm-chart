@@ -483,6 +483,43 @@ function _ci::validate_kustomize_yaml() {
   }'
 }
 
+# Create all resources needed for openid authentication
+function ci::create_openid_resources() {
+
+  # Merge the keycloack partial export with client scopes
+  jq '.clientScopes += [input]' ${PULSAR_HOME}/.ci/auth/keycloak/0-realm-pulsar-partial-export.json ${PULSAR_HOME}/.ci/auth/keycloak/1-clientscope-nbf.json > /tmp/realm-pulsar.json
+
+  for component in broker proxy client manager; do
+
+    echo "Creating openid resources for ${component}"
+
+    local client_id=pulsar-${component}
+    local client_secret=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+
+    # Create the client credentials secret
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
+
+    local secret_name="${component}-credentials"
+    ${KUBECTL} create secret generic ${secret_name} \
+      --from-file=credentials_file.json=/tmp/${component}-credentials_file.json \
+      -n ${NAMESPACE}
+
+    # Create the keycloak client file
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/keycloak/2-client-template.json > /tmp/${component}-keycloak-client.json
+
+    # Merge the keycloak client file with the realm
+    jq '.clients += [input]' /tmp/realm-pulsar.json /tmp/${component}-keycloak-client.json > /tmp/realm-pulsar.json.tmp
+    mv /tmp/realm-pulsar.json.tmp /tmp/realm-pulsar.json
+
+  done
+
+  # Create the keycloak realm configuration
+  ${KUBECTL} create secret generic keycloak-realm-pulsar \
+    --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
+    -n ${NAMESPACE}
+
+}
+
 # lists all available functions in this tool
 function ci::list_functions() {
   declare -F | awk '{print $NF}' | sort | grep -E '^ci::' | sed 's/^ci:://'
