@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Run tests
         run: |
-          CLIENT_SECRET=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32)); print(random_string);")
+          CLIENT_SECRET=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
           echo "CLIENT_SECRET=${CLIENT_SECRET}"
   
   preconditions:
