@@ -22,7 +22,7 @@ proxy:
   configData:
     # Authentication settings of the broker itself. Used when the broker connects to other brokers, or when the proxy connects to brokers, either in same or other clusters
     brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.oauth2.AuthenticationOAuth2"
-    brokerClientAuthenticationParameters: '{"privateKey":"file:///pulsar/auth/proxy/credentials_file.json","audience":"account","issuerUrl":"http://keycloak-headless:8080/realms/pulsar"}'
+    brokerClientAuthenticationParameters: '{"privateKey":"file:///pulsar/auth/proxy/credentials_file.json","audience":"account","issuerUrl":"http://pulsar-ci-keycloak-headless:8080/realms/pulsar"}'
   extraVolumes:
     - name: pulsar-proxy-credentials
       secret:
@@ -36,7 +36,7 @@ broker:
   configData:
     # Authentication settings of the broker itself. Used when the broker connects to other brokers, or when the proxy connects to brokers, either in same or other clusters
     brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.oauth2.AuthenticationOAuth2"
-    brokerClientAuthenticationParameters: '{"privateKey":"file:///pulsar/auth/broker/credentials_file.json","audience":"account","issuerUrl":"http://keycloak-headless:8080/realms/pulsar"}'
+    brokerClientAuthenticationParameters: '{"privateKey":"file:///pulsar/auth/broker/credentials_file.json","audience":"account","issuerUrl":"http://pulsar-ci-keycloak-headless:8080/realms/pulsar"}'
   extraVolumes:
     - name: pulsar-broker-credentials
       secret:
@@ -54,7 +54,7 @@ auth:
       enabled: true
       # https://pulsar.apache.org/docs/next/security-openid-connect/#enable-openid-connect-authentication-in-the-broker-and-proxy
       openIDAllowedTokenIssuers:
-        - http://keycloak-headless:8080/realms/pulsar
+        - http://pulsar-ci-keycloak-headless:8080/realms/pulsar
       openIDAllowedAudiences:
         - account
       #openIDTokenIssuerTrustCertsFilePath:
