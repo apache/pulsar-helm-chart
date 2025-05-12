@@ -494,7 +494,7 @@ function ci::create_openid_resources() {
     echo "Creating openid resources for ${component}"
 
     local client_id=pulsar-${component}
-    # /dev/urandom hang on github actions runner, so use python to generate a random string
+    # Github action hang up when read string from /dev/urandom, so use python to generate a random string
     local client_secret=$(python -c "import secrets; import string; ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))")
 
     # Create the client credentials secret

@@ -32,6 +32,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  test:
+    name: Test python secrets
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Run tests
+        run: |
+          python -c "import secrets; import string; ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+  
   preconditions:
     name: Preconditions
     runs-on: ubuntu-24.04
