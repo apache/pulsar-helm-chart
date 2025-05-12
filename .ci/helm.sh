@@ -505,7 +505,7 @@ function ci::create_openid_resources() {
     # Create the client credentials secret
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
 
-    local secret_name="${component}-credentials"
+    local secret_name="pulsar-${component}-credentials"
     ${KUBECTL} create secret generic ${secret_name} \
       --from-file=credentials_file.json=/tmp/${component}-credentials_file.json \
       -n ${NAMESPACE}
