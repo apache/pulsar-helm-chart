@@ -494,11 +494,7 @@ function ci::create_openid_resources() {
     echo "Creating openid resources for ${component}"
 
     local client_id=pulsar-${component}
-    set +e
-    tr -dc '[:alnum:]' < /dev/urandom | head -c 32
-    cat /dev/urandom | tr -dc '[:alnum:]' | head -c 32
-    set -e
-    local client_secret=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+    local client_secret=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 
     # Create the client credentials secret
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
