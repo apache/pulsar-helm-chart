@@ -494,7 +494,8 @@ function ci::create_openid_resources() {
     echo "Creating openid resources for ${component}"
 
     local client_id=pulsar-${component}
-    local client_secret=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+    # /dev/urandom hang on github actions runner, so use python to generate a random string
+    local client_secret=$(python -c "import secrets; import string; ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))")
 
     # Create the client credentials secret
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
