@@ -92,8 +92,8 @@ keycloak:
       value: "--import-realm"
   extraVolumes:
     - name: keycloak-realm-pulsar
-      configMap:
-        name: keycloak-realm-pulsar
+      secret:
+        secretName: keycloak-realm-pulsar
   extraVolumeMounts:
     - name: keycloak-realm-pulsar
       mountPath: "/opt/bitnami/keycloak/data/import"
