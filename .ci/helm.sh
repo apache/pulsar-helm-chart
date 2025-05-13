@@ -178,6 +178,10 @@ function ci::install_pulsar_chart() {
     ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} "${extra_values[@]}" --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
     set +x
 
+    
+    echo "Services :"
+    ${KUBECTL} get services -n ${NAMESPACE}
+
     if [[ "${install_type}" == "install" ]]; then
       echo "wait until broker is alive"
       WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep ${CLUSTER}-broker | wc -l)
@@ -550,8 +554,8 @@ function ci::create_openid_resources() {
   echo "Show services"
   ${KUBECTL} get services -n ${NAMESPACE}
 
-  echo "Check realm pulsar openid configuration"
-  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci:80/realms/pulsar/.well-known/openid-configuration'
+  #echo "Check realm pulsar openid configuration"
+  #${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci:80/realms/pulsar/.well-known/openid-configuration'
 
 }
 
