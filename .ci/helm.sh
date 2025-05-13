@@ -546,8 +546,12 @@ function ci::create_openid_resources() {
     fi
     WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
   done
+
   echo "Show services"
   ${KUBECTL} get services -n ${NAMESPACE}
+
+  echo "Check realm pulsar openid configuration"
+  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar/.well-known/openid-configuration'
 
 }
 
