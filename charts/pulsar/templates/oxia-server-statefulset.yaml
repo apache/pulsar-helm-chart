@@ -45,6 +45,9 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.oxia.server.ports.metrics }}"
         {{- end }}
+{{- with .Values.oxia.server.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
     {{- if .Values.oxia.server.nodeSelector }}
       nodeSelector:

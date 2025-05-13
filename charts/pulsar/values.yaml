@@ -503,6 +503,8 @@ oxia:
   coordinator:
     # annotations for the app (statefulset/deployment)
     appAnnotations: {}
+    # pods annotations
+    annotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
@@ -527,6 +529,8 @@ oxia:
   server:
     # annotations for the app (statefulset/deployment)
     appAnnotations: {}
+    # pods annotations
+    annotations: {}
     # This is how Victoria Metrics or Prometheus discovers this component
     podMonitor:
       enabled: true
