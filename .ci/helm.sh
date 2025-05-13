@@ -90,8 +90,8 @@ function ci::helm_repo_add() {
 }
 
 function ci::print_pod_logs() {
-    echo "Logs for all pulsar containers:"
-    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
+    echo "Logs for all containers:"
+    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -o=name); do
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --tail=100 || true
     done;
 }
@@ -99,7 +99,7 @@ function ci::print_pod_logs() {
 function ci::collect_k8s_logs() {
     mkdir -p "${K8S_LOGS_DIR}" && cd "${K8S_LOGS_DIR}"
     echo "Collecting k8s logs to ${K8S_LOGS_DIR}"
-    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
+    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -o=name); do
       filebase="${k8sobject//\//_}"
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${filebase}.$$.log.txt" || true
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${filebase}.previous.$$.log.txt" || true
