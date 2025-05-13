@@ -552,7 +552,7 @@ function ci::create_openid_resources() {
   ${KUBECTL} get services -n ${NAMESPACE}
 
   echo "Wait until keycloak-ci is ready"
-  ${KUBECTL} exec -n ${NAMESPACE} $keycloak-ci-0 -- bash -c 'until nslookup keycloak-ci-headless; do sleep 3; done'
+  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -- bash -c 'until nslookup keycloak-ci-headless; do sleep 3; done'
 
 }
 
