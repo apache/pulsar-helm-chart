@@ -520,13 +520,13 @@ function ci::create_openid_resources() {
   done
 
   # Create the keycloak realm configuration
-  ${KUBECTL} create secret generic keycloak-realm-pulsar \
+  ${KUBECTL} create secret generic keycloak-ci-realm-pulsar \
     --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
     -n ${NAMESPACE}
 
   # Install keycloak helm chart
   echo "Installing keycloak helm chart"
-  ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml
+  ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml -n ${NAMESPACE}
 
   echo "Wait until keycloak is alive"
   WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
