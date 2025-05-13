@@ -25,10 +25,10 @@ extraEnvVars:
   - name: KEYCLOAK_EXTRA_ARGS
     value: "--import-realm"
 extraVolumes:
-  - name: realm-pulsar
+  - name: realm-config
     secret:
-      secretName: keycloak-ci-realm-pulsar
+      secretName: keycloak-ci-realm-config
 extraVolumeMounts:
-  - name: realm-pulsar
+  - name: realm-config
     mountPath: "/opt/bitnami/keycloak/data/import"
     readOnly: true

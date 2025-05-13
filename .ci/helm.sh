@@ -524,7 +524,7 @@ function ci::create_openid_resources() {
   done
 
   # Create the keycloak realm configuration
-  ${KUBECTL} create secret generic keycloak-ci-realm-pulsar \
+  ${KUBECTL} create secret generic keycloak-ci-realm-config \
     --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
     -n ${NAMESPACE}
 
@@ -559,6 +559,13 @@ function ci::create_openid_resources() {
 
   echo "Wait until keycloak is alive"
   ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'until getent hosts keycloak-ci-headless; do sleep 3; done'
+
+  echo "Get keycloak log"
+  ${KUBECTL} logs keycloak-ci-0 -n ${NAMESPACE} -c keycloak
+
+  echo "Check keycloack realm pulsar urls"
+  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar'
+  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar/.well-known/openid-configuration'
 
 }
 
