@@ -281,6 +281,7 @@ function ci::retry() {
 }
 
 function ci::test_pulsar_admin_api_access() {
+  echo "Test pulsar admin api access"
   ci::retry ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin tenants list
 }
 
