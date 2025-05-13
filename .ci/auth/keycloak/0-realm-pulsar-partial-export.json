@@ -1,6 +1,6 @@
 {
   "id": "a091a8f3-7639-4755-b93f-7d8ce91b2c2e",
-  "realm": "pulsar-default",
+  "realm": "pulsar",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
