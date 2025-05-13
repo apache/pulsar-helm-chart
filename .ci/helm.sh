@@ -525,11 +525,27 @@ function ci::create_openid_resources() {
     -n ${NAMESPACE}
 
   # Install keycloak helm chart
-  ${HELM} install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml --wait
+  echo "Installing keycloak helm chart"
+  ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml
 
-  # List services
-  echo "Waiting for keycloak to be ready"
-  ${KUBECTL} get services -n ${NAMESPACE}
+  echo "Wait until keycloak is alive"
+  WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
+  counter=1
+  while [[ ${WC} -lt 1 ]]; do
+    ((counter++))
+    echo ${WC};
+    sleep 15
+    ${KUBECTL} get pods,jobs -n ${NAMESPACE}
+    ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+    if [[ $((counter % 20)) -eq 0 ]]; then
+      ci::print_pod_logs
+      if [[ $counter -gt 100 ]]; then
+        echo >&2 "Timeout waiting..."
+        exit 1
+      fi
+    fi
+    WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | keycloak-ci-0 | wc -l)
+  done
 
 }
 
