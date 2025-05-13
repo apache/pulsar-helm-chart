@@ -551,7 +551,7 @@ function ci::create_openid_resources() {
   ${KUBECTL} get services -n ${NAMESPACE}
 
   echo "Check realm pulsar openid configuration"
-  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar/.well-known/openid-configuration'
+  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci:80/realms/pulsar/.well-known/openid-configuration'
 
 }
 
