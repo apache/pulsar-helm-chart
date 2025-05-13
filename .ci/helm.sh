@@ -528,7 +528,7 @@ function ci::create_openid_resources() {
   echo "Installing keycloak helm chart"
   ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml -n ${NAMESPACE}
 
-  echo "Wait until keycloak is alive"
+  echo "Wait until keycloak is running"
   WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
   counter=1
   while [[ ${WC} -lt 1 ]]; do
@@ -548,11 +548,11 @@ function ci::create_openid_resources() {
   done
 
   # Wait until keycloak is ready
-  echo "Print services"
+  echo "Show services"
   ${KUBECTL} get services -n ${NAMESPACE}
 
-  echo "Check pulsar realm OpenID configuration"
-  curl -sSL http://keycloak-ci-headless:8080/realms/pulsar/.well-known/openid-configuration
+  echo "Wait until keycloak-ci is ready"
+  ${KUBECTL} exec -n ${NAMESPACE} $keycloak-ci-0 -- bash -c 'until nslookup keycloak-ci-headless; do sleep 3; done'
 
 }
 
