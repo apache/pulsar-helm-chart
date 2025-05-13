@@ -546,13 +546,8 @@ function ci::create_openid_resources() {
     fi
     WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
   done
-
-  # Wait until keycloak is ready
   echo "Show services"
   ${KUBECTL} get services -n ${NAMESPACE}
-
-  echo "Wait until keycloak-ci is ready"
-  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -- bash -c 'until nslookup keycloak-ci-headless; do sleep 3; done'
 
 }
 
