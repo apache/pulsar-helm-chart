@@ -552,7 +552,7 @@ function ci::create_openid_resources() {
   done
 
   echo "Wait until keycloak is ready"
-  ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-0 -n ${NAMESPACE}
+  ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-0 -n ${NAMESPACE} --timeout 180s
 
   echo "Check keycloack realm pulsar urls"
   ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar'
