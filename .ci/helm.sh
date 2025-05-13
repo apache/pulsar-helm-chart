@@ -551,17 +551,8 @@ function ci::create_openid_resources() {
     WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
   done
 
-  echo "Show services"
-  ${KUBECTL} get services -n ${NAMESPACE}
-
-  echo "Describe keycloak pod"
-  ${KUBECTL} describe pod keycloak-ci-0 -n ${NAMESPACE}
-
-  echo "Wait until keycloak is alive"
-  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'until getent hosts keycloak-ci-headless; do sleep 3; done'
-
-  echo "Get keycloak log"
-  ${KUBECTL} logs keycloak-ci-0 -n ${NAMESPACE} -c keycloak
+  echo "Wait until keycloak is ready"
+  ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-0 -n ${NAMESPACE}
 
   echo "Check keycloack realm pulsar urls"
   ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar'
