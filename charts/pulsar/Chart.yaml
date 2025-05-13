@@ -36,7 +36,3 @@ dependencies:
     version: 0.38.x
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-metrics-k8s-stack.enabled
-  - name: keycloak
-    version: 24.6.3
-    repository: oci://registry-1.docker.io/bitnamicharts
-    condition: keycloak.enabled

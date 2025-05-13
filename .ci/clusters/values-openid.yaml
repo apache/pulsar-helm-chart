@@ -79,22 +79,3 @@ auth:
     client: "admin"
     # pulsar manager to broker
     manager: "manager-admin"
-
-# Deploy keycloak to test the openid authentication
-keycloak:
-  enabled: true
-  tls:
-    enabled: false
-  # This block sets up an example Pulsar Realm
-  # https://www.keycloak.org/server/importExport#_importing_a_realm_from_a_directory
-  extraEnvVars:
-    - name: KEYCLOAK_EXTRA_ARGS
-      value: "--import-realm"
-  extraVolumes:
-    - name: keycloak-realm-pulsar
-      secret:
-        secretName: keycloak-realm-pulsar
-  extraVolumeMounts:
-    - name: keycloak-realm-pulsar
-      mountPath: "/opt/bitnami/keycloak/data/import"
-      readOnly: true

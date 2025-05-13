@@ -524,6 +524,13 @@ function ci::create_openid_resources() {
     --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
     -n ${NAMESPACE}
 
+  # Install keycloak helm chart
+  ${HELM} install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml --wait
+
+  # List services
+  echo "Waiting for keycloak to be ready"
+  ${KUBECTL} get services -n ${NAMESPACE}
+
 }
 
 # lists all available functions in this tool
