@@ -525,6 +525,8 @@ oxia:
     tolerations: []
     # nodeSelector:
       # cloud.google.com/gke-nodepool: default-pool
+    # customConfigMapName: ""
+    # entrypoint: []
 ## templates/server-statefulset.yaml
   server:
     # annotations for the app (statefulset/deployment)
