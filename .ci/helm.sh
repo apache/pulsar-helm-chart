@@ -496,10 +496,12 @@ function _ci::validate_kustomize_yaml() {
 # Create all resources needed for openid authentication
 function ci::create_openid_resources() {
 
+  echo "Creating openid resources"
+
   # Merge the keycloack partial export with client scopes
   jq '.clientScopes += [input]' ${PULSAR_HOME}/.ci/auth/keycloak/0-realm-pulsar-partial-export.json ${PULSAR_HOME}/.ci/auth/keycloak/1-clientscope-nbf.json > /tmp/realm-pulsar.json
 
-  for component in broker proxy client manager; do
+  for component in broker proxy admin manager; do
 
     echo "Creating openid resources for ${component}"
 
@@ -524,12 +526,11 @@ function ci::create_openid_resources() {
 
   done
 
-  # Create the keycloak realm configuration
+  echo "Create keycloak realm configuration"
   ${KUBECTL} create secret generic keycloak-ci-realm-config \
     --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
     -n ${NAMESPACE}
 
-  # Install keycloak helm chart
   echo "Installing keycloak helm chart"
   ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/keycloak-values.yaml -n ${NAMESPACE}
 

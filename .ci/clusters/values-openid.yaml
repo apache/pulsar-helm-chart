@@ -46,6 +46,19 @@ broker:
       mountPath: "/pulsar/auth/broker"
       readOnly: true
 
+toolset:
+  configData:
+    authPlugin: "org.apache.pulsar.client.impl.auth.oauth2.AuthenticationOAuth2"
+    authParams: '{"privateKey":"file:///pulsar/auth/admin/credentials_file.json","audience":"account","issuerUrl":"http://keycloak-ci-headless:8080/realms/pulsar"}'
+  extraVolumes:
+    - name: pulsar-admin-credentials
+      secret:
+        secretName: pulsar-admin-credentials
+  extraVolumeMounts:
+    - name: pulsar-admin-credentials
+      mountPath: "/pulsar/auth/admin"
+      readOnly: true
+
 auth:
   authentication:
     enabled: true
