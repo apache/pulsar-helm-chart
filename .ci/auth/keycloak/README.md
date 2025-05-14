@@ -5,28 +5,22 @@ Keycloak is used to validate OIDC configuration.
 To create the pulsar realm configuration, we use :
 
 * `0-realm-pulsar-partial-export.json` : after creating pulsar realm in Keycloack UI, this file is the result of the partial export in Keycloak UI without options.
-* `1-clientscope-nbf.json` : Keycloak does not include the `nbf` claim (not-before) in the JWT token. This is the client scope to add to pulsar clients.
-* `2-client-template.json` : this is the template to create pulsar clients.
+* `1-client-template.json` : this is the template to create pulsar clients.
 
 To create the final `realm-pulsar.json`, merge files with `jq` command :
 
-* to merge the partial export and the client scope nbf :
-
-```
-jq '.clientScopes += [input]' 0-realm-pulsar-partial-export.json 1-clientscope-nbf.json > realm-pulsar-with-clientscopes.json
-```
-
-* then to create a client with `CLIENT_ID` and `CLIENT_SECRET` :
+* create a client with `CLIENT_ID`, `CLIENT_SECRET` and `SUB_CLAIM_VALUE` :
 
 ```
 CLIENT_ID=xx
 CLIENT_SECRET=yy
+SUB_CLAIM_VALUE=zz
 
-jq -n --arg CLIENT_ID "$CLIENT_ID" --arg CLIENT_SECRET "$CLIENT_SECRET" 2-client-template.json > client.json
+jq -n --arg CLIENT_ID "$CLIENT_ID" --arg CLIENT_SECRET "$CLIENT_SECRET" --arg SUB_CLAIM_VALUE "$SUB_CLAIM_VALUE" 1-client-template.json > client.json
 ```
 
-* finally merge the realm and the client :
+* then merge the realm and the client :
 
 ```
-jq '.clients += [input]' realm-pulsar-with-clientscopes.json client.json > realm-pulsar.json
+jq '.clients += [input]' 0-realm-pulsar-partial-export.json client.json > realm-pulsar.json
 ```
