@@ -530,6 +530,9 @@ function ci::create_openid_resources() {
 
   done
 
+  echo "Keycloak realm configuration (clients)"
+  jq '.clients[]' /tmp/realm-pulsar.json
+
   echo "Create keycloak realm configuration"
   ${KUBECTL} create secret generic keycloak-ci-realm-config \
     --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
