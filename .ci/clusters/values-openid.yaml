@@ -82,7 +82,7 @@ auth:
       openIDRequireIssuersUseHttps: "false"
       openIDFallbackDiscoveryMode: "DISABLED"
   authorization:
-    enabled: false
+    enabled: true
   superUsers:
     # broker to broker communication
     broker: "broker-admin"
