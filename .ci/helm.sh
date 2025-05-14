@@ -150,7 +150,7 @@ function ci::install_pulsar_chart() {
       ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
       install_args=""
 
-      # create openid resources
+      # create auth resources
       if [[ "x${AUTHENTICATION_PROVIDER}" == "xopenid" ]]; then
           ci::create_openid_resources
       fi
@@ -177,10 +177,6 @@ function ci::install_pulsar_chart() {
     ${HELM} template --values ${common_value_file} --values ${value_file} "${extra_values[@]}" ${CLUSTER} ${CHART_ARGS}
     ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} "${extra_values[@]}" --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
     set +x
-
-    
-    echo "Services :"
-    ${KUBECTL} get services -n ${NAMESPACE}
 
     if [[ "${install_type}" == "install" ]]; then
       echo "wait until broker is alive"
@@ -505,21 +501,22 @@ function ci::create_openid_resources() {
     echo "Creating openid resources for ${component}"
 
     local client_id=pulsar-${component}
+
     # Github action hang up when read string from /dev/urandom, so use python to generate a random string
     local client_secret=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
+
     if [[ "${component}" == "admin" ]]; then
       local sub_claim_value="admin"
     else
       local sub_claim_value="${component}-admin"
     fi
 
-    # Create the client credentials secret
+    # Create the client credentials file
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
 
+    # Create the secret for the client credentials
     local secret_name="pulsar-${component}-credentials"
-    ${KUBECTL} create secret generic ${secret_name} \
-      --from-file=credentials_file.json=/tmp/${component}-credentials_file.json \
-      -n ${NAMESPACE}
+    ${KUBECTL} create secret generic ${secret_name} --from-file=credentials_file.json=/tmp/${component}-credentials_file.json -n ${NAMESPACE}
 
     # Create the keycloak client file
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/keycloak/1-client-template.json > /tmp/${component}-keycloak-client.json
@@ -530,13 +527,8 @@ function ci::create_openid_resources() {
 
   done
 
-  echo "Keycloak realm configuration (clients)"
-  jq '.clients[]' /tmp/realm-pulsar.json
-
   echo "Create keycloak realm configuration"
-  ${KUBECTL} create secret generic keycloak-ci-realm-config \
-    --from-file=realm-pulsar.json=/tmp/realm-pulsar.json \
-    -n ${NAMESPACE}
+  ${KUBECTL} create secret generic keycloak-ci-realm-config --from-file=realm-pulsar.json=/tmp/realm-pulsar.json -n ${NAMESPACE}
 
   echo "Installing keycloak helm chart"
   ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/values.yaml -n ${NAMESPACE}
@@ -563,9 +555,8 @@ function ci::create_openid_resources() {
   echo "Wait until keycloak is ready"
   ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-0 -n ${NAMESPACE} --timeout 180s
 
-  echo "Check keycloack realm pulsar urls"
+  echo "Check keycloack realm pulsar issuer url"
   ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar'
-  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar/.well-known/openid-configuration'
 
 }
 
