@@ -504,16 +504,17 @@ function ci::create_openid_resources() {
 
     echo "Creating openid resources for ${component}"
 
-    local client_id=pulsar-${component}
+    client_id=pulsar-${component}
     # Github action hang up when read string from /dev/urandom, so use python to generate a random string
-    local client_secret=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
+    client_secret=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
     if [[ "${component}" == "admin" ]]; then
-      local sub_claim_value="admin"
+      sub_claim_value="admin"
     else
-      local sub_claim_value="${component}-admin"
+      sub_claim_value="${component}-admin"
     fi
 
     # Create the client credentials secret
+    echo jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
 
     local secret_name="pulsar-${component}-credentials"
