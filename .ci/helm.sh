@@ -504,18 +504,17 @@ function ci::create_openid_resources() {
 
     echo "Creating openid resources for ${component}"
 
-    client_id=pulsar-${component}
+    local client_id=pulsar-${component}
     # Github action hang up when read string from /dev/urandom, so use python to generate a random string
-    client_secret=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
+    local client_secret=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
     if [[ "${component}" == "admin" ]]; then
-      sub_claim_value="admin"
+      local sub_claim_value="admin"
     else
-      sub_claim_value="${component}-admin"
+      local sub_claim_value="${component}-admin"
     fi
 
     # Create the client credentials secret
-    echo jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
-    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
 
     local secret_name="pulsar-${component}-credentials"
     ${KUBECTL} create secret generic ${secret_name} \
@@ -523,7 +522,7 @@ function ci::create_openid_resources() {
       -n ${NAMESPACE}
 
     # Create the keycloak client file
-    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/keycloak/1-client-template.json > /tmp/${component}-keycloak-client.json
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/keycloak/1-client-template.json > /tmp/${component}-keycloak-client.json
 
     # Merge the keycloak client file with the realm
     jq '.clients += [input]' /tmp/realm-pulsar.json /tmp/${component}-keycloak-client.json > /tmp/realm-pulsar.json.tmp
