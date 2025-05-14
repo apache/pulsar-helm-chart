@@ -512,7 +512,7 @@ function ci::create_openid_resources() {
     else
       local sub_claim_value="${component}-admin"
     fi
-    
+
     # Create the client credentials secret
     jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
 
@@ -522,7 +522,7 @@ function ci::create_openid_resources() {
       -n ${NAMESPACE}
 
     # Create the keycloak client file
-    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/keycloak/2-client-template.json > /tmp/${component}-keycloak-client.json
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/keycloak/1-client-template.json > /tmp/${component}-keycloak-client.json
 
     # Merge the keycloak client file with the realm
     jq '.clients += [input]' /tmp/realm-pulsar.json /tmp/${component}-keycloak-client.json > /tmp/realm-pulsar.json.tmp
