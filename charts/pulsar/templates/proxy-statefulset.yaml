@@ -237,7 +237,7 @@ spec:
         {{- if or .Values.proxy.extraVolumeMounts .Values.auth.authentication.enabled (and .Values.tls.enabled (or .Values.tls.proxy.enabled .Values.tls.broker.enabled)) }}
         volumeMounts:
           {{- if .Values.auth.authentication.enabled }}
-          {{- if eq .Values.auth.authentication.provider "jwt" }}
+          {{- if .Values.auth.authentication.jwt.enabled }}
           - mountPath: "/pulsar/keys"
             name: token-keys
             readOnly: true
@@ -267,7 +267,7 @@ spec:
 {{ toYaml .Values.proxy.extraVolumes | indent 8 }}
         {{- end }}
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.jwt.enabled }}
         - name: token-keys
           secret:
             {{- if not .Values.auth.authentication.jwt.usingSecretKey }}
