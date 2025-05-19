@@ -106,7 +106,11 @@ Define coordinator entrypoint
 {{- define "oxia.coordinator.entrypoint" -}}
 - "oxia"
 - "coordinator"
+{{- if .Values.oxia.coordinator.customConfigMapName }}
+- "--conf=configmap:{{ template "pulsar.namespace" . }}/{{ .Values.oxia.coordinator.customConfigMapName }}"
+{{- else }}
 - "--conf=configmap:{{ template "pulsar.namespace" . }}/{{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator"
+{{- end }}
 - "--log-json"
 - "--metadata=configmap"
 - "--k8s-namespace={{ template "pulsar.namespace" . }}"
