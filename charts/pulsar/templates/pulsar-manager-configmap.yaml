@@ -31,7 +31,7 @@ data:
   PULSAR_MANAGER_OPTS: "-Dlog4j2.formatMsgNoLookups=true"
   {{- if .Values.auth.authentication.enabled }}
   # auth
-  {{- if eq .Values.auth.authentication.provider "jwt" }}
+  {{- if .Values.auth.authentication.jwt.enabled }}
   {{- if .Values.auth.authentication.jwt.usingSecretKey }}
   SECRET_KEY: "file:///pulsar-manager/keys/token/secret.key"
   {{- else }}

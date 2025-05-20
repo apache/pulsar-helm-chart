@@ -51,7 +51,13 @@ existing security implementations.
 
 As per the [Pulsar Proxy documentation](https://pulsar.apache.org/docs/3.1.x/administration-proxy/), it is explicitly stated that the Pulsar proxy is not designed for exposure to the public internet. The design assumes that deployments will be protected by network perimeter security measures. It is crucial to understand that relying solely on the default configuration can expose your deployment to significant security vulnerabilities.
 
-### Important Change in 4.0.0 version of the Apache Pulsar Helm chart
+### Upgrading
+
+#### To 4.1.0
+
+This version introduces `OpenID` authentication. Setting `auth.authentication.provider` is no longer supported, you need to enable the provider with `auth.authentication.<provider>.enabled`.
+
+#### To 4.0.0
 
 The default service type for the Pulsar proxy has changed from `LoadBalancer` to `ClusterIP` for security reasons. This limits access to within the Kubernetes environment by default.
 
@@ -157,6 +163,7 @@ It includes support for:
         - [x] ZooKeeper
     - [x] Authentication
         - [x] JWT
+        - [x] OpenID
         - [ ] Mutal TLS
         - [ ] Kerberos
     - [x] Authorization

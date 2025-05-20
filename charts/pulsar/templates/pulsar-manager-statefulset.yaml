@@ -82,7 +82,7 @@ spec:
 {{ toYaml .Values.pulsar_manager.extraVolumeMounts | indent 10 }}
           {{- end }}
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.jwt.enabled }}
           - name: pulsar-manager-keys
             mountPath: /pulsar-manager/keys
         {{- end }}
@@ -110,7 +110,7 @@ spec:
                 {{- end }}
                 key: DB_PASSWORD
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.jwt.enabled }}
         {{- if .Values.auth.superUsers.manager }}
           - name: JWT_TOKEN
             valueFrom:
@@ -126,7 +126,7 @@ spec:
 {{ toYaml .Values.pulsar_manager.extraVolumes | indent 8 }}
         {{- end }}
       {{- if .Values.auth.authentication.enabled }}
-      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      {{- if .Values.auth.authentication.jwt.enabled }}
         - name: pulsar-manager-keys
           secret:
             defaultMode: 420

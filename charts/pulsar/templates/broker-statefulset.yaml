@@ -276,7 +276,7 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         volumeMounts:
           {{- if .Values.auth.authentication.enabled }}
-          {{- if eq .Values.auth.authentication.provider "jwt" }}
+          {{- if .Values.auth.authentication.jwt.enabled }}
           - mountPath: "/pulsar/keys"
             name: token-keys
             readOnly: true
@@ -329,7 +329,7 @@ spec:
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
       {{- end }}
       {{- if .Values.auth.authentication.enabled }}
-      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      {{- if .Values.auth.authentication.jwt.enabled }}
       - name: token-keys
         secret:
           {{- if not .Values.auth.authentication.jwt.usingSecretKey }}

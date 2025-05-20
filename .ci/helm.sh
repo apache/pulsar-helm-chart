@@ -90,8 +90,8 @@ function ci::helm_repo_add() {
 }
 
 function ci::print_pod_logs() {
-    echo "Logs for all pulsar containers:"
-    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
+    echo "Logs for all containers:"
+    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -o=name); do
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --tail=100 || true
     done;
 }
@@ -99,7 +99,7 @@ function ci::print_pod_logs() {
 function ci::collect_k8s_logs() {
     mkdir -p "${K8S_LOGS_DIR}" && cd "${K8S_LOGS_DIR}"
     echo "Collecting k8s logs to ${K8S_LOGS_DIR}"
-    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -l app=pulsar -o=name); do
+    for k8sobject in $(${KUBECTL} get pods,jobs -n ${NAMESPACE} -o=name); do
       filebase="${k8sobject//\//_}"
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true > "${filebase}.$$.log.txt" || true
       ${KUBECTL} logs -n ${NAMESPACE} "$k8sobject" --all-containers=true --ignore-errors=true --prefix=true --previous=true > "${filebase}.previous.$$.log.txt" || true
@@ -149,6 +149,11 @@ function ci::install_pulsar_chart() {
       # configure metallb
       ${KUBECTL} apply -f ${BINDIR}/metallb/metallb-config.yaml
       install_args=""
+
+      # create auth resources
+      if [[ "x${AUTHENTICATION_PROVIDER}" == "xopenid" ]]; then
+          ci::create_openid_resources
+      fi
     else
       install_args="--wait --wait-for-jobs --timeout 360s --debug"
     fi
@@ -272,6 +277,7 @@ function ci::retry() {
 }
 
 function ci::test_pulsar_admin_api_access() {
+  echo "Test pulsar admin api access"
   ci::retry ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin tenants list
 }
 
@@ -481,6 +487,77 @@ function _ci::validate_kustomize_yaml() {
     }
     exit 1;
   }'
+}
+
+# Create all resources needed for openid authentication
+function ci::create_openid_resources() {
+
+  echo "Creating openid resources"
+
+  cp ${PULSAR_HOME}/.ci/auth/keycloak/0-realm-pulsar-partial-export.json /tmp/realm-pulsar.json
+
+  for component in broker proxy admin manager; do
+
+    echo "Creating openid resources for ${component}"
+
+    local client_id=pulsar-${component}
+
+    # Github action hang up when read string from /dev/urandom, so use python to generate a random string
+    local client_secret=$(python -c "import secrets; import string; length = 32; random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length)); print(random_string);")
+
+    if [[ "${component}" == "admin" ]]; then
+      local sub_claim_value="admin"
+    else
+      local sub_claim_value="${component}-admin"
+    fi
+
+    # Create the client credentials file
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" -f ${PULSAR_HOME}/.ci/auth/oauth2/credentials_file.json > /tmp/${component}-credentials_file.json
+
+    # Create the secret for the client credentials
+    local secret_name="pulsar-${component}-credentials"
+    ${KUBECTL} create secret generic ${secret_name} --from-file=credentials_file.json=/tmp/${component}-credentials_file.json -n ${NAMESPACE}
+
+    # Create the keycloak client file
+    jq -n --arg CLIENT_ID $client_id --arg CLIENT_SECRET "$client_secret" --arg SUB_CLAIM_VALUE "$sub_claim_value" -f ${PULSAR_HOME}/.ci/auth/keycloak/1-client-template.json > /tmp/${component}-keycloak-client.json
+
+    # Merge the keycloak client file with the realm
+    jq '.clients += [input]' /tmp/realm-pulsar.json /tmp/${component}-keycloak-client.json > /tmp/realm-pulsar.json.tmp
+    mv /tmp/realm-pulsar.json.tmp /tmp/realm-pulsar.json
+
+  done
+
+  echo "Create keycloak realm configuration"
+  ${KUBECTL} create secret generic keycloak-ci-realm-config --from-file=realm-pulsar.json=/tmp/realm-pulsar.json -n ${NAMESPACE}
+
+  echo "Installing keycloak helm chart"
+  ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/values.yaml -n ${NAMESPACE}
+
+  echo "Wait until keycloak is running"
+  WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
+  counter=1
+  while [[ ${WC} -lt 1 ]]; do
+    ((counter++))
+    echo ${WC};
+    sleep 15
+    ${KUBECTL} get pods,jobs -n ${NAMESPACE}
+    ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+    if [[ $((counter % 20)) -eq 0 ]]; then
+      ci::print_pod_logs
+      if [[ $counter -gt 100 ]]; then
+        echo >&2 "Timeout waiting..."
+        exit 1
+      fi
+    fi
+    WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
+  done
+
+  echo "Wait until keycloak is ready"
+  ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-0 -n ${NAMESPACE} --timeout 180s
+
+  echo "Check keycloack realm pulsar issuer url"
+  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar'
+
 }
 
 # lists all available functions in this tool

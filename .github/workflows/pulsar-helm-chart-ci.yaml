@@ -32,6 +32,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+ 
   preconditions:
     name: Preconditions
     runs-on: ubuntu-24.04
@@ -229,6 +230,9 @@ jobs:
           - name: Oxia
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
+          - name: OpenID
+            values_file: .ci/clusters/values-openid.yaml
+            shortname: openid
         include:
           - k8sVersion:
               version: "1.25.16"
@@ -288,6 +292,9 @@ jobs:
               ;;
             "jwt-asymmetric")
               export EXTRA_SUPERUSERS=manager-admin
+              ;;
+            "openid")
+              export AUTHENTICATION_PROVIDER=openid
               ;;
           esac
           if [[ "${{ matrix.testScenario.type || 'install' }}" == "upgrade" ]]; then
