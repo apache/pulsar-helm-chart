@@ -125,14 +125,10 @@ spec:
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
-            done; 
-            {{- else if .Values.pulsar_metadata.configurationStore }}
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.service" . }} get {{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
-              echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
-            {{- else }}
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.service" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
-              echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
+            {{ else }}
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.service" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+              sleep 3;
             done;
             {{- end}}
       {{- end}}
