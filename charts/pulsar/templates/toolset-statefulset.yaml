@@ -125,12 +125,7 @@ spec:
       {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
       - name: proxy-ca
         secret:
-          {{- if eq .Values.certs.internal_issuer.type "selfsigning" }}
           secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-          {{- end }}
-          {{- if eq .Values.certs.internal_issuer.type "ca" }}
-          secretName: "{{ .Values.certs.issuers.ca.secretName }}"
-          {{- end }}
           items:
             - key: ca.crt
               path: ca.crt
