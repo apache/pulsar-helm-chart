@@ -23,6 +23,7 @@ kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.autorecovery.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.autorecovery.component }}
@@ -43,8 +44,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.autorecovery.component }}
       annotations:
+        {{- if not .Values.autorecovery.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.autorecovery.ports.http }}"
+        {{- end }}
         {{- if .Values.autorecovery.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/autorecovery-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -119,12 +122,15 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.autorecovery.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-        - >
+        - |
           {{- include "pulsar.autorecovery.init.verify_cluster_id" . | nindent 10 }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
+        {{- if .Values.autorecovery.extraVolumeMounts }}
+{{ toYaml .Values.autorecovery.extraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
       {{- if .Values.autorecovery.initContainers }}
@@ -138,13 +144,9 @@ spec:
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end}}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/bookkeeper autorecovery
@@ -158,6 +160,9 @@ spec:
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
+      {{- if .Values.autorecovery.extraVolumes }}
+{{ toYaml .Values.autorecovery.extraVolumes | indent 6 }}
+      {{- end }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
 

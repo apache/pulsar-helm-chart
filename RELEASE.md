@@ -87,7 +87,7 @@ official Apache releases must not include the rcN suffix.
 - Tag your release
 
     ```shell
-    git tag -s pulsar-${VERSION_RC} -m "Apache Pulsar Helm Chart $VERSION_RC"
+    git tag -u $APACHE_USER@apache.org -s pulsar-${VERSION_RC} -m "Apache Pulsar Helm Chart $VERSION_RC"
     ```
 
 - Tarball the repo
@@ -243,12 +243,16 @@ Public keys are available at: https://www.apache.org/dist/pulsar/KEYS
 
 For convenience "index.yaml" has been uploaded (though excluded from voting), so you can also run the below commands.
 
-helm repo add --force-update \
- apache-pulsar-dist-dev https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
+helm repo add --force-update apache-pulsar-dist-dev \\
+  https://dist.apache.org/repos/dist/dev/pulsar/helm-chart/$VERSION_RC/
 helm repo update
-helm install pulsar apache-pulsar-dist-dev/pulsar \
- --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false
+helm install pulsar apache-pulsar-dist-dev/pulsar \\
+ --version ${VERSION_WITHOUT_RC} --set affinity.anti_affinity=false \\
+ --wait --timeout 10m --debug
 
+ For observing the deployment progress, you can use the k9s tool to view the cluster state changes in a different terminal window.
+ The k9s tool is available at https://k9scli.io/topics/install/.
+ 
 pulsar-${VERSION_WITHOUT_RC}.tgz.prov - is also uploaded for verifying Chart Integrity, though it is not strictly required for releasing the artifact based on ASF Guidelines. 
 
 You can optionally verify this file using this helm plugin https://github.com/technosophos/helm-gpg, or by using helm --verify (https://helm.sh/docs/helm/helm_verify/).
@@ -486,9 +490,7 @@ Verify that the packages appear in [Pulsar Helm Chart](https://dist.apache.org/r
 Create and push the release tag:
 
 ```shell
-cd "${PULSAR_REPO_ROOT}"
-git checkout pulsar-${VERSION_RC}
-git tag -s pulsar-${VERSION_WITHOUT_RC} -m "Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC}"
+git tag -u $APACHE_USER@apache.org pulsar-$VERSION_WITHOUT_RC $(git rev-parse pulsar-$VERSION_RC^{}) -m "Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC}"
 git push origin pulsar-${VERSION_WITHOUT_RC}
 ```
 
@@ -509,7 +511,7 @@ cd pulsar-site
 # Run on a branch based on main branch
 cd static/charts
 # need the chart file temporarily to update the index
-wget https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz
+wget https://dist.apache.org/repos/dist/release/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz
 # store the license header temporarily
 head -n 17 index.yaml > license_header.txt
 # update the index
@@ -522,14 +524,29 @@ rm license_header.txt index.yaml.new
 rm pulsar-${VERSION_WITHOUT_RC}.tgz
 ```
 
-Verify that the updated `index.yaml` file has the most recent version. Then run:
+Verify that the updated `index.yaml` file has the most recent version. 
+
+Wait until the file is available:
+
+```shell
+while ! curl -fIL https://downloads.apache.org/pulsar/helm-chart/${VERSION_WITHOUT_RC}/pulsar-${VERSION_WITHOUT_RC}.tgz; do
+  echo "Waiting for pulsar-${VERSION_WITHOUT_RC}.tgz to become available..."
+  sleep 10
+done
+```
+
+Then run:
 
 ```shell
 git add index.yaml
 git commit -m "Adding Pulsar Helm Chart ${VERSION_WITHOUT_RC} to index.yaml"
 ```
 
-Then open a PR.
+Then commit the change.
+```
+git push origin main
+```
+
 
 ## Create release notes for the tag in GitHub UI
 

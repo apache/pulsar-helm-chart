@@ -32,9 +32,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+ 
   preconditions:
     name: Preconditions
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: (github.event_name != 'schedule') || (github.repository == 'apache/pulsar-helm-chart')
     outputs:
       docs_only: ${{ steps.check_changes.outputs.docs_only }}
@@ -62,7 +63,7 @@ jobs:
   license-check:
     needs: preconditions
     name: License Check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     steps:
@@ -83,7 +84,7 @@ jobs:
   ct-lint:
     needs: ['preconditions', 'license-check']
     name: chart-testing lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     steps:
@@ -107,13 +108,17 @@ jobs:
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         uses: azure/setup-helm@v4
         with:
-          version: v3.14.4
+          version: v3.16.4
 
       - name: Set up Python
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
+
+      - name: Install uv, a fast modern package manager for Python
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Set up chart-testing
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
@@ -127,7 +132,7 @@ jobs:
             --validate-maintainers=false \
             --target-branch ${{ github.event.repository.default_branch }}
 
-      - name: Run kubeconform check for helm template with every major k8s version 1.23.0-1.30.0
+      - name: Run kubeconform check for helm template with every major k8s version 1.25.0-1.32.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
           PULSAR_CHART_HOME=$(pwd)
@@ -147,16 +152,25 @@ jobs:
             else
               echo ""
             fi
-            helm template charts/pulsar --set kube-prometheus-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" | \
+            helm template charts/pulsar --set victoria-metrics-k8s-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" | \
               kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
           }
           set -o pipefail
-          for k8s_version_part in {23..30}; do
+          for k8s_version_part in {25..32}; do
             k8s_version="1.${k8s_version_part}.0"
+            echo "Validating default values with k8s version $k8s_version"
             validate_helm_template_with_k8s_version $k8s_version
-            echo "Validating with Oxia enabled"
-            validate_helm_template_with_k8s_version $k8s_version --set components.zookeeper=false --set components.oxia=true
+            for config in .ci/clusters/*.yaml; do
+              echo "Validating $config with k8s version $k8s_version"
+              validate_helm_template_with_k8s_version $k8s_version --values .ci/values-common.yaml --values $config
+            done
           done
+
+      - name: Validate kustomize yaml for extra new lines in pulsar-init commands
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: |
+          ./.ci/helm.sh validate_kustomize_yaml
+
       - name: Wait for ssh connection when build fails
         # ssh access is enabled for builds in own forks
         uses: ./.github/actions/ssh-access
@@ -167,19 +181,20 @@ jobs:
 
   install-chart-tests:
     name: ${{ matrix.testScenario.name }} - k8s ${{ matrix.k8sVersion.version }} - ${{ matrix.testScenario.type || 'install' }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: ${{ matrix.testScenario.timeout || 45 }}
     needs: ['preconditions', 'ct-lint']
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.22.0 for the list of supported k8s versions for kind 0.22.0
+        # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.27.0 for the list of supported k8s versions for kind 0.27.0
+        # docker images are available at https://hub.docker.com/r/kindest/node/tags
         k8sVersion:
-          - version: "1.23.17"
-            kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
-          - version: "1.29.2"
-            kind_image_tag: v1.29.2@sha256:51a1434a5397193442f0be2a297b488b6c919ce8a3931be0ce822606ea5ca245
+          - version: "1.25.16"
+            kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
+          - version: "1.32.2"
+            kind_image_tag: v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f
         testScenario:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
@@ -209,44 +224,36 @@ jobs:
           - name: ZK & BK TLS Only
             values_file: .ci/clusters/values-zkbk-tls.yaml
             shortname: zkbk-tls
-          - name: PSP
-            values_file: .ci/clusters/values-psp.yaml
-            shortname: psp
           - name: Pulsar Manager
             values_file: .ci/clusters/values-pulsar-manager.yaml
             shortname: pulsar-manager
           - name: Oxia
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
+          - name: OpenID
+            values_file: .ci/clusters/values-openid.yaml
+            shortname: openid
         include:
           - k8sVersion:
-              version: "1.23.17"
-              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
+              version: "1.25.16"
+              kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
             testScenario:
               name: "Upgrade TLS"
               values_file: .ci/clusters/values-tls.yaml
               shortname: tls
               type: upgrade
           - k8sVersion:
-              version: "1.23.17"
-              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
+              version: "1.25.16"
+              kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
             testScenario:
-              name: "Upgrade PSP"
-              values_file: .ci/clusters/values-psp.yaml
-              shortname: psp
-              type: upgrade
-          - k8sVersion:
-              version: "1.23.17"
-              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
-            testScenario:
-              name: "Upgrade kube-prometheus-stack for previous LTS"
-              values_file: .ci/clusters/values-prometheus-grafana.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
-              shortname: prometheus-grafana
+              name: "Upgrade victoria-metrics-k8s-stack for previous LTS"
+              values_file: .ci/clusters/values-victoria-metrics-grafana.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
+              shortname: victoria-metrics-grafana
               type: upgrade
               upgradeFromVersion: 3.2.0
           - k8sVersion:
-              version: "1.23.17"
-              kind_image_tag: v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
+              version: "1.25.16"
+              kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
             testScenario:
               name: "TLS with helm 3.12.0"
               values_file: .ci/clusters/values-tls.yaml
@@ -286,6 +293,9 @@ jobs:
             "jwt-asymmetric")
               export EXTRA_SUPERUSERS=manager-admin
               ;;
+            "openid")
+              export AUTHENTICATION_PROVIDER=openid
+              ;;
           esac
           if [[ "${{ matrix.testScenario.type || 'install' }}" == "upgrade" ]]; then
             export UPGRADE_FROM_VERSION="${{ matrix.testScenario.upgradeFromVersion || 'latest' }}"
@@ -324,7 +334,7 @@ jobs:
   pulsar-helm-chart-ci-checks-completed:
     name: "CI checks completed"
     if: ${{ always() && ((github.event_name != 'schedule') || (github.repository == 'apache/pulsar-helm-chart')) }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     needs: [
       'preconditions',

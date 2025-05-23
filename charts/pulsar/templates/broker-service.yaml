@@ -26,7 +26,7 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
-{{- with .Values.broker.service_account.annotations }}
+{{- with .Values.broker.service.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}

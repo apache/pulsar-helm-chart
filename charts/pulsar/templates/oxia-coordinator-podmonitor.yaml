@@ -17,42 +17,7 @@
 # under the License.
 #
 
-# deploy oxia-coordinator PodMonitor only when `$.Values.oxia.podMonitor.enabled` is true
+# deploy oxia-coordinator PodMonitor only when `$.Values.oxia.coordinator.podMonitor.enabled` is true
 {{- if and $.Values.components.oxia $.Values.oxia.coordinator.podMonitor.enabled }}
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-  name: {{ template "pulsar.fullname" . }}-oxia-coordinator
-  labels:
-    app: {{ template "pulsar.name" . }}
-    chart: {{ template "pulsar.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-spec:
-  jobLabel: oxia-coordinator
-  podMetricsEndpoints:
-    - port: metrics
-      path: /metrics
-      scheme: http
-      interval: {{ $.Values.oxia.coordinator.podMonitor.interval }}
-      scrapeTimeout: {{ $.Values.oxia.coordinator.podMonitor.scrapeTimeout }}
-      relabelings:
-        - action: labelmap
-          regex: __meta_kubernetes_pod_label_(.+)
-        - sourceLabels: [__meta_kubernetes_namespace]
-          action: replace
-          targetLabel: kubernetes_namespace
-        - sourceLabels: [__meta_kubernetes_pod_label_component]
-          action: replace
-          targetLabel: job
-        - sourceLabels: [__meta_kubernetes_pod_name]
-          action: replace
-          targetLabel: kubernetes_pod_name
-    {{- if $.Values.oxia.coordinator.podMonitor.metricRelabelings }}
-      metricRelabelings: {{ toYaml $.Values.oxia.coordinator.podMonitor.metricRelabelings | nindent 8 }}
-    {{- end }}
-  selector:
-    matchLabels:
-      {{- include "pulsar.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: oxia-coordinator
+{{- include "pulsar.podMonitor" (list . "oxia.coordinator" (printf "component: %s-coordinator" .Values.oxia.component) "metrics") }}
 {{- end }}

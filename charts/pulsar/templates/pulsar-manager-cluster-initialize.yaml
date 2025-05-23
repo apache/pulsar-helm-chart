@@ -64,7 +64,7 @@ spec:
           resources: {{ toYaml .Values.initContainer.resources | nindent 12 }}
           command: [ "sh", "-c" ]
           args:
-            - >-
+            - |
               set -e;
               brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
               until [ ${brokerServiceNumber} -ge 1 ]; do

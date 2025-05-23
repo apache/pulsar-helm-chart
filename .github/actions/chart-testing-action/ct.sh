@@ -35,9 +35,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-DEFAULT_CHART_TESTING_VERSION=v3.11.0
-DEFAULT_YAMLLINT_VERSION=1.33.0
-DEFAULT_YAMALE_VERSION=4.0.4
+DEFAULT_CHART_TESTING_VERSION=v3.12.0
+DEFAULT_YAMLLINT_VERSION=1.35.1
+DEFAULT_YAMALE_VERSION=6.0.0
 
 ARCH=$(uname -m)
 case $ARCH in
@@ -131,18 +131,24 @@ install_chart_testing() {
         tar -xzf ct.tar.gz -C "$cache_dir"
         rm -f ct.tar.gz
 
+        # if uv (https://docs.astral.sh/uv/) is not installed, install it
+        if ! command -v uv &> /dev/null; then
+            echo 'Installing uv...'
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+        fi
+
         echo 'Creating virtual Python environment...'
-        python3 -m venv "$venv_dir"
+        uv venv "$venv_dir"
 
         echo 'Activating virtual environment...'
         # shellcheck disable=SC1090
         source "$venv_dir/bin/activate"
 
         echo 'Installing yamllint...'
-        pip3 install "yamllint==${yamllint_version}"
+        uv pip install "yamllint==${yamllint_version}"
 
         echo 'Installing Yamale...'
-        pip3 install "yamale==${yamale_version}"
+        uv pip install "yamale==${yamale_version}"
     fi
 
     # https://github.com/helm/chart-testing-action/issues/62

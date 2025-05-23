@@ -25,6 +25,7 @@ metadata:
   name: {{ $stsName | quote }}
   {{- $namespace := include "pulsar.namespace" . }}
   namespace: {{ $namespace | quote }}
+  annotations: {{ .Values.broker.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
@@ -62,8 +63,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.broker.component }}
       annotations:
+        {{- if not .Values.broker.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.broker.ports.http }}"
+        {{- end }}
         {{- if .Values.broker.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/broker-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -136,21 +139,17 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.broker.waitZookeeperTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
-            export BOOKIE_MEM="-Xmx128M";
+            export PULSAR_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
             {{- if not .Values.pulsar_metadata.configurationStore }}
             until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
@@ -161,7 +160,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.broker.waitOxiaTimeout }}", "sh", "-c"]
         args:
-          - >-
+          - |
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
@@ -175,7 +174,7 @@ spec:
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.broker.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-          - >
+          - |
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             bin/apply-config-from-env.py conf/bookkeeper.conf;
             export BOOKIE_MEM="-Xmx128M";
@@ -194,10 +193,6 @@ spec:
         envFrom:
           - configMapRef:
               name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       {{- end }}
@@ -244,7 +239,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.broker.additionalCommand }}
           {{ .Values.broker.additionalCommand }}
         {{- end }}
@@ -281,7 +276,7 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         volumeMounts:
           {{- if .Values.auth.authentication.enabled }}
-          {{- if eq .Values.auth.authentication.provider "jwt" }}
+          {{- if .Values.auth.authentication.jwt.enabled }}
           - mountPath: "/pulsar/keys"
             name: token-keys
             readOnly: true
@@ -301,10 +296,6 @@ spec:
 {{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
           {{- end }}
           {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         env:
           {{- if and (and .Values.broker.storageOffload (eq .Values.broker.storageOffload.driver "aws-s3")) .Values.broker.storageOffload.secret }}
           - name: AWS_ACCESS_KEY_ID
@@ -338,7 +329,7 @@ spec:
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
       {{- end }}
       {{- if .Values.auth.authentication.enabled }}
-      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      {{- if .Values.auth.authentication.jwt.enabled }}
       - name: token-keys
         secret:
           {{- if not .Values.auth.authentication.jwt.usingSecretKey }}

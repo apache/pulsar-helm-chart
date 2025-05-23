@@ -23,6 +23,7 @@ kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.toolset.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.toolset.component }}
@@ -82,7 +83,7 @@ spec:
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.toolset.additionalCommand }}
           {{ .Values.toolset.additionalCommand }}
         {{- end }}
@@ -90,16 +91,12 @@ spec:
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
           sleep 10000000000
-      {{- if and (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
         volumeMounts:
         {{- if .Values.auth.authentication.enabled }}
-        {{- if eq .Values.auth.authentication.provider "jwt" }}
+        {{- if .Values.auth.authentication.jwt.enabled }}
         - mountPath: "/pulsar/tokens"
           name: client-token
           readOnly: true
@@ -116,7 +113,7 @@ spec:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- if .Values.auth.authentication.enabled }}
-      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      {{- if .Values.auth.authentication.jwt.enabled }}
       - name: client-token
         secret:
           secretName: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.client }}"

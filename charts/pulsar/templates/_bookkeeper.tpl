@@ -92,12 +92,31 @@ Define bookie tls certs volumes
 Define bookie common config
 */}}
 {{- define "pulsar.bookkeeper.config.common" -}}
+{{/*
+Configure BookKeeper's metadata store (available since BookKeeper 4.7.0 / BP-29)
+https://bookkeeper.apache.org/bps/BP-29-metadata-store-api-module/
+https://bookkeeper.apache.org/docs/deployment/manual#cluster-metadata-setup
+*/}}
+# Set empty values for zkServers and zkLedgersRootPath since we're using the metadataServiceUri to configure BookKeeper's metadata store
+zkServers: ""
+zkLedgersRootPath: ""
 {{- if .Values.components.zookeeper }}
-zkServers: "{{ template "pulsar.zookeeper.connect" . }}"
-zkLedgersRootPath: "{{ .Values.metadataPrefix }}/ledgers"
+{{- if (and (hasKey .Values.pulsar_metadata "bookkeeper") .Values.pulsar_metadata.bookkeeper.usePulsarMetadataBookieDriver) }}
+# there's a bug when using PulsarMetadataBookieDriver since it always appends /ledgers to the metadataServiceUri
+# Possibly a bug in org.apache.pulsar.metadata.bookkeeper.AbstractMetadataDriver#resolveLedgersRootPath in Pulsar code base
+metadataServiceUri: "metadata-store:zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+{{- else }}
+# use zk+hierarchical:// when using BookKeeper's built-in metadata driver
+metadataServiceUri: "zk+hierarchical://{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
+{{- end }}
 {{- else if .Values.components.oxia }}
 metadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
 {{- end }}
+{{- /* metadataStoreSessionTimeoutMillis maps to zkTimeout in bookkeeper.conf for both zookeeper and oxia metadata stores */}}
+{{- if (and (hasKey .Values.pulsar_metadata "bookkeeper") (hasKey .Values.pulsar_metadata.bookkeeper "metadataStoreSessionTimeoutMillis")) }}
+zkTimeout: "{{ .Values.pulsar_metadata.bookkeeper.metadataStoreSessionTimeoutMillis }}"
+{{- end }}
+
 # enable bookkeeper http server
 httpServerEnabled: "true"
 httpServerPort: "{{ .Values.bookkeeper.ports.http }}"

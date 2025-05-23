@@ -26,6 +26,7 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.oxia.component }}-coordinator
+  annotations: {{ .Values.oxia.coordinator.appAnnotations | toYaml | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -40,23 +41,32 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.oxia.component }}-coordinator
       annotations:
+        {{- if not .Values.oxia.coordinator.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
+        {{- end }}
+{{- with .Values.oxia.coordinator.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
-    {{- if .Values.oxia.server.nodeSelector }}
+    {{- if .Values.oxia.coordinator.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.oxia.server.nodeSelector | indent 8 }}
+{{ toYaml .Values.oxia.coordinator.nodeSelector | indent 8 }}
     {{- end }}
-    {{- if .Values.oxia.server.tolerations }}
+    {{- if .Values.oxia.coordinator.tolerations }}
       tolerations:
-{{ toYaml .Values.oxia.server.tolerations | indent 8 }}
+{{ toYaml .Values.oxia.coordinator.tolerations | indent 8 }}
     {{- end }}    
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:
         - command:
+{{- if .Values.oxia.coordinator.entrypoint }}
+{{ toYaml .Values.oxia.coordinator.entrypoint | indent 12 }}
+{{- else }}
             {{- include "oxia.coordinator.entrypoint" . | nindent 12 }}
+{{- end }}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
-          imagePullPolicy: {{ .Values.images.oxia.pullPolicy }}
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           name: coordinator
           ports:
             {{- range $key, $value := .Values.oxia.coordinator.ports }}
@@ -71,4 +81,11 @@ spec:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
           readinessProbe:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
+      {{- if .Values.oxia.coordinator.extraContainers }}
+        {{- toYaml .Values.oxia.coordinator.extraContainers | nindent 8 }}
+      {{- end }}
+      {{- if .Values.oxia.coordinator.extraVolumes }}
+      volumes:
+{{- toYaml .Values.oxia.coordinator.extraVolumes | nindent 8 }}
+      {{- end }}
 {{- end }}

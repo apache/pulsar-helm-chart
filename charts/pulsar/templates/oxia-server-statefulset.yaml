@@ -26,6 +26,7 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.oxia.component }}-server
+  annotations: {{ .Values.oxia.server.appAnnotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.oxia.server.replicas }}
   selector:
@@ -40,8 +41,13 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.oxia.component }}-server
       annotations:
+        {{- if not .Values.oxia.server.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.oxia.server.ports.metrics }}"
+        {{- end }}
+{{- with .Values.oxia.server.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
     {{- if .Values.oxia.server.nodeSelector }}
       nodeSelector:
@@ -112,8 +118,8 @@ spec:
             {{- if .Values.oxia.pprofEnabled }}
             - "--profile"
             {{- end}}
-          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.images.oxia.pullPolicy }}
+          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           name: server
           ports:
             {{- range $key, $value := .Values.oxia.server.ports }}

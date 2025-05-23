@@ -17,14 +17,30 @@
 # under the License.
 #
 
-kube-prometheus-stack:
-  enabled: true
-  prometheus:
-    enabled: true
+# disabled AntiAffinity
+affinity:
+  anti_affinity: false
+
+victoria-metrics-k8s-stack:
   grafana:
-    enabled: true
-    adminPassword: pulsar-ci-admin
-  alertmanager:
-    enabled: false
-  prometheus-node-exporter:
-    enabled: true
+    adminPassword: verysecureword123
+
+bookkeeper:
+  configData:
+    # more aggressive disk cleanup
+    journalMaxSizeMB: "256"
+    majorCompactionInterval: "600"
+    minorCompactionInterval: "300"
+    compactionRateByEntries: "5000"
+    gcWaitTime: "60000"
+
+broker:
+  configData:
+    # more aggressive disk cleanup
+    managedLedgerMinLedgerRolloverTimeMinutes: "1"
+    managedLedgerMaxLedgerRolloverTimeMinutes: "5"
+    # configure deletion of inactive topics
+    brokerDeleteInactiveTopicsMaxInactiveDurationSeconds: "86400"
+
+proxy:
+  replicaCount: 1

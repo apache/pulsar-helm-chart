@@ -74,10 +74,6 @@ if [[ "x${role}" == "x" ]]; then
     exit 1
 fi
 
-source ${CHART_HOME}/scripts/pulsar/common_auth.sh
-
-pulsar::ensure_pulsarctl
-
 namespace=${namespace:-pulsar}
 release=${release:-pulsar-dev}
 

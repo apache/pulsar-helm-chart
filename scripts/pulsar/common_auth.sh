@@ -18,34 +18,13 @@
 # under the License.
 #
 
-if [ -z "$CHART_HOME" ]; then
-    echo "error: CHART_HOME should be initialized"
-    exit 1
+if [ -z "$PULSAR_VERSION" ]; then
+    if command -v yq &> /dev/null; then
+        # use yq to get the appVersion from the Chart.yaml file
+        PULSAR_VERSION=$(yq .appVersion charts/pulsar/Chart.yaml)
+    else
+        # use a default version if yq is not installed
+        PULSAR_VERSION="4.0.3"
+    fi
 fi
-
-OUTPUT=${CHART_HOME}/output
-OUTPUT_BIN=${OUTPUT}/bin
-PULSARCTL_VERSION=v3.0.2.6
-PULSARCTL_BIN=${HOME}/.pulsarctl/pulsarctl
-export PATH=${HOME}/.pulsarctl/plugins:${PATH}
-
-test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
-
-function pulsar::verify_pulsarctl() {
-    if test -x "$PULSARCTL_BIN"; then
-        return
-    fi
-    return 1
-}
-
-function pulsar::ensure_pulsarctl() {
-    if pulsar::verify_pulsarctl; then
-        return 0
-    fi
-    echo "Get pulsarctl install.sh script ..."
-    install_script=$(mktemp)
-    trap "test -f $install_script && rm $install_script" RETURN
-    curl --retry 10 -L -o $install_script https://raw.githubusercontent.com/streamnative/pulsarctl/master/install.sh
-    chmod +x $install_script
-    $install_script --user --version ${PULSARCTL_VERSION}
-}
+PULSAR_TOKENS_CONTAINER_IMAGE="apachepulsar/pulsar:${PULSAR_VERSION}"
