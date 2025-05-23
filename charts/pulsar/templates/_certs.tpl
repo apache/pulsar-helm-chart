@@ -21,10 +21,20 @@ under the License.
 Define the pulsar certs ca issuer name
 */}}
 {{- define "pulsar.certs.issuers.ca.name" -}}
+{{- if .Values.certs.internal_issuer.enabled -}}
+{{- if and (eq .Values.certs.internal_issuer.type "selfsigning") .Values.certs.issuers.selfsigning.name -}}
+{{- .Values.certs.issuers.selfsigning.name -}}
+{{- else if and (eq .Values.certs.internal_issuer.type "ca") .Values.certs.issuers.ca.name -}}
+{{- .Values.certs.issuers.ca.name -}}
+{{- else -}}
+{{- template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer
+{{- end -}}
+{{- else -}}
 {{- if .Values.certs.issuers.ca.name -}}
 {{- .Values.certs.issuers.ca.name -}}
 {{- else -}}
-{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer
+{{- fail "certs.issuers.ca.name is required when TLS is enabled and certs.internal_issuer.enabled is false" -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -32,9 +42,19 @@ Define the pulsar certs ca issuer name
 Define the pulsar certs ca issuer secret name
 */}}
 {{- define "pulsar.certs.issuers.ca.secretName" -}}
+{{- if .Values.certs.internal_issuer.enabled -}}
+{{- if and (eq .Values.certs.internal_issuer.type "selfsigning") .Values.certs.issuers.selfsigning.secretName -}}
+{{- .Values.certs.issuers.selfsigning.secretName -}}
+{{- else if and (eq .Values.certs.internal_issuer.type "ca") .Values.certs.issuers.ca.secretName -}}
+{{- .Values.certs.issuers.ca.secretName -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name .Values.tls.ca_suffix -}}
+{{- end -}}
+{{- else -}}
 {{- if .Values.certs.issuers.ca.secretName -}}
 {{- .Values.certs.issuers.ca.secretName -}}
 {{- else -}}
-{{ printf "%s-%s" .Release.Name .Values.tls.ca_suffix }}
+{{- fail "certs.issuers.ca.secretName is required when TLS is enabled and certs.internal_issuer.enabled is false" -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}

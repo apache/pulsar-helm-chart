@@ -322,6 +322,8 @@ auth:
 certs:
   internal_issuer:
     apiVersion: cert-manager.io/v1
+    # To enable internal issuer for TLS certificates, set this to true
+    # It is necessary to have cert-manager installed in the cluster
     enabled: false
     component: internal-cert-issuer
     # The type of issuer, supports selfsigning and ca
@@ -331,11 +333,19 @@ certs:
     # 15d
     renewBefore: 360h
   issuers:
-    # Used for certs.internal_issuer.type as selfsigning, the selfsigned issuer has no dependency on any other resource.
+    # Used for certs.internal_issuer.type as selfsigning
     selfsigning:
-    # used for certs.internal_issuer.type as ca, the CA issuer needs to reference a Secret which contains your CA certificate and signing private key.
-    ca:
+      # The name of the issuer, if not specified, the default value is used
       name:
+      # The secret name of the selfsigned CA certificate, if not specified, the default value is used
+      secretName:
+    # used for certs.internal_issuer.type as ca or when internal_issuer is disabled
+    ca:
+      # The name of the issuer, it is mandatory to specify this value if TLS is enabled
+      # and selfsigning is not used
+      name:
+      # The secret name of the CA certificate, it is mandatory to specify this value if TLS is enabled
+      # and selfsigning is not used
       secretName:
 
 ######################################################################
