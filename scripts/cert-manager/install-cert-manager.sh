@@ -41,10 +41,12 @@ echo "Updating local helm chart repository cache ..."
 helm repo update
 
 echo "Installing cert-manager ${VERSION} to namespace ${NAMESPACE} as '${NAME}' ..."
-helm install \
+helm upgrade \
+  --install \
   --namespace ${NAMESPACE} \
   --create-namespace \
   --version ${VERSION} \
+  --set featureGates=AdditionalCertificateOutputFormats=true \
   ${NAME} \
   jetstack/cert-manager
 echo "Successfully installed cert-manager ${VERSION}."
