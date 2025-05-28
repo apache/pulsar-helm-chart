@@ -72,8 +72,10 @@ metadata:
 spec:
   # Secret names are always required.
   secretName: "{{ .root.Release.Name }}-{{ .tlsConfig.cert_name }}"
+{{- if .root.Values.tls.zookeeper.enabled }}
   additionalOutputFormats:
-    - type: CombinedPEM  
+    - type: CombinedPEM
+{{- end }}
   duration: "{{ .root.Values.tls.common.duration }}"
   renewBefore: "{{ .root.Values.tls.common.renewBefore }}"
   subject:

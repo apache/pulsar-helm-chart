@@ -68,8 +68,10 @@ Define bookie tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.zookeeper.enabled }}
     - key: tls-combined.pem
       path: tls-combined.pem
+{{- end }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
