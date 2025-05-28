@@ -53,7 +53,23 @@ Define zookeeper tls settings
 */}}
 {{- define "pulsar.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-/pulsar/keytool/keytool.sh zookeeper {{ template "pulsar.zookeeper.hostname" . }} false;
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "zookeeper" "isClient" false) -}}
+{{- end }}
+{{- end }}
+
+{{- define "pulsar.component.zookeeper.tls.settings" }}
+{{- $component := .component -}}
+{{- $isClient := .isClient -}}
+{{- $keyFile := printf "/pulsar/certs/%s/tls-combined.pem" $component -}}
+{{- $caFile := "/pulsar/certs/ca/ca.crt" -}}
+{{- if $isClient }}
+echo $'\n' >> conf/pulsar_env.sh
+echo "PULSAR_EXTRA_OPTS=\"\${PULSAR_EXTRA_OPTS} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.client.certReload=true -Dzookeeper.ssl.keyStore.location={{- $keyFile }} -Dzookeeper.ssl.keyStore.type=PEM -Dzookeeper.ssl.trustStore.location={{- $caFile }} -Dzookeeper.ssl.trustStore.type=PEM\"" >> conf/pulsar_env.sh
+echo $'\n' >> conf/bkenv.sh
+echo "BOOKIE_EXTRA_OPTS=\"\${BOOKIE_EXTRA_OPTS} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.client.certReload=true -Dzookeeper.ssl.keyStore.location={{- $keyFile }} -Dzookeeper.ssl.keyStore.type=PEM -Dzookeeper.ssl.trustStore.location={{- $caFile }} -Dzookeeper.ssl.trustStore.type=PEM\"" >> conf/bkenv.sh
+{{- else }}
+echo $'\n' >> conf/pulsar_env.sh
+echo "PULSAR_EXTRA_OPTS=\"\${PULSAR_EXTRA_OPTS} -Dzookeeper.ssl.keyStore.location={{- $keyFile }} -Dzookeeper.ssl.keyStore.type=PEM -Dzookeeper.ssl.trustStore.location={{- $caFile }} -Dzookeeper.ssl.trustStore.type=PEM\"" >> conf/pulsar_env.sh
 {{- end }}
 {{- end }}
 
