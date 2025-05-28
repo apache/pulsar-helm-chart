@@ -72,6 +72,8 @@ metadata:
 spec:
   # Secret names are always required.
   secretName: "{{ .root.Release.Name }}-{{ .tlsConfig.cert_name }}"
+  additionalOutputFormats:
+    - type: CombinedPEM  
   duration: "{{ .root.Values.tls.common.duration }}"
   renewBefore: "{{ .root.Values.tls.common.renewBefore }}"
   subject:
