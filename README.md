@@ -402,6 +402,15 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
+## Upgrading to Helm chart version 4.2.0 (not released yet)
+
+### TLS configuration for ZooKeeper has changed
+
+TLS configuration for ZooKeeper has changed to fix certificate and private key expiration issues.
+This impacts upgrading configurations with `tls.enabled` and `tls.zookeeper.enabled` in `values.yaml`.
+The revisited solution requires `AdditionalCertificateOutputFormats` feature gate to be enabled in the `cert-manager` deployment.
+If `cert-manager` was installed using `./scripts/cert-manager/install-cert-manager.sh`, it's possible to re-run the updated script to set the feature gate.
+
 ## Upgrading from Helm Chart versions before 4.0.0 to 4.0.0 version and above
 
 ### Pulsar Proxy service's default type has been changed from `LoadBalancer` to `ClusterIP`
