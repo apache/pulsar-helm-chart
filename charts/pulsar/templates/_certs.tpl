@@ -74,28 +74,17 @@ spec:
   secretName: "{{ .root.Release.Name }}-{{ .tlsConfig.cert_name }}"
   duration: "{{ .root.Values.tls.common.duration }}"
   renewBefore: "{{ .root.Values.tls.common.renewBefore }}"
-  {{- if eq .root.Values.certs.internal_issuer.apiVersion "cert-manager.io/v1" }}
   subject:
     organizations:
 {{ toYaml .root.Values.tls.common.organization | indent 4 }}
-  {{- else }}
-  organization:
-{{ toYaml .root.Values.tls.common.organization | indent 2 }}
-  {{- end }}
   # The use of the common name field has been deprecated since 2000 and is
   # discouraged from being used.
   commonName: "{{ template "pulsar.fullname" .root }}-{{ .componentConfig.component }}"
   isCA: false
-  {{- if eq .root.Values.certs.internal_issuer.apiVersion "cert-manager.io/v1" }}
   privateKey:
     size: {{ .root.Values.tls.common.keySize }}
     algorithm: {{ .root.Values.tls.common.keyAlgorithm }}
     encoding: {{ .root.Values.tls.common.keyEncoding }}
-  {{- else }}
-  keySize: {{ .root.Values.tls.common.keySize }}
-  keyAlgorithm: {{ .root.Values.tls.common.keyAlgorithm }}
-  keyEncoding: {{ .root.Values.tls.common.keyEncoding }}
-  {{- end }}
   usages:
     - server auth
     - client auth
