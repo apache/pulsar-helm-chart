@@ -160,7 +160,7 @@ It includes support for:
         - [x] Broker
         - [x] Toolset
         - [x] Bookie
-        - [x] ZooKeeper
+        - [x] ZooKeeper (requires the `AdditionalCertificateOutputFormats=true` feature gate to be enabled in the cert-manager deployment when using cert-manager versions below 1.15.0)
     - [x] Authentication
         - [x] JWT
         - [x] OpenID
@@ -406,10 +406,10 @@ For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs
 
 ### TLS configuration for ZooKeeper has changed
 
-TLS configuration for ZooKeeper has changed to fix certificate and private key expiration issues.
-This impacts upgrading configurations with `tls.enabled` and `tls.zookeeper.enabled` in `values.yaml`.
-The revisited solution requires `AdditionalCertificateOutputFormats` feature gate to be enabled in the `cert-manager` deployment.
-If `cert-manager` was installed using `./scripts/cert-manager/install-cert-manager.sh`, it's possible to re-run the updated script to set the feature gate.
+The TLS configuration for ZooKeeper has been changed to fix certificate and private key expiration issues.
+This change impacts configurations that have `tls.enabled` and `tls.zookeeper.enabled` set in `values.yaml`.
+The revised solution requires the `AdditionalCertificateOutputFormats=true` feature gate to be enabled in the `cert-manager` deployment when using cert-manager versions below 1.15.0.
+If you installed `cert-manager` using `./scripts/cert-manager/install-cert-manager.sh`, you can re-run the updated script to set the feature gate. The script currently installs or upgrades cert-manager LTS version 1.12.17, where the feature gate must be explicitly enabled.
 
 ## Upgrading from Helm Chart versions before 4.0.0 to 4.0.0 version and above
 
