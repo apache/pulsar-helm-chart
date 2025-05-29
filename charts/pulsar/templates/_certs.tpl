@@ -64,6 +64,9 @@ Common certificate template
 Usage: {{- include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.proxy "tlsConfig" .Values.tls.proxy) -}}
 */}}
 {{- define "pulsar.cert.template" -}}
+{{- if eq .root.Values.certs.internal_issuer.apiVersion "cert-manager.io/v1beta1" -}}
+{{- fail "cert-manager.io/v1beta1 is no longer supported. Please set certs.internal_issuer.apiVersion to cert-manager.io/v1" -}}
+{{- end -}}
 apiVersion: "{{ .root.Values.certs.internal_issuer.apiVersion }}"
 kind: Certificate
 metadata:
