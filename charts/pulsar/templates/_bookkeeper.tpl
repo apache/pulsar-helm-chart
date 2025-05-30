@@ -37,7 +37,7 @@ Define bookie zookeeper client tls settings
 */}}
 {{- define "pulsar.bookkeeper.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-/pulsar/keytool/keytool.sh bookie {{ template "pulsar.bookkeeper.hostname" . }} true;
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "bookie" "isClient" true) -}}
 {{- end }}
 {{- end }}
 
@@ -52,11 +52,6 @@ Define bookie tls certs mounts
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  mountPath: "/pulsar/keytool/keytool.sh"
-  subPath: keytool.sh
-{{- end }}
 {{- end }}
 {{- end }}
 
@@ -73,18 +68,16 @@ Define bookie tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.zookeeper.enabled }}
+    - key: tls-combined.pem
+      path: tls-combined.pem
+{{- end }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     items:
     - key: ca.crt
       path: ca.crt
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  configMap:
-    name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
-    defaultMode: 0755
-{{- end }}
 {{- end }}
 {{- end }}
 
@@ -147,7 +140,7 @@ Define bookie init container : verify cluster id
 {{- if not (and .Values.volumes.persistence .Values.bookkeeper.volumes.persistence) }}
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 export BOOKIE_MEM="-Xmx128M";
-{{- include "pulsar.bookkeeper.zookeeper.tls.settings" . -}}
+{{- include "pulsar.bookkeeper.zookeeper.tls.settings" . }}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
@@ -157,7 +150,7 @@ bin/bookkeeper shell bookieformat -nonInteractive -force -deleteCookie || true
 set -e;
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 export BOOKIE_MEM="-Xmx128M";
-{{- include "pulsar.bookkeeper.zookeeper.tls.settings" . -}}
+{{- include "pulsar.bookkeeper.zookeeper.tls.settings" . }}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;

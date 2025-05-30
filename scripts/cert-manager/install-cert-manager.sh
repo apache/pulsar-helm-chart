@@ -25,7 +25,7 @@ set -e
 NAMESPACE=cert-manager
 NAME=cert-manager
 # check compatibility with k8s versions from https://cert-manager.io/docs/installation/supported-releases/
-VERSION=v1.12.16
+VERSION=v1.12.17
 
 # Install cert-manager CustomResourceDefinition resources
 echo "Installing cert-manager CRD resources ..."
@@ -41,10 +41,12 @@ echo "Updating local helm chart repository cache ..."
 helm repo update
 
 echo "Installing cert-manager ${VERSION} to namespace ${NAMESPACE} as '${NAME}' ..."
-helm install \
+helm upgrade \
+  --install \
   --namespace ${NAMESPACE} \
   --create-namespace \
   --version ${VERSION} \
+  --set featureGates=AdditionalCertificateOutputFormats=true \
   ${NAME} \
   jetstack/cert-manager
 echo "Successfully installed cert-manager ${VERSION}."

@@ -58,3 +58,57 @@ Define the pulsar certs ca issuer secret name
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Common certificate template
+Usage: {{- include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.proxy "tlsConfig" .Values.tls.proxy) -}}
+*/}}
+{{- define "pulsar.cert.template" -}}
+{{- if eq .root.Values.certs.internal_issuer.apiVersion "cert-manager.io/v1beta1" -}}
+{{- fail "cert-manager.io/v1beta1 is no longer supported. Please set certs.internal_issuer.apiVersion to cert-manager.io/v1" -}}
+{{- end -}}
+apiVersion: "{{ .root.Values.certs.internal_issuer.apiVersion }}"
+kind: Certificate
+metadata:
+  name: "{{ template "pulsar.fullname" .root }}-{{ .tlsConfig.cert_name }}"
+  namespace: {{ template "pulsar.namespace" .root }}
+spec:
+  # Secret names are always required.
+  secretName: "{{ .root.Release.Name }}-{{ .tlsConfig.cert_name }}"
+{{- if .root.Values.tls.zookeeper.enabled }}
+  additionalOutputFormats:
+    - type: CombinedPEM
+{{- end }}
+  duration: "{{ .root.Values.tls.common.duration }}"
+  renewBefore: "{{ .root.Values.tls.common.renewBefore }}"
+  subject:
+    organizations:
+{{ toYaml .root.Values.tls.common.organization | indent 4 }}
+  # The use of the common name field has been deprecated since 2000 and is
+  # discouraged from being used.
+  commonName: "{{ template "pulsar.fullname" .root }}-{{ .componentConfig.component }}"
+  isCA: false
+  privateKey:
+    size: {{ .root.Values.tls.common.keySize }}
+    algorithm: {{ .root.Values.tls.common.keyAlgorithm }}
+    encoding: {{ .root.Values.tls.common.keyEncoding }}
+  usages:
+    - server auth
+    - client auth
+  # At least one of a DNS Name, USI SAN, or IP address is required.
+  dnsNames:
+{{- if .tlsConfig.dnsNames }}
+{{ toYaml .tlsConfig.dnsNames | indent 4 }}
+{{- end }}
+    - {{ printf "*.%s-%s.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
+    - {{ printf "%s-%s" (include "pulsar.fullname" .root) .componentConfig.component | quote }}
+  # Issuer references are always required.
+  issuerRef:
+    name: "{{ template "pulsar.certs.issuers.ca.name" .root }}"
+    # We can reference ClusterIssuers by changing the kind here.
+    # The default value is Issuer (i.e. a locally namespaced Issuer)
+    kind: Issuer
+    # This is optional since cert-manager will default to this value however
+    # if you are using an external issuer, change this to that issuer group.
+    group: cert-manager.io
+{{- end -}}

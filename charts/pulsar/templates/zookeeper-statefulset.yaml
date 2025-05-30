@@ -227,9 +227,6 @@ spec:
         - mountPath: "/pulsar/certs/ca"
           name: ca
           readOnly: true
-        - name: keytool
-          mountPath: "/pulsar/keytool/keytool.sh"
-          subPath: keytool.sh
         {{- end }}
         {{- if .Values.zookeeper.extraVolumeMounts }}
 {{ toYaml .Values.zookeeper.extraVolumeMounts | indent 8 }}
@@ -251,16 +248,14 @@ spec:
               path: tls.crt
             - key: tls.key
               path: tls.key
+            - key: tls-combined.pem
+              path: tls-combined.pem
       - name: ca
         secret:
           secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
           items:
             - key: ca.crt
               path: ca.crt
-      - name: keytool
-        configMap:
-          name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
-          defaultMode: 0755
       {{- end}}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence }}
