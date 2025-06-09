@@ -72,6 +72,8 @@ kind: Certificate
 metadata:
   name: "{{ template "pulsar.fullname" .root }}-{{ .tlsConfig.cert_name }}"
   namespace: {{ template "pulsar.namespace" .root }}
+  labels:
+    {{- include "pulsar.standardLabels" .root | nindent 4 }}
 spec:
   # Secret names are always required.
   secretName: "{{ .root.Release.Name }}-{{ .tlsConfig.cert_name }}"

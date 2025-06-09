@@ -24,6 +24,8 @@ kind: Issuer
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
   selfSigned: {}
 ---
@@ -32,6 +34,8 @@ kind: Certificate
 metadata:
   name: "{{ template "pulsar.fullname" . }}-ca"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
   secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
   commonName: "{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
@@ -56,6 +60,8 @@ kind: Issuer
 metadata:
   name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
   ca:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"

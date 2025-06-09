@@ -43,10 +43,7 @@ kind: PodMonitor
 metadata:
   name: {{ template "pulsar.fullname" $root }}-{{ replace "." "-" $component }}
   labels:
-    app: {{ template "pulsar.name" $root }}
-    chart: {{ template "pulsar.chart" $root }}
-    release: {{ $root.Release.Name }}
-    heritage: {{ $root.Release.Service }}
+    {{- include "pulsar.standardLabels" $root | nindent 4 }}
 spec:
   jobLabel: {{ replace "." "-" $component }}
   podMetricsEndpoints:

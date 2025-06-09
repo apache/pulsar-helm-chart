@@ -32,6 +32,10 @@ spec:
   ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished | default 600 }}
   {{- end }}
   template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.pulsar_manager.component }}-init
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       nodeSelector:

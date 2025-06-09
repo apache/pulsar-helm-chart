@@ -27,6 +27,8 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
   maxReplicas: {{ .Values.proxy.autoscaling.maxReplicas }}
   {{- with .Values.proxy.autoscaling.metrics }}
