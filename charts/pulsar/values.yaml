@@ -554,6 +554,7 @@ oxia:
       # cloud.google.com/gke-nodepool: default-pool
     extraContainers: []
     extraVolumes: []
+    extraVolumeMounts: []
     # customConfigMapName: ""
     # entrypoint: []
 ## templates/server-statefulset.yaml

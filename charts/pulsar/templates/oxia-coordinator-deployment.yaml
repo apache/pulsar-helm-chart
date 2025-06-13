@@ -77,6 +77,10 @@ spec:
             limits:
               cpu: {{ .Values.oxia.coordinator.cpuLimit }}
               memory: {{ .Values.oxia.coordinator.memoryLimit }}
+      {{- if .Values.oxia.coordinator.extraVolumeMounts }}
+          volumeMounts:
+        {{- toYaml .Values.oxia.coordinator.extraVolumeMounts | nindent 12 }}
+      {{- end }}
           livenessProbe:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
           readinessProbe:
