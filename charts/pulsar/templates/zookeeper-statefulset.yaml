@@ -147,6 +147,7 @@ spec:
           {{- if .Values.tls.zookeeper.cacerts.enabled }}
           cd /pulsar/certs/cacerts;
           nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "zookeeper" "isTls" .Values.tls.zookeeper.enabled "certs" .Values.tls.zookeeper.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          echo "DEBUG CACERTS" && echo "--------------------------" && cat /pulsar/certs/cacerts/ca-combined.pem && echo "--------------------------"
           cd /pulsar;
           {{- end }}
           bin/apply-config-from-env.py conf/zookeeper.conf;
