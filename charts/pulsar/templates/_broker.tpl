@@ -43,7 +43,7 @@ Define broker zookeeper client tls settings
 */}}
 {{- define "pulsar.broker.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "broker" "isClient" true) -}}
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "broker" "isClient" true "isCacerts" .Values.tls.broker.cacerts.enabled) -}}
 {{- end }}
 {{- end }}
 
@@ -58,6 +58,18 @@ Define broker tls certs mounts
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
+{{- if .Values.tls.broker.cacerts.enabled }}
+- mountPath: "/pulsar/certs/cacerts"
+  name: broker-cacerts
+{{- range $cert := .Values.tls.broker.cacerts.certs }}
+- name: {{ $cert.name }}
+  mountPath: "/pulsar/certs/{{ $cert.name }}"
+  readOnly: true
+{{- end }}
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem.sh"
+  subPath: certs-combine-pem.sh
 {{- end }}
 {{- end }}
 
@@ -84,5 +96,23 @@ Define broker tls certs volumes
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
+{{- if .Values.tls.broker.cacerts.enabled }}
+- name: broker-cacerts
+  emptyDir: {}
+{{- range $cert := .Values.tls.broker.cacerts.certs }}
+- name: {{ $cert.name }}
+  secret:
+    secretName: "{{ $cert.existingSecret }}"
+    items:
+    {{- range $key := $cert.secretKeys }}
+      - key: {{ $key }}
+        path: {{ $key }}
+    {{- end }}
+{{- end }}
+- name: certs-scripts
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+    defaultMode: 0755
 {{- end }}
 {{- end }}

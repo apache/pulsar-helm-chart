@@ -1,0 +1,106 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+
+# enable TLS with cacerts
+tls:
+  enabled: true
+  proxy:
+    enabled: true
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: common-cacert
+          secretKeys:
+            - key: ca.crt
+  broker:
+    enabled: true
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: common-cacert
+          secretKeys:
+            - key: ca.crt
+  bookie:
+    enabled: true
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: common-cacert
+          secretKeys:
+            - key: ca.crt
+  zookeeper:
+    enabled: true
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: common-cacert
+          secretKeys:
+            - key: ca.crt
+  toolset:
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: common-cacert
+          secretKeys:
+            - key: ca.crt
+  autorecovery:
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: common-cacert
+          secretKeys:
+            - key: ca.crt
+
+
+# enable cert-manager
+certs:
+  internal_issuer:
+    enabled: true
+    type: selfsigning
+
+# deploy cacerts
+extraDeploy:
+  - |
+    apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
+    kind: Certificate
+    metadata:
+      name: "{{ template "pulsar.fullname" . }}-common-cacert"
+      namespace: {{ template "pulsar.namespace" . }}
+      labels:
+        {{- include "pulsar.standardLabels" . | nindent 4 }}
+    spec:
+      secretName: "{{ template "pulsar.fullname" . }}-common-cacert"
+      commonName: "common-cacert"
+      duration: "{{ .Values.certs.internal_issuer.duration }}"
+      renewBefore: "{{ .Values.certs.internal_issuer.renewBefore }}"
+      usages:
+        - server auth
+        - client auth
+      isCA: true
+      issuerRef:
+        name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}"
+        kind: Issuer
+        group: cert-manager.io

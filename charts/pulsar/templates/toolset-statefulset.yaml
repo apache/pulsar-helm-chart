@@ -64,8 +64,20 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-      {{- if .Values.toolset.initContainers }}
       initContainers:
+      {{- if .Values.tls.toolset.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.toolset "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.toolset "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "toolset" "isTls" .Values.tls.toolset.enabled "certs" .Values.tls.toolset.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.toolset.initContainers }}
         {{- toYaml .Values.toolset.initContainers | nindent 6 }}
       {{- end }}
       containers:
@@ -87,6 +99,9 @@ spec:
         {{- if .Values.toolset.additionalCommand }}
           {{ .Values.toolset.additionalCommand }}
         {{- end }}
+          {{- if .Values.tls.toolset.cacerts.enabled }}
+          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "toolset" "isTls" .Values.tls.toolset.enabled "certs" .Values.tls.toolset.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 & &&
+          {{- end }}
           bin/apply-config-from-env.py conf/client.conf;
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}

@@ -114,8 +114,20 @@ spec:
       securityContext:
 {{ toYaml .Values.zookeeper.securityContext | indent 8 }}
       {{- end }}
-      {{- if .Values.zookeeper.initContainers }}
       initContainers:
+      {{- if .Values.tls.zookeeper.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.zookeeper "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.zookeeper "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+        - |
+          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "zookeeper" "isTls" .Values.tls.zookeeper.enabled "certs" .Values.tls.zookeeper.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.zookeeper.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.zookeeper.initContainers }}
         {{- toYaml .Values.zookeeper.initContainers | nindent 6 }}
       {{- end }}
       containers:
@@ -132,6 +144,9 @@ spec:
         {{- if .Values.zookeeper.additionalCommand }}
           {{ .Values.zookeeper.additionalCommand }}
         {{- end }}
+          {{- if .Values.tls.zookeeper.cacerts.enabled }}
+          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "zookeeper" "isTls" .Values.tls.zookeeper.enabled "certs" .Values.tls.zookeeper.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 & &&
+          {{- end }}
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
@@ -220,14 +235,7 @@ spec:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
           mountPath: /pulsar/data-log
         {{- end }}
-        {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-        - mountPath: "/pulsar/certs/zookeeper"
-          name: zookeeper-certs
-          readOnly: true
-        - mountPath: "/pulsar/certs/ca"
-          name: ca
-          readOnly: true
-        {{- end }}
+        {{- include "pulsar.zookeeper.certs.volumeMounts" . | nindent 8 }}
         {{- if .Values.zookeeper.extraVolumeMounts }}
 {{ toYaml .Values.zookeeper.extraVolumeMounts | indent 8 }}
         {{- end }}
@@ -236,27 +244,10 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
         emptyDir: {}
       {{- end }}
+      {{- include "pulsar.zookeeper.certs.volumes" . | nindent 6 }}
       {{- if .Values.zookeeper.extraVolumes }}
 {{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
       {{- end }}
-      {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-      - name: zookeeper-certs
-        secret:
-          secretName: "{{ .Release.Name }}-{{ .Values.tls.zookeeper.cert_name }}"
-          items:
-            - key: tls.crt
-              path: tls.crt
-            - key: tls.key
-              path: tls.key
-            - key: tls-combined.pem
-              path: tls-combined.pem
-      - name: ca
-        secret:
-          secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-          items:
-            - key: ca.crt
-              path: ca.crt
-      {{- end}}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence }}
   volumeClaimTemplates:

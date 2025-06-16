@@ -112,6 +112,18 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
       initContainers:
+      {{- if .Values.tls.proxy.cacerts.enabled }}
+      - name: combine-certs
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "proxy" "isTls" .Values.tls.proxy.enabled "certs" .Values.tls.proxy.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.proxy.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
       {{- if and .Values.components.zookeeper .Values.proxy.waitZookeeperTimeout (gt (.Values.proxy.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
@@ -214,6 +226,9 @@ spec:
         {{- if .Values.proxy.additionalCommand }}
           {{ .Values.proxy.additionalCommand }}
         {{- end }}
+          {{- if .Values.tls.proxy.cacerts.enabled }}
+          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "proxy" "isTls" .Values.tls.proxy.enabled "certs" .Values.tls.proxy.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 & &&
+          {{- end }}
           bin/apply-config-from-env.py conf/proxy.conf &&
           echo "OK" > "${statusFilePath:-status}" &&
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar proxy
@@ -250,16 +265,7 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
-          {{- if .Values.tls.proxy.enabled }}
-          - mountPath: "/pulsar/certs/proxy"
-            name: proxy-certs
-            readOnly: true
-          {{- end}}
-          {{- if .Values.tls.enabled }}
-          - mountPath: "/pulsar/certs/ca"
-            name: ca
-            readOnly: true
-          {{- end}}
+          {{- include "pulsar.proxy.certs.volumeMounts" . | nindent 10 }}
           {{- if .Values.proxy.extraVolumeMounts }}
 {{ toYaml .Values.proxy.extraVolumeMounts | indent 10 }}
           {{- end }}
@@ -296,25 +302,6 @@ spec:
                 path: proxy/token
         {{- end}}
         {{- end}}
-        {{- if .Values.tls.proxy.enabled }}
-        - name: ca
-          secret:
-            secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-            items:
-              - key: ca.crt
-                path: ca.crt
-        - name: proxy-certs
-          secret:
-            secretName: "{{ .Release.Name }}-{{ .Values.tls.proxy.cert_name }}"
-            items:
-              - key: tls.crt
-                path: tls.crt
-              - key: tls.key
-                path: tls.key
-{{- if .Values.tls.zookeeper.enabled }}
-              - key: tls-combined.pem
-                path: tls-combined.pem
-{{- end }}
-        {{- end}}
+        {{- include "pulsar.proxy.certs.volumes" . | nindent 8 }}
       {{- end}}
 {{- end }}

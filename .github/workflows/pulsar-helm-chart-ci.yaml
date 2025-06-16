@@ -233,6 +233,9 @@ jobs:
           - name: OpenID
             values_file: .ci/clusters/values-openid.yaml
             shortname: openid
+          - name: CA certificates
+            values_file: .ci/clusters/values-cacerts.yaml
+            shortname: cacerts
         include:
           - k8sVersion:
               version: "1.25.16"

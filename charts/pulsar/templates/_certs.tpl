@@ -114,3 +114,25 @@ spec:
     # if you are using an external issuer, change this to that issuer group.
     group: cert-manager.io
 {{- end -}}
+
+{{/*
+CA certificates template
+Usage: {{ include "pulsar.certs.cacerts" (dict "isTls" .Values.tls.<component>.enabled "certs" .Values.tls.<component>.cacerts.certs) }}
+*/}}
+{{- define "pulsar.certs.cacerts" -}}
+{{- $isTls := .isTls -}}
+{{- $certs := .certs -}}
+{{- $cacerts := list -}}
+{{- if and $isTls (ne .component "toolset") -}}
+{{- $cacerts = print "/pulsar/certs/ca/ca.crt" | append $cacerts -}}
+{{- end -}}
+{{- if and $isTls (eq .component "toolset") -}}
+{{- $cacerts = print "/pulsar/certs/proxy-ca/ca.crt" | append $cacerts -}}
+{{- end -}}
+{{- range $cert := $certs -}}
+{{- range $key := $cert.secretKeys -}}
+{{- $cacerts = print "/pulsar/certs/" $cert.name "/" $key | append $cacerts -}}
+{{- end -}}
+{{- end -}}
+{{ join " " $cacerts }}
+{{- end -}}
