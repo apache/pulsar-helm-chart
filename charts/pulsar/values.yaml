@@ -244,10 +244,10 @@ tls:
     cacerts:
       enabled: false
       certs:
-        #- name: proxy-cacert
-        #  existingSecret: proxy-cacert
-        #  secretKeys:
-        #    - ca.crt
+        # - name: proxy-cacert
+        #   existingSecret: proxy-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for broker
   broker:
     enabled: false
@@ -258,10 +258,10 @@ tls:
     cacerts:
       enabled: false
       certs:
-        #- name: broker-cacert
-        #  existingSecret: broker-cacert
-        #  secretKeys:
-        #    - ca.crt
+        # - name: broker-cacert
+        #   existingSecret: broker-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for bookies
   bookie:
     enabled: false
@@ -269,10 +269,10 @@ tls:
     cacerts:
       enabled: false
       certs:
-        #- name: bookie-cacert
-        #  existingSecret: bookie-cacert
-        #  secretKeys:
-        #    - ca.crt
+        # - name: bookie-cacert
+        #   existingSecret: bookie-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for zookeeper
   zookeeper:
     enabled: false
@@ -280,30 +280,30 @@ tls:
     cacerts:
       enabled: false
       certs:
-        #- name: zookeeper-cacert
-        #  existingSecret: zookeeper-cacert
-        #  secretKeys:
-        #    - ca.crt
+        # - name: zookeeper-cacert
+        #   existingSecret: zookeeper-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for recovery
   autorecovery:
     cert_name: tls-recovery
     cacerts:
       enabled: false
       certs:
-        #- name: autorecovery-cacert
-        #  existingSecret: autorecovery-cacert
-        #  secretKeys:
-        #    - ca.crt
+        # - name: autorecovery-cacert
+        #   existingSecret: autorecovery-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for toolset
   toolset:
     cert_name: tls-toolset
     cacerts:
       enabled: false
       certs:
-        #- name: toolset-cacert
-        #  existingSecret: toolset-cacert
-        #  secretKeys:
-        #    - ca.crt
+        # - name: toolset-cacert
+        #   existingSecret: toolset-cacert
+        #   secretKeys:
+        #     - ca.crt
   # TLS setting for function runtime instance
   function_instance:
     # controls the use of TLS for function runtime connections towards brokers
