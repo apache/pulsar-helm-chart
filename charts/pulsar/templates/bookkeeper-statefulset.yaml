@@ -115,6 +115,7 @@ spec:
       {{- end }}
       {{- if and .Values.bookkeeper.waitMetadataTimeout (gt (.Values.bookkeeper.waitMetadataTimeout | int) 0) }}
       initContainers:
+      {{- if .Values.tls.bookie.cacerts.enabled }}
       - name: cacerts
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
@@ -123,11 +124,9 @@ spec:
         args:
         - |
           bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "bookie" "isTls" .Values.tls.bookie.enabled "certs" .Values.tls.bookie.cacerts.certs) }}
-        envFrom:
-        - configMapRef:
-            name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
