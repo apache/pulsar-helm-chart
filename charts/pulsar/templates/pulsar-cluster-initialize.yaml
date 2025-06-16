@@ -45,7 +45,7 @@ spec:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
       initContainers:
-      {{- if .Values.tls.pulsar_metadata.cacerts.enabled }}
+      {{- if .Values.tls.toolset.cacerts.enabled }}
       - name: cacerts
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
@@ -53,7 +53,7 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "pulsar_metadata" "isTls" .Values.tls.pulsar_metadata.enabled "certs" .Values.tls.pulsar_metadata.cacerts.certs) }}
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "toolset" "isTls" .Values.tls.toolset.enabled "certs" .Values.tls.toolset.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       {{- end }}

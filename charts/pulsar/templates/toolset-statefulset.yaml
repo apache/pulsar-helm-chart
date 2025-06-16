@@ -119,11 +119,6 @@ spec:
           readOnly: true
         {{- end }}
         {{- end }}
-        {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
-        - mountPath: "/pulsar/certs/proxy-ca"
-          name: proxy-ca
-          readOnly: true
-        {{- end}}
         {{- if .Values.toolset.extraVolumeMounts }}
 {{ toYaml .Values.toolset.extraVolumeMounts | indent 8 }}
         {{- end }}
@@ -138,14 +133,6 @@ spec:
             - key: TOKEN
               path: client/token
       {{- end}}
-      {{- end}}
-      {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
-      - name: proxy-ca
-        secret:
-          secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-          items:
-            - key: ca.crt
-              path: ca.crt
       {{- end}}
       {{- if .Values.toolset.extraVolumes }}
 {{ toYaml .Values.toolset.extraVolumes | indent 6 }}
