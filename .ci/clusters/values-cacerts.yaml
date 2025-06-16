@@ -27,7 +27,7 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: "{{ .Release.Name }}-common-cacert"
+          existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
   broker:
@@ -36,7 +36,7 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: "{{ .Release.Name }}-common-cacert"
+          existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
   bookie:
@@ -45,7 +45,7 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: "{{ .Release.Name }}-common-cacert"
+          existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
   zookeeper:
@@ -54,7 +54,7 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: "{{ .Release.Name }}-common-cacert"
+          existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
   toolset:
@@ -62,7 +62,7 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: "{{ .Release.Name }}-common-cacert"
+          existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
   autorecovery:
@@ -70,7 +70,7 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: "{{ .Release.Name }}-common-cacert"
+          existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
 
