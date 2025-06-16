@@ -27,52 +27,52 @@ tls:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: '{{ template "pulsar.fullname" . }}-common-cacert'
+          existingSecret: "{{ .Release.Name }}-common-cacert"
           secretKeys:
-            - key: ca.crt
+            - ca.crt
   broker:
     enabled: true
     cacerts:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: '{{ template "pulsar.fullname" . }}-common-cacert'
+          existingSecret: "{{ .Release.Name }}-common-cacert"
           secretKeys:
-            - key: ca.crt
+            - ca.crt
   bookie:
     enabled: true
     cacerts:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: '{{ template "pulsar.fullname" . }}-common-cacert'
+          existingSecret: "{{ .Release.Name }}-common-cacert"
           secretKeys:
-            - key: ca.crt
+            - ca.crt
   zookeeper:
     enabled: true
     cacerts:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: '{{ template "pulsar.fullname" . }}-common-cacert'
+          existingSecret: "{{ .Release.Name }}-common-cacert"
           secretKeys:
-            - key: ca.crt
+            - ca.crt
   toolset:
     cacerts:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: '{{ template "pulsar.fullname" . }}-common-cacert'
+          existingSecret: "{{ .Release.Name }}-common-cacert"
           secretKeys:
-            - key: ca.crt
+            - ca.crt
   autorecovery:
     cacerts:
       enabled: true
       certs:
         - name: common-cacert
-          existingSecret: '{{ template "pulsar.fullname" . }}-common-cacert'
+          existingSecret: "{{ .Release.Name }}-common-cacert"
           secretKeys:
-            - key: ca.crt
+            - ca.crt
 
 
 # enable cert-manager
