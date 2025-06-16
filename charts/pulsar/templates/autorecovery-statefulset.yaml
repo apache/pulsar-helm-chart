@@ -160,7 +160,9 @@ spec:
         args:
         - |
           {{- if .Values.tls.autorecovery.cacerts.enabled }}
-          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "autorecovery" "isTls" .Values.tls.autorecovery.enabled "certs" .Values.tls.autorecovery.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &;
+          cd /pulsar/certs/cacerts;
+          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "autorecovery" "isTls" .Values.tls.autorecovery.enabled "certs" .Values.tls.autorecovery.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
           {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}

@@ -208,7 +208,9 @@ spec:
           {{ .Values.bookkeeper.additionalCommand }}
           {{- end }}
           {{- if .Values.tls.bookie.cacerts.enabled }}
-          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "bookie" "isTls" .Values.tls.bookie.enabled "certs" .Values.tls.bookie.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &;
+          cd /pulsar/certs/cacerts;
+          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "bookie" "isTls" .Values.tls.bookie.enabled "certs" .Values.tls.bookie.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
           {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
