@@ -47,8 +47,8 @@ spec:
       initContainers:
       {{- if .Values.tls.pulsar_metadata.cacerts.enabled }}
       - name: cacerts
-        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.pulsar_metadata "root" .) }}"
-        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.pulsar_metadata "root" .) }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
