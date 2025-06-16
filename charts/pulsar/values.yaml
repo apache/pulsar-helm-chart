@@ -310,6 +310,14 @@ tls:
     enabled: false
   oxia:
     enabled: false
+  pulsar_metadata:
+    cacerts:
+      enabled: false
+      certs:
+        # - name: pulsar-metadata-cacert
+        #   existingSecret: pulsar-metadata-cacert
+        #   secretKeys:
+        #     - ca.crt
 
 # Enable or disable broker authentication and authorization.
 auth:

@@ -45,6 +45,18 @@ spec:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
       initContainers:
+      {{- if .Values.tls.pulsar_metadata.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.pulsar_metadata "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.pulsar_metadata "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "pulsar_metadata" "isTls" .Values.tls.pulsar_metadata.enabled "certs" .Values.tls.pulsar_metadata.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
       {{- if and .Values.components.zookeeper .Values.pulsar_metadata.waitZookeeperTimeout (gt (.Values.pulsar_metadata.waitZookeeperTimeout | int) 0) }}
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-zk-cs-ready
