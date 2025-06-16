@@ -256,7 +256,7 @@ spec:
           {{ .Values.broker.additionalCommand }}
         {{- end }}
           {{- if .Values.tls.broker.cacerts.enabled }}
-          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "broker" "isTls" .Values.tls.broker.enabled "certs" .Values.tls.broker.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 & &&
+          bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "broker" "isTls" .Values.tls.broker.enabled "certs" .Values.tls.broker.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &;
           {{- end }}
           bin/apply-config-from-env.py conf/broker.conf;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
