@@ -73,6 +73,14 @@ tls:
           existingSecret: "pulsar-ci-common-cacert"
           secretKeys:
             - ca.crt
+  pulsar_metadata:
+    cacerts:
+      enabled: true
+      certs:
+        - name: common-cacert
+          existingSecret: "pulsar-ci-common-cacert"
+          secretKeys:
+            - ca.crt
 
 
 # enable cert-manager
