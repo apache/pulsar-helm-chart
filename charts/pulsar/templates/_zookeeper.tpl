@@ -96,6 +96,9 @@ Define zookeeper tls certs mounts
 - name: certs-scripts
   mountPath: "/pulsar/bin/certs-combine-pem.sh"
   subPath: certs-combine-pem.sh
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem-infinity.sh"
+  subPath: certs-combine-pem-infinity.sh
 {{- end }}
 {{- end }}
 
