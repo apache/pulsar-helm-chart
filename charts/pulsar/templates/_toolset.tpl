@@ -45,11 +45,9 @@ Define toolset tls certs mounts
 */}}
 {{- define "pulsar.toolset.certs.volumeMounts" -}}
 {{- if .Values.tls.enabled }}
-{{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: toolset-certs
   mountPath: "/pulsar/certs/toolset"
   readOnly: true
-{{- end }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
@@ -73,7 +71,6 @@ Define toolset tls certs volumes
 */}}
 {{- define "pulsar.toolset.certs.volumes" -}}
 {{- if .Values.tls.enabled  }}
-{{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: toolset-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.toolset.cert_name }}"
@@ -82,9 +79,10 @@ Define toolset tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+    {{- if .Values.tls.zookeeper.enabled }}
     - key: tls-combined.pem
       path: tls-combined.pem
-{{- end }}
+    {{- end }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
