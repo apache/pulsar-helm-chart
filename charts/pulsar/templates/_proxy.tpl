@@ -21,16 +21,16 @@ under the License.
 Define proxy tls certs mounts
 */}}
 {{- define "pulsar.proxy.certs.volumeMounts" -}}
+{{- if .Values.tls.enabled }}
 {{- if .Values.tls.proxy.enabled }}
 - mountPath: "/pulsar/certs/proxy"
   name: proxy-certs
   readOnly: true
-{{- end}}
-{{- if .Values.tls.enabled }}
+{{- end }}
 - mountPath: "/pulsar/certs/ca"
   name: ca
   readOnly: true
-{{- end}}
+{{- end }}
 {{- if .Values.tls.proxy.cacerts.enabled }}
 - mountPath: "/pulsar/certs/cacerts"
   name: proxy-cacerts
@@ -49,13 +49,8 @@ Define proxy tls certs mounts
 Define proxy tls certs volumes
 */}}
 {{- define "pulsar.proxy.certs.volumes" -}}
+{{- if .Values.tls.enabled }}
 {{- if .Values.tls.proxy.enabled }}
-- name: ca
-  secret:
-    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-    items:
-      - key: ca.crt
-        path: ca.crt
 - name: proxy-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.proxy.cert_name }}"
@@ -68,7 +63,14 @@ Define proxy tls certs volumes
       - key: tls-combined.pem
         path: tls-combined.pem
       {{- end }}
-{{- end}}
+{{- end }}
+- name: ca
+  secret:
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
+    items:
+      - key: ca.crt
+        path: ca.crt
+{{- end }}
 {{- if .Values.tls.proxy.cacerts.enabled }}
 - name: proxy-cacerts
   emptyDir: {}

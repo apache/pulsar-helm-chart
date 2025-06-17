@@ -51,10 +51,12 @@ Define broker zookeeper client tls settings
 Define broker tls certs mounts
 */}}
 {{- define "pulsar.broker.certs.volumeMounts" -}}
-{{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled)) }}
+{{- if .Values.tls.enabled }}
+{{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: broker-certs
   mountPath: "/pulsar/certs/broker"
   readOnly: true
+{{- end }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
@@ -77,7 +79,8 @@ Define broker tls certs mounts
 Define broker tls certs volumes
 */}}
 {{- define "pulsar.broker.certs.volumes" -}}
-{{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled)) }}
+{{- if .Values.tls.enabled }}
+{{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: broker-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}"
@@ -89,6 +92,7 @@ Define broker tls certs volumes
 {{- if .Values.tls.zookeeper.enabled }}
     - key: tls-combined.pem
       path: tls-combined.pem
+{{- end }}
 {{- end }}
 - name: ca
   secret:
