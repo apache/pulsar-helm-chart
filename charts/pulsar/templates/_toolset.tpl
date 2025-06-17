@@ -44,10 +44,12 @@ Define toolset zookeeper client tls settings
 Define toolset tls certs mounts
 */}}
 {{- define "pulsar.toolset.certs.volumeMounts" -}}
-{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+{{- if .Values.tls.enabled }}
+{{- if .Values.tls.zookeeper.enabled }}
 - name: toolset-certs
   mountPath: "/pulsar/certs/toolset"
   readOnly: true
+{{- end }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
@@ -70,7 +72,8 @@ Define toolset tls certs mounts
 Define toolset tls certs volumes
 */}}
 {{- define "pulsar.toolset.certs.volumes" -}}
-{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+{{- if .Values.tls.enabled  }}
+{{- if .Values.tls.zookeeper.enabled }}
 - name: toolset-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.toolset.cert_name }}"
@@ -81,6 +84,7 @@ Define toolset tls certs volumes
       path: tls.key
     - key: tls-combined.pem
       path: tls-combined.pem
+{{- end }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
