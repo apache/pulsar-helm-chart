@@ -123,7 +123,7 @@ spec:
         command: ["sh", "-c"]
         args:
         - |
-          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "bookie" "isTls" .Values.tls.bookie.enabled "certs" .Values.tls.bookie.cacerts.certs) }}
+          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.bookie.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
@@ -209,7 +209,7 @@ spec:
           {{- end }}
           {{- if .Values.tls.bookie.cacerts.enabled }}
           cd /pulsar/certs/cacerts;
-          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "bookie" "isTls" .Values.tls.bookie.enabled "certs" .Values.tls.bookie.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.bookie.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
           cd /pulsar;
           {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;

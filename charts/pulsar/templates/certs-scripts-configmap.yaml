@@ -48,8 +48,7 @@ data:
           echo "# $CERT" >> "$OUTPUT_FILE_TMP"
           cat "$CERT" >> "$OUTPUT_FILE_TMP"
         else
-          echo "ERROR certificate file '$CERT' does not exist"
-          exit 1
+          echo "Certificate file '$CERT' does not exist, skipping"
         fi
       done
 

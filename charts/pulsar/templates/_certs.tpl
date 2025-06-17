@@ -117,15 +117,12 @@ spec:
 
 {{/*
 CA certificates template
-Usage: {{ include "pulsar.certs.cacerts" (dict "component" <component> "isTls" .Values.tls.<component>.enabled "certs" .Values.tls.<component>.cacerts.certs) }}
+Usage: {{ include "pulsar.certs.cacerts" (dict "certs" .Values.tls.<component>.cacerts.certs) }}
 */}}
 {{- define "pulsar.certs.cacerts" -}}
-{{- $isTls := .isTls -}}
 {{- $certs := .certs -}}
 {{- $cacerts := list -}}
-{{- if $isTls -}}
 {{- $cacerts = print "/pulsar/certs/ca/ca.crt" | append $cacerts -}}
-{{- end -}}
 {{- range $cert := $certs -}}
 {{- range $key := $cert.secretKeys -}}
 {{- $cacerts = print "/pulsar/certs/" $cert.name "/" $key | append $cacerts -}}

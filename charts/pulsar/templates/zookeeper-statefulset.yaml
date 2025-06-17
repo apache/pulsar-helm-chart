@@ -123,7 +123,7 @@ spec:
         command: ["sh", "-c"]
         args:
         - |
-          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "zookeeper" "isTls" .Values.tls.zookeeper.enabled "certs" .Values.tls.zookeeper.cacerts.certs) }}
+          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.zookeeper.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.zookeeper.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
@@ -146,8 +146,7 @@ spec:
         {{- end }}
           {{- if .Values.tls.zookeeper.cacerts.enabled }}
           cd /pulsar/certs/cacerts;
-          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "zookeeper" "isTls" .Values.tls.zookeeper.enabled "certs" .Values.tls.zookeeper.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
-          echo "DEBUG CACERTS" && echo "--------------------------" && cat /pulsar/certs/cacerts/ca-combined.pem && echo "--------------------------"
+          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.zookeeper.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
           cd /pulsar;
           {{- end }}
           bin/apply-config-from-env.py conf/zookeeper.conf;

@@ -57,7 +57,7 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "bookie" "isTls" .Values.tls.bookie.enabled "certs" .Values.tls.bookie.cacerts.certs) }}
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.bookie.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       {{- end }}

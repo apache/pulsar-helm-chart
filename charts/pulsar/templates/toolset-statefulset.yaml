@@ -73,7 +73,7 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "toolset" "isTls" .Values.tls.toolset.enabled "certs" .Values.tls.toolset.cacerts.certs) }}
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.toolset.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
@@ -101,7 +101,7 @@ spec:
         {{- end }}
           {{- if .Values.tls.toolset.cacerts.enabled }}
           cd /pulsar/certs/cacerts;
-          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "component" "toolset" "isTls" .Values.tls.toolset.enabled "certs" .Values.tls.toolset.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          nohup bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.toolset.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
           cd /pulsar;
           {{- end }}
           bin/apply-config-from-env.py conf/client.conf;
