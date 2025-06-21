@@ -37,7 +37,7 @@ Define bookie zookeeper client tls settings
 */}}
 {{- define "pulsar.bookkeeper.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "bookie" "isClient" true) -}}
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "bookie" "isClient" true "isCacerts" .Values.tls.bookie.cacerts.enabled) -}}
 {{- end }}
 {{- end }}
 
@@ -45,13 +45,30 @@ Define bookie zookeeper client tls settings
 Define bookie tls certs mounts
 */}}
 {{- define "pulsar.bookkeeper.certs.volumeMounts" -}}
-{{- if and .Values.tls.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
+{{- if .Values.tls.enabled }}
+{{- if or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled }}
 - name: bookie-certs
   mountPath: "/pulsar/certs/bookie"
   readOnly: true
+{{- end }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
+{{- if .Values.tls.bookie.cacerts.enabled }}
+- mountPath: "/pulsar/certs/cacerts"
+  name: bookie-cacerts
+{{- range $cert := .Values.tls.bookie.cacerts.certs }}
+- name: {{ $cert.name }}
+  mountPath: "/pulsar/certs/{{ $cert.name }}"
+  readOnly: true
+{{- end }}
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem.sh"
+  subPath: certs-combine-pem.sh
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem-infinity.sh"
+  subPath: certs-combine-pem-infinity.sh
 {{- end }}
 {{- end }}
 
@@ -59,7 +76,8 @@ Define bookie tls certs mounts
 Define bookie tls certs volumes
 */}}
 {{- define "pulsar.bookkeeper.certs.volumes" -}}
-{{- if and .Values.tls.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
+{{- if .Values.tls.enabled }}
+{{- if or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled }}
 - name: bookie-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.bookie.cert_name }}"
@@ -72,12 +90,31 @@ Define bookie tls certs volumes
     - key: tls-combined.pem
       path: tls-combined.pem
 {{- end }}
+{{- end }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
+{{- if .Values.tls.bookie.cacerts.enabled }}
+- name: bookie-cacerts
+  emptyDir: {}
+{{- range $cert := .Values.tls.bookie.cacerts.certs }}
+- name: {{ $cert.name }}
+  secret:
+    secretName: "{{ $cert.existingSecret }}"
+    items:
+    {{- range $key := $cert.secretKeys }}
+      - key: {{ $key }}
+        path: {{ $key }}
+    {{- end }}
+{{- end }}
+- name: certs-scripts
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+    defaultMode: 0755
 {{- end }}
 {{- end }}
 
@@ -129,7 +166,7 @@ PULSAR_PREFIX_tlsCertificatePath: /pulsar/certs/bookie/tls.crt
 PULSAR_PREFIX_tlsKeyStoreType: PEM
 PULSAR_PREFIX_tlsKeyStore: /pulsar/certs/bookie/tls.key
 PULSAR_PREFIX_tlsTrustStoreType: PEM
-PULSAR_PREFIX_tlsTrustStore: /pulsar/certs/ca/ca.crt 
+PULSAR_PREFIX_tlsTrustStore: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.bookie.cacerts.enabled | quote }}
 {{- end }}
 {{- end }}
 

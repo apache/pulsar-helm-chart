@@ -241,6 +241,13 @@ tls:
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     dnsNames:
     # - example.com
+    cacerts:
+      enabled: false
+      certs:
+        # - name: proxy-cacert
+        #   existingSecret: proxy-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for broker
   broker:
     enabled: false
@@ -248,26 +255,69 @@ tls:
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     dnsNames:
     # - example.com
+    cacerts:
+      enabled: false
+      certs:
+        # - name: broker-cacert
+        #   existingSecret: broker-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for bookies
   bookie:
     enabled: false
     cert_name: tls-bookie
+    cacerts:
+      enabled: false
+      certs:
+        # - name: bookie-cacert
+        #   existingSecret: bookie-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for zookeeper
   zookeeper:
     enabled: false
     cert_name: tls-zookeeper
+    cacerts:
+      enabled: false
+      certs:
+        # - name: zookeeper-cacert
+        #   existingSecret: zookeeper-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for recovery
   autorecovery:
     cert_name: tls-recovery
+    cacerts:
+      enabled: false
+      certs:
+        # - name: autorecovery-cacert
+        #   existingSecret: autorecovery-cacert
+        #   secretKeys:
+        #     - ca.crt
   # settings for generating certs for toolset
   toolset:
     cert_name: tls-toolset
+    cacerts:
+      enabled: false
+      certs:
+        # - name: toolset-cacert
+        #   existingSecret: toolset-cacert
+        #   secretKeys:
+        #     - ca.crt
   # TLS setting for function runtime instance
   function_instance:
     # controls the use of TLS for function runtime connections towards brokers
     enabled: false
   oxia:
     enabled: false
+  pulsar_metadata:
+    cacerts:
+      enabled: false
+      certs:
+        # - name: pulsar-metadata-cacert
+        #   existingSecret: pulsar-metadata-cacert
+        #   secretKeys:
+        #     - ca.crt
 
 # Enable or disable broker authentication and authorization.
 auth:
@@ -1889,3 +1939,7 @@ initContainer:
     requests:
       memory: 256Mi
       cpu: 0.1
+
+## Array of extra objects to deploy with the release (evaluated as a template)
+##
+extraDeploy: []

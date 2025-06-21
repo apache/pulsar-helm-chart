@@ -130,6 +130,18 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
       initContainers:
+      {{- if .Values.tls.broker.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.broker "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.broker "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.broker.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
       {{- if and .Values.components.zookeeper .Values.broker.waitZookeeperTimeout (gt (.Values.broker.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
@@ -243,6 +255,11 @@ spec:
         {{- if .Values.broker.additionalCommand }}
           {{ .Values.broker.additionalCommand }}
         {{- end }}
+          {{- if .Values.tls.broker.cacerts.enabled }}
+          cd /pulsar/certs/cacerts;
+          nohup /pulsar/bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.broker.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
+          {{- end }}
           bin/apply-config-from-env.py conf/broker.conf;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > "${statusFilePath:-status}";

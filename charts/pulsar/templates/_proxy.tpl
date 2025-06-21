@@ -18,46 +18,23 @@ under the License.
 */}}
 
 {{/*
-Define the pulsar toolset service
+Define proxy tls certs mounts
 */}}
-{{- define "pulsar.toolset.service" -}}
-{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}
-{{- end }}
-
-{{/*
-Define the toolset hostname
-*/}}
-{{- define "pulsar.toolset.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.toolset.service" . }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}
-{{- end -}}
-
-{{/*
-Define toolset zookeeper client tls settings
-*/}}
-{{- define "pulsar.toolset.zookeeper.tls.settings" -}}
-{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled -}}
-{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "toolset" "isClient" true "isCacerts" .Values.tls.toolset.cacerts.enabled) -}}
-{{- end -}}
-{{- end }}
-
-{{/*
-Define toolset tls certs mounts
-*/}}
-{{- define "pulsar.toolset.certs.volumeMounts" -}}
+{{- define "pulsar.proxy.certs.volumeMounts" -}}
 {{- if .Values.tls.enabled }}
-{{- if .Values.tls.zookeeper.enabled }}
-- name: toolset-certs
-  mountPath: "/pulsar/certs/toolset"
+{{- if .Values.tls.proxy.enabled }}
+- mountPath: "/pulsar/certs/proxy"
+  name: proxy-certs
   readOnly: true
 {{- end }}
-- name: ca
-  mountPath: "/pulsar/certs/ca"
+- mountPath: "/pulsar/certs/ca"
+  name: ca
   readOnly: true
 {{- end }}
-{{- if .Values.tls.toolset.cacerts.enabled }}
+{{- if .Values.tls.proxy.cacerts.enabled }}
 - mountPath: "/pulsar/certs/cacerts"
-  name: toolset-cacerts
-{{- range $cert := .Values.tls.toolset.cacerts.certs }}
+  name: proxy-cacerts
+{{- range $cert := .Values.tls.proxy.cacerts.certs }}
 - name: {{ $cert.name }}
   mountPath: "/pulsar/certs/{{ $cert.name }}"
   readOnly: true
@@ -72,33 +49,35 @@ Define toolset tls certs mounts
 {{- end }}
 
 {{/*
-Define toolset tls certs volumes
+Define proxy tls certs volumes
 */}}
-{{- define "pulsar.toolset.certs.volumes" -}}
-{{- if .Values.tls.enabled  }}
-{{- if .Values.tls.zookeeper.enabled }}
-- name: toolset-certs
+{{- define "pulsar.proxy.certs.volumes" -}}
+{{- if .Values.tls.enabled }}
+{{- if .Values.tls.proxy.enabled }}
+- name: proxy-certs
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.toolset.cert_name }}"
+    secretName: "{{ .Release.Name }}-{{ .Values.tls.proxy.cert_name }}"
     items:
-    - key: tls.crt
-      path: tls.crt
-    - key: tls.key
-      path: tls.key
-    - key: tls-combined.pem
-      path: tls-combined.pem
+      - key: tls.crt
+        path: tls.crt
+      - key: tls.key
+        path: tls.key
+      {{- if .Values.tls.zookeeper.enabled }}
+      - key: tls-combined.pem
+        path: tls-combined.pem
+      {{- end }}
 {{- end }}
 - name: ca
   secret:
     secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     items:
-    - key: ca.crt
-      path: ca.crt
+      - key: ca.crt
+        path: ca.crt
 {{- end }}
-{{- if .Values.tls.toolset.cacerts.enabled }}
-- name: toolset-cacerts
+{{- if .Values.tls.proxy.cacerts.enabled }}
+- name: proxy-cacerts
   emptyDir: {}
-{{- range $cert := .Values.tls.toolset.cacerts.certs }}
+{{- range $cert := .Values.tls.proxy.cacerts.certs }}
 - name: {{ $cert.name }}
   secret:
     secretName: "{{ $cert.existingSecret }}"

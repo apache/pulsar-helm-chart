@@ -36,7 +36,7 @@ Define autorecovery zookeeper client tls settings
 */}}
 {{- define "pulsar.autorecovery.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "autorecovery" "isClient" true) -}}
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "autorecovery" "isClient" true "isCacerts" .Values.tls.autorecovery.cacerts.enabled) -}}
 {{- end }}
 {{- end }}
 
@@ -51,6 +51,21 @@ Define autorecovery tls certs mounts
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- end }}
+{{- if .Values.tls.autorecovery.cacerts.enabled }}
+- mountPath: "/pulsar/certs/cacerts"
+  name: autorecovery-cacerts
+{{- range $cert := .Values.tls.autorecovery.cacerts.certs }}
+- name: {{ $cert.name }}
+  mountPath: "/pulsar/certs/{{ $cert.name }}"
+  readOnly: true
+{{- end }}
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem.sh"
+  subPath: certs-combine-pem.sh
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem-infinity.sh"
+  subPath: certs-combine-pem-infinity.sh
 {{- end }}
 {{- end }}
 
@@ -75,6 +90,24 @@ Define autorecovery tls certs volumes
     items:
     - key: ca.crt
       path: ca.crt
+{{- end }}
+{{- if .Values.tls.autorecovery.cacerts.enabled }}
+- name: autorecovery-cacerts
+  emptyDir: {}
+{{- range $cert := .Values.tls.autorecovery.cacerts.certs }}
+- name: {{ $cert.name }}
+  secret:
+    secretName: "{{ $cert.existingSecret }}"
+    items:
+    {{- range $key := $cert.secretKeys }}
+      - key: {{ $key }}
+        path: {{ $key }}
+    {{- end }}
+{{- end }}
+- name: certs-scripts
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+    defaultMode: 0755
 {{- end }}
 {{- end }}
 

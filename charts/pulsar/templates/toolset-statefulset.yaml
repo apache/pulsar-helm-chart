@@ -64,8 +64,20 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
-      {{- if .Values.toolset.initContainers }}
       initContainers:
+      {{- if .Values.tls.toolset.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.toolset "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.toolset "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.toolset.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.toolset.initContainers }}
         {{- toYaml .Values.toolset.initContainers | nindent 6 }}
       {{- end }}
       containers:
@@ -87,6 +99,11 @@ spec:
         {{- if .Values.toolset.additionalCommand }}
           {{ .Values.toolset.additionalCommand }}
         {{- end }}
+          {{- if .Values.tls.toolset.cacerts.enabled }}
+          cd /pulsar/certs/cacerts;
+          nohup /pulsar/bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.toolset.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
+          {{- end }}
           bin/apply-config-from-env.py conf/client.conf;
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
@@ -102,11 +119,6 @@ spec:
           readOnly: true
         {{- end }}
         {{- end }}
-        {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
-        - mountPath: "/pulsar/certs/proxy-ca"
-          name: proxy-ca
-          readOnly: true
-        {{- end}}
         {{- if .Values.toolset.extraVolumeMounts }}
 {{ toYaml .Values.toolset.extraVolumeMounts | indent 8 }}
         {{- end }}
@@ -121,14 +133,6 @@ spec:
             - key: TOKEN
               path: client/token
       {{- end}}
-      {{- end}}
-      {{- if and .Values.tls.enabled (or .Values.tls.broker.enabled .Values.tls.proxy.enabled) }}
-      - name: proxy-ca
-        secret:
-          secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
-          items:
-            - key: ca.crt
-              path: ca.crt
       {{- end}}
       {{- if .Values.toolset.extraVolumes }}
 {{ toYaml .Values.toolset.extraVolumes | indent 6 }}
