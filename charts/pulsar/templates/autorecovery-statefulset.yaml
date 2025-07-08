@@ -123,6 +123,9 @@ spec:
         - |
           bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.autorecovery.cacerts.certs) }}
         volumeMounts:
+        {{- if .Values.autorecovery.initContainersExtraVolumeMounts }}
+{{ toYaml .Values.autorecovery.initContainersExtraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
       {{- if and .Values.autorecovery.waitBookkeeperTimeout (gt (.Values.autorecovery.waitBookkeeperTimeout | int) 0) }}
@@ -140,8 +143,8 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
-        {{- if .Values.autorecovery.extraVolumeMounts }}
-{{ toYaml .Values.autorecovery.extraVolumeMounts | indent 8 }}
+        {{- if .Values.autorecovery.initContainersExtraVolumeMounts }}
+{{ toYaml .Values.autorecovery.initContainersExtraVolumeMounts | indent 8 }}
         {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
@@ -174,6 +177,9 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
+        {{- if .Values.autorecovery.extraVolumeMounts }}
+{{ toYaml .Values.autorecovery.extraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
