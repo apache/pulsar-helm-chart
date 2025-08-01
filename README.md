@@ -402,7 +402,7 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
-## Upgrading to Helm chart version 4.2.0 (not released yet)
+## Upgrading to Helm chart version 4.2.0
 
 ### TLS configuration for ZooKeeper has changed
 
