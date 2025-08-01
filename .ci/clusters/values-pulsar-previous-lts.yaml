@@ -17,4 +17,4 @@
 # under the License.
 #
 
-defaultPulsarImageTag: 3.0.12
+defaultPulsarImageTag: 3.0.13
