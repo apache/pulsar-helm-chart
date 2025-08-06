@@ -588,7 +588,7 @@ Pulsar Helm Chart $VERSION_WITHOUT_RC.
 
 The official source release, as well as the binary Helm Chart release,
 are available at
-https://downloads.apache.org/pulsar/helm-chart/$VERSION_WITHOUT_RC/.
+https://www.apache.org/dyn/closer.lua/pulsar/helm-chart/$VERSION_WITHOUT_RC/?action=download
 
 The helm chart index at https://pulsar.apache.org/charts/ has been
 updated and the release is also available directly via helm.
@@ -629,7 +629,7 @@ We've just released Apache Pulsar Helm Chart ${VERSION_WITHOUT_RC} 🎉
 
 The official source release, as well as the binary Helm Chart release,
 are available at
-https://downloads.apache.org/pulsar/helm-chart/$VERSION_WITHOUT_RC/.
+https://www.apache.org/dyn/closer.lua/pulsar/helm-chart/$VERSION_WITHOUT_RC/?action=download
 
 The helm chart index at https://pulsar.apache.org/charts/ has been
 updated and the release is also available directly via helm.
