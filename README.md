@@ -51,16 +51,6 @@ existing security implementations.
 
 As per the [Pulsar Proxy documentation](https://pulsar.apache.org/docs/3.1.x/administration-proxy/), it is explicitly stated that the Pulsar proxy is not designed for exposure to the public internet. The design assumes that deployments will be protected by network perimeter security measures. It is crucial to understand that relying solely on the default configuration can expose your deployment to significant security vulnerabilities.
 
-### Upgrading
-
-#### To 4.1.0
-
-This version introduces `OpenID` authentication. Setting `auth.authentication.provider` is no longer supported, you need to enable the provider with `auth.authentication.<provider>.enabled`.
-
-#### To 4.0.0
-
-The default service type for the Pulsar proxy has changed from `LoadBalancer` to `ClusterIP` for security reasons. This limits access to within the Kubernetes environment by default.
-
 ### External Access Recommendations
 
 If you need to expose the Pulsar Proxy outside the cluster:
@@ -410,6 +400,22 @@ The TLS configuration for ZooKeeper has been changed to fix certificate and priv
 This change impacts configurations that have `tls.enabled` and `tls.zookeeper.enabled` set in `values.yaml`.
 The revised solution requires the `AdditionalCertificateOutputFormats=true` feature gate to be enabled in the `cert-manager` deployment when using cert-manager versions below 1.15.0.
 If you installed `cert-manager` using `./scripts/cert-manager/install-cert-manager.sh`, you can re-run the updated script to set the feature gate. The script currently installs or upgrades cert-manager LTS version 1.12.17, where the feature gate must be explicitly enabled.
+
+
+## Upgrading to Helm chart version 4.1.0
+
+This version introduces `OpenID` authentication. Setting `auth.authentication.provider` is no longer supported, you need to enable the provider with `auth.authentication.<provider>.enabled`.
+
+In the case of using JWT authentication, you need to set `auth.authentication.jwt.enabled` to `true` in your `values.yaml`.
+
+```yaml
+auth:
+  authentication:
+    enabled: true
+    jwt:
+      # Enable JWT authentication
+      enabled: true
+```
 
 ## Upgrading from Helm Chart versions before 4.0.0 to 4.0.0 version and above
 
