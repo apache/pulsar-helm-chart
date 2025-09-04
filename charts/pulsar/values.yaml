@@ -209,8 +209,8 @@ images:
     pullPolicy:
     hasCommand: false
   oxia:
-    repository: streamnative/oxia
-    tag: 0.12.0
+    repository: oxia/oxia
+    tag: 0.14.4
     pullPolicy:
 
 ## TLS
