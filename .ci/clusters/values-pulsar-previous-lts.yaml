@@ -18,3 +18,44 @@
 #
 
 defaultPulsarImageTag: 3.0.13
+
+# Pulsar 3.0.x runs on JDK 17, which doesn't support -XX:+ZGeneration, therefore it's necessary to
+# override the PULSAR_GC options to use ZGC.
+
+zookeeper:
+  configData:
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+bookkeeper:
+  configData:
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+broker:
+  configData:
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+
+proxy:
+  configData:
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
