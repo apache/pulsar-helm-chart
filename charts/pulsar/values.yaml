@@ -209,8 +209,8 @@ images:
     pullPolicy:
     hasCommand: false
   oxia:
-    repository: streamnative/oxia
-    tag: 0.12.0
+    repository: oxia/oxia
+    tag: 0.14.4
     pullPolicy:
 
 ## TLS
@@ -547,15 +547,12 @@ zookeeper:
     PULSAR_MEM: >
       -Xms64m -Xmx128m
     PULSAR_GC: >
-      -XX:+UseG1GC
-      -XX:MaxGCPauseMillis=10
-      -Dcom.sun.management.jmxremote
-      -Djute.maxbuffer=10485760
-      -XX:+ParallelRefProcEnabled
-      -XX:+UnlockExperimentalVMOptions
-      -XX:+DoEscapeAnalysis
-      -XX:+DisableExplicitGC
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
   ## Add a custom command to the start up process of the zookeeper pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
@@ -836,17 +833,12 @@ bookkeeper:
       -Xmx256m
       -XX:MaxDirectMemorySize=256m
     PULSAR_GC: >
-      -XX:+UseG1GC
-      -XX:MaxGCPauseMillis=10
-      -XX:+ParallelRefProcEnabled
-      -XX:+UnlockExperimentalVMOptions
-      -XX:+DoEscapeAnalysis
-      -XX:ParallelGCThreads=4
-      -XX:ConcGCThreads=4
-      -XX:G1NewSizePercent=50
-      -XX:+DisableExplicitGC
-      -XX:-ResizePLAB
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
     #
     # Bookkeeper configuration reference: https://bookkeeper.apache.org/docs/reference/config
@@ -1167,19 +1159,12 @@ broker:
     PULSAR_MEM: >
       -Xms128m -Xmx256m -XX:MaxDirectMemorySize=256m
     PULSAR_GC: >
-      -XX:+UseG1GC
-      -XX:MaxGCPauseMillis=10
-      -Dio.netty.leakDetectionLevel=disabled
-      -Dio.netty.recycler.linkCapacity=1024
-      -XX:+ParallelRefProcEnabled
-      -XX:+UnlockExperimentalVMOptions
-      -XX:+DoEscapeAnalysis
-      -XX:ParallelGCThreads=4
-      -XX:ConcGCThreads=4
-      -XX:G1NewSizePercent=50
-      -XX:+DisableExplicitGC
-      -XX:-ResizePLAB
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
     managedLedgerDefaultEnsembleSize: "2"
     managedLedgerDefaultWriteQuorum: "2"
@@ -1423,19 +1408,12 @@ proxy:
     PULSAR_MEM: >
       -Xms64m -Xmx64m -XX:MaxDirectMemorySize=64m
     PULSAR_GC: >
-      -XX:+UseG1GC
-      -XX:MaxGCPauseMillis=10
-      -Dio.netty.leakDetectionLevel=disabled
-      -Dio.netty.recycler.linkCapacity=1024
-      -XX:+ParallelRefProcEnabled
-      -XX:+UnlockExperimentalVMOptions
-      -XX:+DoEscapeAnalysis
-      -XX:ParallelGCThreads=4
-      -XX:ConcGCThreads=4
-      -XX:G1NewSizePercent=50
-      -XX:+DisableExplicitGC
-      -XX:-ResizePLAB
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
     httpNumThreads: "8"
   ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
