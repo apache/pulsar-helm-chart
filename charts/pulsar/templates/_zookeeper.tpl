@@ -33,10 +33,10 @@ Define the pulsar zookeeper
 {{- $zk -}}
 {{ else }}
 {{- if not (and .Values.tls.enabled .Values.tls.zookeeper.enabled) -}}
-{{ template "pulsar.zookeeper.service" . }}:{{ .Values.zookeeper.ports.client }}
+{{ template "pulsar.zookeeper.service" . }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.zookeeper.ports.client }}
 {{- end -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled -}}
-{{ template "pulsar.zookeeper.service" . }}:{{ .Values.zookeeper.ports.clientTls }}
+{{ template "pulsar.zookeeper.service" . }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.zookeeper.ports.clientTls }}
 {{- end -}}
 {{- end -}}
 {{- end -}}
