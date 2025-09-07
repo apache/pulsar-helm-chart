@@ -197,7 +197,7 @@ spec:
             echo "bookkeeper cluster is already initialized";
             bookieServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }} | grep Name | wc -l)";
             until [ ${bookieServiceNumber} -ge {{ .Values.broker.configData.managedLedgerDefaultEnsembleSize }} ]; do
-              echo "bookkeeper cluster {{ template "pulsar.cluster.name" . }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }} isn't ready yet ... check in 10 seconds ...";
+              echo "bookkeeper cluster {{ template "pulsar.cluster.name" . }}-{{ .Values.bookkeeper.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }} isn't ready yet ... check in 10 seconds ...";
               sleep 10;
               bookieServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }} | grep Name | wc -l)";
             done;
