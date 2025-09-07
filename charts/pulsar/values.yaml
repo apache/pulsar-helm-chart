@@ -1166,7 +1166,7 @@ broker:
       -XX:+ExitOnOutOfMemoryError
       -XX:+DisableExplicitGC
       -XX:+PerfDisableSharedMem
-    managedLedgerDefaultEnsembleSize: "2"
+    managedLedgerDefaultEnsembleSize: "1"
     managedLedgerDefaultWriteQuorum: "2"
     managedLedgerDefaultAckQuorum: "2"
 
