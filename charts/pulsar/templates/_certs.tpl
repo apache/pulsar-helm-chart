@@ -107,12 +107,8 @@ spec:
   # Issuer references are always required.
   issuerRef:
     name: "{{ template "pulsar.certs.issuers.ca.name" .root }}"
-    # We can reference ClusterIssuers by changing the kind here.
-    # The default value is Issuer (i.e. a locally namespaced Issuer)
-    kind: Issuer
-    # This is optional since cert-manager will default to this value however
-    # if you are using an external issuer, change this to that issuer group.
-    group: cert-manager.io
+    kind: "{{ default "Issuer" .root.Values.certs.issuers.ca.kind }}"
+    group: "{{ default "cert-manager.io" .root.Values.certs.issuers.ca.group }}"
 {{- end -}}
 
 {{/*
