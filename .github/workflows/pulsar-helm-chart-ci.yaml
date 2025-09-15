@@ -132,7 +132,7 @@ jobs:
             --validate-maintainers=false \
             --target-branch ${{ github.event.repository.default_branch }}
 
-      - name: Run kubeconform check for helm template with every major k8s version 1.25.0-1.32.0
+      - name: Run kubeconform check for helm template with every major k8s version 1.25.0-1.34.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
           PULSAR_CHART_HOME=$(pwd)
@@ -156,7 +156,7 @@ jobs:
               kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
           }
           set -o pipefail
-          for k8s_version_part in {25..32}; do
+          for k8s_version_part in {25..34}; do
             k8s_version="1.${k8s_version_part}.0"
             echo "Validating default values with k8s version $k8s_version"
             validate_helm_template_with_k8s_version $k8s_version
@@ -193,8 +193,8 @@ jobs:
         k8sVersion:
           - version: "1.25.16"
             kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
-          - version: "1.32.2"
-            kind_image_tag: v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f
+          - version: "1.34.0"
+            kind_image_tag: v1.34.0@sha256:ede5bb6984830375d264e41b7169d03643f586d3e35316bf5229eaeb12bb18e0
         testScenario:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
