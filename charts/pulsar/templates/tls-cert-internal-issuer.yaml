@@ -55,6 +55,9 @@ spec:
     group: cert-manager.io
 ---
 {{- end }}
+{{- if and (eq .Values.certs.internal_issuer.type "ca") (not (eq .Values.certs.issuers.ca.kind "Issuer")) -}}
+{{- fail "Set certs.internal_issuer.enabled to false when using certs.issuers.ca.kind other than Issuer." -}}
+{{- end }}
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
