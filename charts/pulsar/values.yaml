@@ -397,6 +397,10 @@ certs:
       # The secret name of the CA certificate, it is mandatory to specify this value if TLS is enabled
       # and selfsigning is not used
       secretName:
+      # The k8s kind of the ca issuer: Issuer or ClusterIssuer
+      kind: Issuer
+      # Issuer group
+      group: cert-manager.io
 
 ######################################################################
 # Below are settings for each component
