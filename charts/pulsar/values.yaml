@@ -863,6 +863,11 @@ bookkeeper:
     majorCompactionInterval: "10800"    # default 86400 seconds (3 hours vs default 1 day)
     gcWaitTime: "300000"                # default 900000 milli-seconds (5 minutes vs default 15 minutes)
     isForceGCAllowWhenNoSpace: "true"   # default false
+    # run entry location index RocksDB compaction with a random interval up to the configured value in seconds
+    # see https://github.com/apache/bookkeeper/pull/4555
+    # besides keeping the size of the entry location index RocksDB under control,
+    # this also makes the entry count metrics more accurate for monitoring
+    PULSAR_PREFIX_entryLocationCompactionInterval: "86400"
     # disk utilization configuration
     # https://bookkeeper.apache.org/docs/reference/config#disk-utilization
     # Make sure that diskUsageLwmThreshold <= diskUsageWarnThreshold <= diskUsageThreshold
