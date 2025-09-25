@@ -19,5 +19,5 @@
 #
 
 # This script is used to upgrade the Victoria Metrics Operator CRDs before running "helm upgrade"
-VM_OPERATOR_VERSION="${1:-"0.42.4"}"
+VM_OPERATOR_VERSION="${1:-"0.53.0"}"
 kubectl apply --server-side --force-conflicts -f "https://github.com/VictoriaMetrics/operator/releases/download/v${VM_OPERATOR_VERSION}/crd.yaml"
