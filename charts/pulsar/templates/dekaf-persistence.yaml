@@ -17,6 +17,7 @@
 # under the License.
 #
 
+{{- if .Values.components.dekaf }}
 {{- if ((.Values.dekaf).persistence).enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -42,4 +43,5 @@ spec:
     requests:
       storage: "{{ ((.Values.dekaf).persistence).size | default "2Gi" }}"
   storageClassName: {{ ((.Values.dekaf).persistence).storageClass | default nil }}
+{{- end }}
 {{- end }}
