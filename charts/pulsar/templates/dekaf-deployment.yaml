@@ -21,36 +21,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "pulsar.fullname" . }}-{{ .Values.dekaf.component }}
+  name: {{ template "pulsar.fullname" . }}-{{ template "dekaf.component" . }}
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.dekaf.component }}
+    component: {{ template "dekaf.component" . }}
   annotations:
-    {{- toYaml .Values.dekaf.deployment.annotations | nindent 4 }}
+    {{- toYaml (((.Values.dekaf).deployment).annotations | default dict) | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
-      component: {{ .Values.dekaf.component }}
+      component: {{ template "dekaf.component" . }}
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
         {{- include "pulsar.template.labels" . | nindent 8 }}
-        component: {{ .Values.dekaf.component }}
-      annotations: {{ .Values.dekaf.deployment.podAnnotations | toYaml | nindent 8 }}
+        component: {{ template "dekaf.component" . }}
+      annotations: {{ ((.Values.dekaf).deployment).podAnnotations | default dict | toYaml | nindent 8 }}
     spec:
-      {{- if .Values.dekaf.deployment.nodeSelector }}
+      {{- if ((.Values.dekaf).deployment).nodeSelector }}
       nodeSelector:
-        {{ toYaml .Values.dekaf.deployment.nodeSelector | indent 10 }}
+        {{ toYaml .Values.dekaf.deployment.nodeSelector | default dict | indent 10 }}
       {{- end }}
 
-      {{- if .Values.dekaf.deployment.tolerations }}
+      {{- if ((.Values.dekaf).deployment).tolerations }}
       tolerations:
-        {{ toYaml .Values.dekaf.deployment.tolerations | indent 8 }}
+        {{ toYaml .Values.dekaf.deployment.tolerations | default list | indent 8 }}
       {{- end }}
 
       containers:
@@ -63,41 +63,51 @@ spec:
           - name: DEKAF_PULSAR_BROKER_URL
             value: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}"
 
-          {{- if .Values.dekaf.deployment.extraEnv }}
-            {{- toYaml .Values.dekaf.deployment.extraEnv | nindent 10 }}
+          {{- if ((.Values.dekaf).deployment).extraEnv }}
+            {{- toYaml .Values.dekaf.deployment.extraEnv | default list | nindent 10 }}
           {{- end }}
 
           ports:
             - containerPort: 8090
               name: http
 
+          {{- if ((.Values.dekaf).deployment).resources }}
           resources:
             {{- toYaml .Values.dekaf.deployment.resources | nindent 12 }}
+          {{- end }}
+
+          {{- if ((.Values.dekaf).deployment).livenessProbe }}
           livenessProbe:
             {{- toYaml .Values.dekaf.deployment.livenessProbe | nindent 12 }}
+          {{- end }}
+
+          {{- if ((.Values.dekaf).deployment).readinessProbe }}
           readinessProbe:
             {{- toYaml .Values.dekaf.deployment.readinessProbe | nindent 12 }}
+          {{- end }}
 
-          {{- if .Values.dekaf.persistence.enabled }}
+          {{- if ((.Values.dekaf).persistence).enabled }}
           volumeMounts:
-            - name: {{ template "pulsar.fullname" . }}-{{ .Values.dekaf.component }}-library
+            - name: {{ template "pulsar.fullname" . }}-{{ template "dekaf.component" . }}-library
               mountPath: /dekaf/data/library
           {{- end }}
 
-          {{- if .Values.dekaf.deployment.extraVolumeMounts }}
-            {{- toYaml .Values.dekaf.deployment.extraVolumeMounts | nindent 12 }}
+          {{- if ((.Values.dekaf).deployment).extraVolumeMounts }}
+            {{- toYaml .Values.dekaf.deployment.extraVolumeMounts | default list | nindent 12 }}
           {{- end }}
 
-      {{- toYaml .Values.dekaf.deployment.extraContainers | nindent 8 }}
-
-      volumes:
-      {{- if .Values.dekaf.persistence.enabled }}
-      - name: {{ template "pulsar.fullname" . }}-{{ .Values.dekaf.component }}-library
-        persistentVolumeClaim:
-          claimName: {{ template "pulsar.fullname" . }}-{{ .Values.dekaf.component }}-library
+      {{- range ((.Values.dekaf).deployment).extraContainers | default (list) }}
+        - {{- toYaml . | nindent 10 }}
       {{- end }}
 
-      {{- if .Values.dekaf.deployment.extraVolumes }}
-        {{- toYaml .Values.dekaf.deployment.extraVolumes | nindent 8 }}
+      volumes:
+      {{- if ((.Values.dekaf).persistence).enabled }}
+      - name: {{ template "pulsar.fullname" . }}-{{ template "dekaf.component" . }}-library
+        persistentVolumeClaim:
+          claimName: {{ template "pulsar.fullname" . }}-{{ template "dekaf.component" . }}-library
+      {{- end }}
+
+      {{- if ((.Values.dekaf).deployment).extraVolumes }}
+        {{- toYaml .Values.dekaf.deployment.extraVolumes | default list | nindent 8 }}
       {{- end }}
 {{- end }}

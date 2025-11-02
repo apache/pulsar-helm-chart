@@ -21,15 +21,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "pulsar.fullname" . }}-{{ .Values.dekaf.component }}
+  name: {{ template "pulsar.fullname" . }}-{{ template "dekaf.component" . }}
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.dekaf.component }}
-{{- with .Values.dekaf.service.annotations }}
+    component: {{ template "dekaf.component" . }}
   annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+  {{- if ((.Values.dekaf).service).annotations }}
+    {{ toYaml .Values.dekaf.service.annotations | indent 4 }}
+  {{- end }}
 spec:
   ports:
     - name: http
@@ -37,5 +37,5 @@ spec:
       targetPort: 8090
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
-    component: {{ .Values.dekaf.component }}
+    component: {{ template "dekaf.component" . }}
 {{- end }}

@@ -1940,7 +1940,7 @@ dekaf:
         cpu: "4000m"
     livenessProbe:
       httpGet:
-        path: /healthz
+        path: /health
         port: http
         scheme: HTTP
       periodSeconds: 5
