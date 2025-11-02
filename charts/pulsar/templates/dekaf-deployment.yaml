@@ -26,7 +26,8 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.dekaf.component }}
-  annotations: {{ .Values.dekaf.deployment.annotations | toYaml | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.dekaf.deployment.annotations | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -42,14 +43,16 @@ spec:
         component: {{ .Values.dekaf.component }}
       annotations: {{ .Values.dekaf.deployment.podAnnotations | toYaml | nindent 8 }}
     spec:
-    {{- if .Values.dekaf.deployment.nodeSelector }}
+      {{- if .Values.dekaf.deployment.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.dekaf.deployment.nodeSelector | indent 8 }}
-    {{- end }}
-    {{- if .Values.dekaf.deployment.tolerations }}
+        {{ toYaml .Values.dekaf.deployment.nodeSelector | indent 10 }}
+      {{- end }}
+
+      {{- if .Values.dekaf.deployment.tolerations }}
       tolerations:
-{{ toYaml .Values.dekaf.deployment.tolerations | indent 8 }}
-    {{- end }}
+        {{ toYaml .Values.dekaf.deployment.tolerations | indent 8 }}
+      {{- end }}
+
       containers:
         - name: dekaf
           image: "{{ .Values.images.dekaf.repository }}:{{ .Values.images.dekaf.tag }}"
@@ -59,15 +62,21 @@ spec:
             value: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}"
           - name: DEKAF_PULSAR_BROKER_URL
             value: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}"
+
           {{- if .Values.dekaf.deployment.extraEnv }}
-{{- toYaml .Values.dekaf.deployment.extraEnv | nindent 12 }}
+            {{- toYaml .Values.dekaf.deployment.extraEnv | nindent 10 }}
           {{- end }}
+
           ports:
             - containerPort: 8090
               name: http
-          resources: {{ .Values.dekaf.deployment.podAnnotations | toYaml | nindent 12 }}
-          livenessProbe: {{ .Values.dekaf.deployment.livenessProbe | toYaml | nindent 12}}
-          readinessProbe: {{.Values.dekaf.deployment.readinessProbe | toYaml | nindent 12 }}
+
+          resources:
+            {{- toYaml .Values.dekaf.deployment.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.dekaf.deployment.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.dekaf.deployment.readinessProbe | nindent 12 }}
 
           {{- if .Values.dekaf.persistence.enabled }}
           volumeMounts:
@@ -75,12 +84,11 @@ spec:
               mountPath: /dekaf/data/library
           {{- end }}
 
-      {{- if .Values.dekaf.deployment.extraVolumeMounts }}
-{{- toYaml .Values.dekaf.deployment.extraVolumeMounts | nindent 12 }}
-      {{- end }}
-      {{- if .Values.dekaf.deployment.extraContainers }}
-        {{- toYaml .Values.dekaf.deployment.extraContainers | nindent 8 }}
-      {{- end }}
+          {{- if .Values.dekaf.deployment.extraVolumeMounts }}
+            {{- toYaml .Values.dekaf.deployment.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+
+      {{- toYaml .Values.dekaf.deployment.extraContainers | nindent 8 }}
 
       volumes:
       {{- if .Values.dekaf.persistence.enabled }}
@@ -88,7 +96,8 @@ spec:
         persistentVolumeClaim:
           claimName: {{ template "pulsar.fullname" . }}-{{ .Values.dekaf.component }}-library
       {{- end }}
+
       {{- if .Values.dekaf.deployment.extraVolumes }}
-{{- toYaml .Values.dekaf.deployment.extraVolumes | nindent 8 }}
+        {{- toYaml .Values.dekaf.deployment.extraVolumes | nindent 8 }}
       {{- end }}
 {{- end }}

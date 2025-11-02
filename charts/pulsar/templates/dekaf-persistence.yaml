@@ -10,10 +10,11 @@ metadata:
   {{- toYaml . | nindent 4 }}
   {{- end }}
 
-  {{- with .Values.dekaf.persistence.labels }}
   labels:
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    {{- if .Values.dekaf.persistence.labels }}
+    {{- toYaml .Values.dekaf.persistence.labels | nindent 4 }}
+    {{- end }}
 
 spec:
   accessModes:

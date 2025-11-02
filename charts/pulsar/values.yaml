@@ -1930,8 +1930,14 @@ dekaf:
     extraVolumes: []
     extraVolumeMounts: []
     extraContainers: []
-    extraEnv: {}
-    resources: {}
+    extraEnv: []
+    resources:
+      requests:
+        memory: "768Mi"
+        cpu: "100m"
+      limits:
+        memory: "4096Mi"
+        cpu: "4000m"
     livenessProbe:
       httpGet:
         path: /healthz
