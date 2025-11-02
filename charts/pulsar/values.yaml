@@ -1955,12 +1955,12 @@ dekaf:
     annotations: {}
     port: 8090
   persistence:
-      enabled: true
-      storageClass: null
-      size: 2Gi
-      labels: {}
-      annotations: {}
-      accessModes:
+    enabled: true
+    storageClass: null
+    size: 2Gi
+    labels: {}
+    annotations: {}
+    accessModes:
       - ReadWriteOnce
 
 # These are jobs where job ttl configuration is used
