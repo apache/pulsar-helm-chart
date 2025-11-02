@@ -325,7 +325,31 @@ zookeeper:
 
 This is shown in some [examples/values-disable-monitoring.yaml](examples/values-disable-monitoring.yaml).
 
+## Dekaf UI
+
+[Dekaf](github.com/visortelle/dekaf) is a new open-source UI for Apache Pulsar.
+
+> :warning: At this moment Dekaf doesn't have built-in authentication. In order to prevent unwanted access, it relies on authentication on the Pulsar broker side.
+> If your Pulsar instance stores sensitive data, make sure that:
+> - You have configured authentication on the Pulsar side
+> - Dekaf isn't accessible from the Internet
+> - Only authorized persons have access to you Kubernetes namespace
+> Improvements in this area are planned to be implemented later.
+
+To enable the Dekaf component:
+
+- Set the `components.dekaf` property to `true` in the Helm release `values.yaml` file.
+- Run the following command to make Dekaf service accessible on your local machine.
+
+```
+kubectl port-forward svc/$(kubectl get svc -l component=dekaf -o jsonpath='{.items[0].metadata.name}') 8090:8090
+```
+
+- Open <http://localhost:8090> in browser.
+
 ## Pulsar Manager
+
+> :warning: Pulsar Manager has been poorly maintained for a long time. Consider the Dekaf UI instead.
 
 The Pulsar Manager can be deployed alongside the pulsar cluster instance.
 Depending on the given settings it uses an existing Secret within the given namespace or creates a new one, with random
