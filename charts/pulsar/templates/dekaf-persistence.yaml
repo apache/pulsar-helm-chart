@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if ((.Values.dekaf).persistence).enabled | default true }}
+{{- if ((.Values.dekaf).persistence).enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

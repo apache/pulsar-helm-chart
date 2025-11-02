@@ -1956,6 +1956,7 @@ dekaf:
     port: 8090
   persistence:
     enabled: true
+    # Storage class must be specified, otherwise you can get an error on Helm upgrade
     storageClass: null
     size: 2Gi
     labels: {}
