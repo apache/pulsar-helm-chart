@@ -19,3 +19,6 @@
 
 components:
   dekaf: true
+dekaf:
+  persistence:
+    enabled: false
