@@ -32,3 +32,12 @@ extraVolumeMounts:
   - name: realm-config
     mountPath: "/opt/bitnami/keycloak/data/import"
     readOnly: true
+
+# Fix for https://github.com/bitnami/charts/issues/35164
+image:
+  repository: bitnamilegacy/keycloak
+  tag: 26.2.3-debian-12-r0
+postgresql:
+  image:
+    repository: bitnamilegacy/postgresql
+    tag: postgresql:17.4.0-debian-12-r17
