@@ -135,6 +135,7 @@ This Helm Chart includes all the components of Apache Pulsar for a complete expe
     - [x] Functions
     - [x] Proxies
 - [x] Management & monitoring components:
+    - [x] Dekaf UI
     - [x] Pulsar Manager
     - [x] Optional PodMonitors for each component (enabled by default)
     - [x] [victoria-metrics-k8s-stack](hhttps://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-k8s-stack) (as of 4.0.0)
@@ -334,6 +335,7 @@ This is shown in some [examples/values-disable-monitoring.yaml](examples/values-
 > - You have configured authentication on the Pulsar side
 > - Dekaf isn't accessible from the Internet
 > - Only authorized persons have access to you Kubernetes namespace
+>
 > Improvements in this area are planned to be implemented later.
 
 To enable the Dekaf component:
