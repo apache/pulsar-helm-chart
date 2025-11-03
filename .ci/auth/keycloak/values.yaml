@@ -34,6 +34,9 @@ extraVolumeMounts:
     readOnly: true
 
 # Fix for https://github.com/bitnami/charts/issues/35164
+global:
+  security:
+    allowInsecureImages: true
 image:
   repository: bitnamilegacy/keycloak
   tag: 26.2.3-debian-12-r0
