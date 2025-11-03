@@ -224,6 +224,9 @@ jobs:
           - name: ZK & BK TLS Only
             values_file: .ci/clusters/values-zkbk-tls.yaml
             shortname: zkbk-tls
+          - name: Dekaf
+            values_file: .ci/clusters/values-dekaf.yaml
+            shortname: dekaf
           - name: Pulsar Manager
             values_file: .ci/clusters/values-pulsar-manager.yaml
             shortname: pulsar-manager

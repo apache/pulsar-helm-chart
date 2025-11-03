@@ -135,6 +135,8 @@ components:
   toolset: true
   # pulsar manager
   pulsar_manager: false
+  # dekaf UI
+  dekaf: false
 
 # default image repository for pulsar images
 defaultPulsarImageRepository: apachepulsar/pulsar-all
@@ -208,6 +210,11 @@ images:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
     hasCommand: false
+  dekaf:
+    repository: visortelle/dekaf
+    tag: 1.0.0
+    # uses defaultPullPolicy when unspecified
+    pullPolicy:
   oxia:
     repository: oxia/oxia
     tag: 0.14.4
@@ -1807,6 +1814,7 @@ victoria-metrics-k8s-stack:
               caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
               insecureSkipVerify: true  # For development environments like minikube
 
+## Pulsar Manager has been poorly maintained for a long time. Consider the Dekaf UI instead.
 ## Components Stack: pulsar_manager
 ## templates/pulsar-manager.yaml
 ##
@@ -1910,6 +1918,51 @@ pulsar_manager:
     ui_password: ""  # leave empty for random password
     db_username: "pulsar"
     db_password: ""  # leave empty for random password
+
+# Dekaf is an open-source web-based UI for Apache Pulsar https://pulsar.apache.org/docs/next/administration-dekaf-ui/
+dekaf:
+  component: dekaf
+  deployment:
+    annotations: {}
+    podAnnotations: {}
+    nodeSelector: {}
+    tolerations: []
+    extraVolumes: []
+    extraVolumeMounts: []
+    extraContainers: []
+    extraEnv: []
+    resources:
+      requests:
+        memory: "768Mi"
+        cpu: "100m"
+      limits:
+        memory: "4096Mi"
+        cpu: "4000m"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: http
+        scheme: HTTP
+      periodSeconds: 5
+      initialDelaySeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: http
+        scheme: HTTP
+      periodSeconds: 5
+  service:
+    annotations: {}
+    port: 8090
+  persistence:
+    enabled: true
+    # Storage class must be specified, otherwise you can get an error on Helm upgrade
+    storageClass: null
+    size: 2Gi
+    labels: {}
+    annotations: {}
+    accessModes:
+      - ReadWriteOnce
 
 # These are jobs where job ttl configuration is used
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml

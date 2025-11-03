@@ -17,30 +17,8 @@
 # under the License.
 #
 
-tls:
-  enabled: false
-# This block sets up an example Pulsar Realm
-# https://www.keycloak.org/server/importExport#_importing_a_realm_from_a_directory
-extraEnvVars:
-  - name: KEYCLOAK_EXTRA_ARGS
-    value: "--import-realm"
-extraVolumes:
-  - name: realm-config
-    secret:
-      secretName: keycloak-ci-realm-config
-extraVolumeMounts:
-  - name: realm-config
-    mountPath: "/opt/bitnami/keycloak/data/import"
-    readOnly: true
-
-# Fix for https://github.com/bitnami/charts/issues/35164
-global:
-  security:
-    allowInsecureImages: true
-image:
-  repository: bitnamilegacy/keycloak
-  tag: 26.2.3-debian-12-r0
-postgresql:
-  image:
-    repository: bitnamilegacy/postgresql
-    tag: 17.4.0-debian-12-r17
+components:
+  dekaf: true
+dekaf:
+  persistence:
+    enabled: false
