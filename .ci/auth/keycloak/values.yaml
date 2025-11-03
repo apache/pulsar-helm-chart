@@ -43,4 +43,4 @@ image:
 postgresql:
   image:
     repository: bitnamilegacy/postgresql
-    tag: postgresql:17.4.0-debian-12-r17
+    tag: 17.4.0-debian-12-r17
