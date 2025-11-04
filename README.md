@@ -328,7 +328,7 @@ This is shown in some [examples/values-disable-monitoring.yaml](examples/values-
 
 ## Dekaf UI
 
-[Dekaf](github.com/visortelle/dekaf) is a new open-source UI for Apache Pulsar.
+[Dekaf](https://github.com/visortelle/dekaf) is a new open-source UI for Apache Pulsar.
 
 > :warning: At this moment Dekaf doesn't have built-in authentication. In order to prevent unwanted access, it relies on authentication on the Pulsar broker side.
 > If your Pulsar instance stores sensitive data, make sure that:
