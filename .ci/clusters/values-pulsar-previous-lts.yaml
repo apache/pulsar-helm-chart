@@ -17,7 +17,7 @@
 # under the License.
 #
 
-defaultPulsarImageTag: 3.0.14
+defaultPulsarImageTag: 3.0.15
 
 # Pulsar 3.0.x runs on JDK 17, which doesn't support -XX:+ZGeneration, therefore it's necessary to
 # override the PULSAR_GC options to use ZGC.
