@@ -939,7 +939,7 @@ autorecovery:
   waitBookkeeperTimeout: 120
   resources:
     requests:
-      memory: 64Mi
+      memory: 128Mi
       cpu: 0.05
   ## Bookkeeper auto-recovery service
   ## templates/autorecovery-service.yaml
@@ -954,7 +954,7 @@ autorecovery:
   ##
   configData:
     BOOKIE_MEM: >
-      -Xms64m -Xmx64m
+      -Xms64m -Xmx128m
     PULSAR_PREFIX_useV2WireProtocol: "true"
   extraVolumes: []
   initContainersExtraVolumeMounts: []
@@ -1422,7 +1422,7 @@ proxy:
   ##
   configData:
     PULSAR_MEM: >
-      -Xms64m -Xmx64m -XX:MaxDirectMemorySize=64m
+      -Xms64m -Xmx128m -XX:MaxDirectMemorySize=128m
     PULSAR_GC: >
       -XX:+UseZGC
       -XX:+ZGenerational
