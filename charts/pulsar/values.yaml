@@ -217,7 +217,7 @@ images:
     pullPolicy:
   oxia:
     repository: oxia/oxia
-    tag: 0.14.4
+    tag: 0.15.0
     pullPolicy:
 
 ## TLS
