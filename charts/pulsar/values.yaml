@@ -818,6 +818,19 @@ bookkeeper:
           size: 10Gi
           # storageClassName: existent-storage-class
           mountPath: /pulsar/data/bookkeeper/ledgers1
+    # Optional dedicated volume for BookKeeper indexes / RocksDB (`indexDirectories`).
+    # Useful when ledgers are on HDD but you want indexes on NVMe.
+    index:
+      enabled: true
+      name: index
+      size: 10Gi
+      local_storage: true
+      storageClassName: existent-storage-class
+      # storageClass:
+        # ...
+      # selector:
+        # ...
+      mountPath: /pulsar/data/bookkeeper/index
 
     ## use a single common volume for both journal and ledgers
     useSingleCommonVolume: false
@@ -830,6 +843,14 @@ bookkeeper:
         # ...
       # selector:
         # ...
+
+  # Configure BookKeeper `indexDirectories` (RocksDB/index location for DbLedgerStorage).
+  # When empty/unset, BookKeeper falls back to `ledgerDirectories`.
+  # If `bookkeeper.volumes.index.enabled=true` and this is empty, it defaults to `bookkeeper.volumes.index.mountPath`.
+  # Example: place indexes on NVMe by reusing the journal volume mount:
+  # indexDirectories:
+  #   - /pulsar/data/bookkeeper/journal/index
+  indexDirectories:
   ## Bookkeeper service account
   ## templates/bookkeeper-service-account.yaml
   service_account:
