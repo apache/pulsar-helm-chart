@@ -212,6 +212,18 @@ spec:
           nohup /pulsar/bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.bookie.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
           cd /pulsar;
           {{- end }}
+          {{- $indexDirs := include "pulsar.bookkeeper.indexDirectories" . -}}
+          {{- if $indexDirs }}
+          INDEX_DIRS={{ $indexDirs | quote }}
+          if [ -n "$INDEX_DIRS" ]; then
+            oldIFS=$IFS
+            IFS=','
+            for dir in $INDEX_DIRS; do
+              mkdir -p "$dir"
+            done
+            IFS=$oldIFS
+          fi
+          {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
@@ -227,6 +239,10 @@ spec:
         {{- if .Values.bookkeeper.volumes.useSingleCommonVolume }}
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.common.name }}"
           mountPath: /pulsar/data/bookkeeper
+        {{- if .Values.bookkeeper.volumes.index.enabled }}
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+          mountPath: {{ .Values.bookkeeper.volumes.index.mountPath }}
+        {{- end }}
         {{- else }}
           {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
             {{- $fullname := include "pulsar.fullname" . -}}
@@ -250,6 +266,10 @@ spec:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
           mountPath: /pulsar/data/bookkeeper/ledgers
           {{- end }}
+        {{- if .Values.bookkeeper.volumes.index.enabled }}
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+          mountPath: {{ .Values.bookkeeper.volumes.index.mountPath }}
+        {{- end }}
         {{- end }}
         {{- if .Values.bookkeeper.extraVolumeMounts }}
 {{ toYaml .Values.bookkeeper.extraVolumeMounts | indent 8 }}
@@ -261,6 +281,10 @@ spec:
         emptyDir: {}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
         emptyDir: {}
+      {{- if .Values.bookkeeper.volumes.index.enabled }}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+        emptyDir: {}
+      {{- end }}
       {{- end }}
       {{- include "pulsar.bookkeeper.certs.volumes" . | nindent 6 }}
       {{- if .Values.bookkeeper.extraVolumes }}
@@ -288,6 +312,26 @@ spec:
         selector:
           {{- toYaml . | nindent 10 }}
         {{- end }}
+  {{- if .Values.bookkeeper.volumes.index.enabled }}
+    - metadata:
+        name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.bookkeeper.volumes.index.size }}
+        {{- if .Values.bookkeeper.volumes.index.storageClassName }}
+        storageClassName: "{{ .Values.bookkeeper.volumes.index.storageClassName }}"
+        {{- else if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.index.local_storage)) .Values.bookkeeper.volumes.index.storageClass }}
+        storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+        {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.index.local_storage }}
+        storageClassName: "local-storage"
+        {{- end }}
+        {{- with .Values.bookkeeper.volumes.index.selector }}
+        selector:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+  {{- end }}
   {{- else }}
   {{- if .Values.bookkeeper.volumes.journal.useMultiVolumes }}
   {{- $fullname := include "pulsar.fullname" . -}}
@@ -363,6 +407,26 @@ spec:
       storageClassName: "local-storage"
     {{- end }}
     {{- with .Values.bookkeeper.volumes.ledgers.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.bookkeeper.volumes.index.enabled }}
+  - metadata:
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.bookkeeper.volumes.index.size }}
+    {{- if .Values.bookkeeper.volumes.index.storageClassName }}
+      storageClassName: "{{ .Values.bookkeeper.volumes.index.storageClassName }}"
+    {{- else if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.index.local_storage)) .Values.bookkeeper.volumes.index.storageClass }}
+      storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.index.name }}"
+    {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.index.local_storage }}
+      storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.bookkeeper.volumes.index.selector }}
       selector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
