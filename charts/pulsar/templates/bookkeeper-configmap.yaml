@@ -59,7 +59,6 @@ data:
   {{- if $indexDirs }}
   # Configure RocksDB/index location for DbLedgerStorage. When unset, BookKeeper falls back to ledgerDirectories.
   indexDirectories: {{ $indexDirs | quote }}
-  PULSAR_PREFIX_indexDirectories: {{ $indexDirs | quote }}
   {{- end }}
   {{- if .Values.functions.useBookieAsStateStore }}
   # Stateful function config
