@@ -825,7 +825,7 @@ bookkeeper:
       name: index
       size: 10Gi
       local_storage: true
-      storageClassName: existent-storage-class
+      # storageClassName: existent-storage-class
       # storageClass:
         # ...
       # selector:
