@@ -821,7 +821,7 @@ bookkeeper:
     # Optional dedicated volume for BookKeeper indexes / RocksDB (`indexDirectories`).
     # Useful when ledgers are on HDD but you want indexes on NVMe.
     index:
-      enabled: true
+      enabled: false
       name: index
       size: 10Gi
       local_storage: true
