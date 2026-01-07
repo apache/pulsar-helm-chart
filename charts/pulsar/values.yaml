@@ -212,7 +212,7 @@ images:
     hasCommand: false
   dekaf:
     repository: visortelle/dekaf
-    tag: 1.0.0
+    tag: 1.1.0
     # uses defaultPullPolicy when unspecified
     pullPolicy:
   oxia:
