@@ -311,7 +311,9 @@ function ci::test_pulsar_producer_consumer() {
 }
 
 function ci::wait_function_running() {
-    num_running=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function' | jq .numRunning)
+    local function_status=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function | grep -v INFO')
+    echo "Function status: $function_status"
+    num_running=$(echo $function_status | jq .numRunning || echo 0)
     counter=1
     while [[ ${num_running} -lt 1 ]]; do
       ((counter++))
@@ -330,12 +332,14 @@ function ci::wait_function_running() {
         echo "Function pod logs"
         ${KUBECTL} logs -n ${NAMESPACE} $podname
       fi
-      num_running=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function' | jq .numRunning)
+      function_status=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function | grep -v INFO')
+      echo "Function status: $function_status"
+      num_running=$(echo $function_status | jq .numRunning || echo 0)
     done
 }
 
 function ci::wait_message_processed() {
-    num_processed=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function' | jq .processedSuccessfullyTotal)
+    num_processed=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function | grep -v INFO' | jq .processedSuccessfullyTotal)
     podname=$(${KUBECTL} get pods -l component=function -n ${NAMESPACE} --no-headers -o custom-columns=":metadata.name")
     counter=1
     while [[ ${num_processed} -lt 1 ]]; do
@@ -350,8 +354,8 @@ function ci::wait_message_processed() {
       ${KUBECTL} describe pod -n ${NAMESPACE} $podname
       echo "Function pod logs"
       ${KUBECTL} logs -n ${NAMESPACE} $podname
-      ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function
-      num_processed=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function' | jq .processedSuccessfullyTotal)
+      ${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function | grep -v INFO
+      num_processed=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions stats --tenant pulsar-ci --namespace test --name test-function | grep -v INFO' | jq .processedSuccessfullyTotal)
     done
 }
 
