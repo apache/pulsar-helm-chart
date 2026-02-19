@@ -311,7 +311,9 @@ function ci::test_pulsar_producer_consumer() {
 }
 
 function ci::wait_function_running() {
-    num_running=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function' | jq .numRunning)
+    local function_status=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function')
+    echo "Function status: $function_status"
+    num_running=$(echo $function_status | jq .numRunning || echo 0)
     counter=1
     while [[ ${num_running} -lt 1 ]]; do
       ((counter++))
@@ -330,7 +332,9 @@ function ci::wait_function_running() {
         echo "Function pod logs"
         ${KUBECTL} logs -n ${NAMESPACE} $podname
       fi
-      num_running=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function' | jq .numRunning)
+      function_status=$(${KUBECTL} exec -n ${NAMESPACE} ${CLUSTER}-toolset-0 -- bash -c 'bin/pulsar-admin functions status --tenant pulsar-ci --namespace test --name test-function')
+      echo "Function status: $function_status"
+      num_running=$(echo $function_status | jq .numRunning || echo 0)
     done
 }
 
