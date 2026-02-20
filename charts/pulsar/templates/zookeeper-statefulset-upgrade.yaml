@@ -1,0 +1,103 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# only when `components.zookeeper` is true and `zookeeper.statefulsetUpgrade.enabled` is true,
+# this pre-upgrade hook job will be created to clean up the old zookeeper statefulset if the existing statefulset is created 
+# by a chart older than 4.6.0, which has a different headless service name and will cause issue if not deleted before
+# the new statefulset is created.
+{{- if and .Values.components.zookeeper .Values.zookeeper.statefulsetUpgrade.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-sts-cleanup
+  namespace: {{ template "pulsar.namespace" . }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-sts-cleanup
+  namespace: {{ template "pulsar.namespace" . }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+rules:
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-sts-cleanup
+  namespace: {{ template "pulsar.namespace" . }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-sts-cleanup
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-sts-cleanup
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-sts-cleanup
+  namespace: {{ template "pulsar.namespace" . }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: {{ .Release.Name }}-sts-cleanup
+      restartPolicy: Never
+      containers:
+        - name: kubectl
+          image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
+          command:
+            - sh
+            - -c
+            - |
+              STS="{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+              CHART_LABEL=$(kubectl get statefulset "$STS" -o jsonpath='{.metadata.labels.chart}' 2>/dev/null || true)
+              if [ -z "$CHART_LABEL" ]; then
+                echo "StatefulSet $STS not found or has no chart label, skipping delete"
+                exit 0
+              fi
+              VERSION="${CHART_LABEL#pulsar-}"
+              MAJOR="$(echo "$VERSION" | cut -d. -f1)"
+              MINOR="$(echo "$VERSION" | cut -d. -f2)"
+              if [ "$MAJOR" -lt 4 ] || { [ "$MAJOR" -eq 4 ] && [ "$MINOR" -lt 6 ]; }; then
+                echo "Chart version $CHART_LABEL is older than pulsar-4.6.0, deleting StatefulSet $STS"
+                kubectl delete statefulset "$STS" --cascade=orphan --ignore-not-found
+              else
+                echo "Chart version $CHART_LABEL is 4.6.0 or newer, skipping delete"
+              fi
+{{- end }}

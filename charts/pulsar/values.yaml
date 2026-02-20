@@ -219,6 +219,9 @@ images:
     repository: oxia/oxia
     tag: 0.15.3
     pullPolicy:
+  kubectl:
+    repository: alpine/k8s
+    tag: 1.32.12
 
 ## TLS
 ## templates/tls-certs.yaml
@@ -577,6 +580,9 @@ zookeeper:
   ##
   headlessService:
     annotations: {}
+  ## Zookeeper statefulset upgrade job
+  statefulsetUpgrade:
+    enabled: true
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
