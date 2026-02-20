@@ -156,8 +156,6 @@ function ci::install_pulsar_chart() {
       fi
     else
       install_args="--wait --wait-for-jobs --timeout 360s --debug"
-      # delete zookeeper statefulset to prevent helm upgrade failure due to immutable field error.
-      ${KUBECTL} delete statefulset ${CLUSTER}-zookeeper --cascade=orphan
     fi
 
     CHART_ARGS=""
