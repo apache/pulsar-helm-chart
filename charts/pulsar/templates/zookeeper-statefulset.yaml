@@ -177,7 +177,7 @@ spec:
            value: {{ .Values.zookeeper.externalZookeeperServerList }}
         {{- else }}
            {{- $global := . }}
-           value: {{ range $i, $e := until (.Values.zookeeper.replicaCount | int) }}{{ if ne $i 0 }},{{ end }}{{ template "pulsar.fullname" $global }}-{{ $global.Values.zookeeper.component }}-{{ printf "%d" $i }}{{ end }}
+           value: {{ range $i, $e := until (.Values.zookeeper.replicaCount | int) }}{{ if ne $i 0 }},{{ end }}{{ template "pulsar.zookeeper.service.headless" $global }}-{{ printf "%d" $i }}{{ end }}
         {{- end }}
          - name: EXTERNAL_PROVIDED_SERVERS
         {{- if .Values.zookeeper.externalZookeeperServerList }}
