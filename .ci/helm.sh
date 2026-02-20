@@ -175,7 +175,7 @@ function ci::install_pulsar_chart() {
     fi
     set -x
     ${HELM} template --values ${common_value_file} --values ${value_file} "${extra_values[@]}" ${CLUSTER} ${CHART_ARGS}
-    ${HELM} ${install_type} --force --values ${common_value_file} --values ${value_file} "${extra_values[@]}" --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
+    ${HELM} ${install_type} --values ${common_value_file} --values ${value_file} "${extra_values[@]}" --namespace=${NAMESPACE} ${CLUSTER} ${CHART_ARGS} ${install_args}
     set +x
 
     if [[ "${install_type}" == "install" ]]; then
