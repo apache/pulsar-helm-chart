@@ -27,6 +27,9 @@ kind: ServiceAccount
 metadata:
   name: {{ .Release.Name }}-sts-cleanup
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.zookeeper.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -37,6 +40,9 @@ kind: Role
 metadata:
   name: {{ .Release.Name }}-sts-cleanup
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.zookeeper.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -51,6 +57,9 @@ kind: RoleBinding
 metadata:
   name: {{ .Release.Name }}-sts-cleanup
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.zookeeper.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -68,6 +77,9 @@ kind: Job
 metadata:
   name: {{ .Release.Name }}-sts-cleanup
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.zookeeper.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "0"
