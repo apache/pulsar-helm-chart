@@ -1239,7 +1239,7 @@ broker:
     annotations: {}
   ## Broker statefulset upgrade job
   statefulsetUpgrade:
-    enabled: true    
+    enabled: true
   ## Broker PodDisruptionBudget
   ## templates/broker-pdb.yaml
   ##
