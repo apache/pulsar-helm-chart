@@ -1229,7 +1229,13 @@ broker:
     # 2. '' -> non-headless service, k8s picks an IPv4 address
     # 3. 'None' -> headless
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
-    clusterIP: "None"
+    clusterIP: ""
+    annotations: {}
+  ## Broker headless service with publishNotReadyAddresses set to true and used for statefulset's pod hostname resolution
+  ## This service is used for broker pod DNS names in the broker statefulset.
+  ## templates/broker-headless-service.yaml
+  ##
+  headlessService:
     annotations: {}
   ## Broker PodDisruptionBudget
   ## templates/broker-pdb.yaml

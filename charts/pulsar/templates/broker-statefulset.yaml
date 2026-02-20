@@ -30,7 +30,7 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
 spec:
-  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  serviceName: "{{ template "pulsar.broker.service.headless" . }}"
   {{- if not .Values.broker.autoscaling.enabled }}
   replicas: {{ .Values.broker.replicaCount }}
   {{- end }}
