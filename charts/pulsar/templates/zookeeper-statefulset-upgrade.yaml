@@ -91,7 +91,7 @@ spec:
       serviceAccountName: {{ .Release.Name }}-sts-cleanup
       restartPolicy: Never
       containers:
-        - name: kubectl
+        - name: sts-cleanup
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
           command:
             - sh
