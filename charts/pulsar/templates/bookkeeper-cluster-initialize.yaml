@@ -75,7 +75,7 @@ spec:
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else }}
-            until nslookup {{ template "pulsar.zookeeper.service.headless" . }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.zookeeper.service.headless" . }}.{{ template "pulsar.namespace" . }}; do
+            until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.zookeeper.service.headless" . }}.{{ template "pulsar.namespace" . }}; do
               sleep 3;
             done;
             {{- end}}
