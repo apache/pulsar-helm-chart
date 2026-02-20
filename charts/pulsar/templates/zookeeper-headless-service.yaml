@@ -22,20 +22,23 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+  name: "{{ template "pulsar.zookeeper.service.headless" . }}"
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
-{{- with .Values.zookeeper.service.annotations }}
+{{- with .Values.zookeeper.headlessService.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
   ports:
-    # prometheus needs to access /metrics endpoint
     - name: http
       port: {{ .Values.zookeeper.ports.http }}
+    - name: "{{ .Values.tcpPrefix }}follower"
+      port: {{ .Values.zookeeper.ports.follower }}
+    - name: "{{ .Values.tcpPrefix }}leader-election"
+      port: {{ .Values.zookeeper.ports.leaderElection }}
     - name: "{{ .Values.tcpPrefix }}client"
       port: {{ .Values.zookeeper.ports.client }}
     {{- if .Values.zookeeper.ports.admin }}
@@ -46,6 +49,8 @@ spec:
     - name: "{{ .Values.tlsPrefix }}client-tls"
       port: {{ .Values.zookeeper.ports.clientTls }}
     {{- end }}
+  clusterIP: None
+  publishNotReadyAddresses: true
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}

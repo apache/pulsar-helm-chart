@@ -18,10 +18,17 @@ under the License.
 */}}
 
 {{/*
-Define the pulsar zookeeper
+Define the pulsar zookeeper service (ordinary ClusterIP, used by brokers/bookies)
 */}}
 {{- define "pulsar.zookeeper.service" -}}
 {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}
+{{- end }}
+
+{{/*
+Define the pulsar zookeeper headless service (used as the StatefulSet serviceName for pod DNS)
+*/}}
+{{- define "pulsar.zookeeper.service.headless" -}}
+{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-headless
 {{- end }}
 
 {{/*

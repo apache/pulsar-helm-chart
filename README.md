@@ -418,6 +418,12 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
+## Upgrading to Helm chart version 4.6.0 (upcoming release)
+
+The ZooKeeper StatefulSet has been modified to use a separate headless service and a separate ClusterIP service.
+The StatefulSet will be deleted and re-created during an upgrade. Deleting the StatefulSet will not delete data. The pods will
+remain running until the upgrade has replaced them. The deletion is handled using a Helm pre-upgrade hook, which runs a Kubernetes job using a container that contains `kubectl`. The image is `alpine/k8s` by default and is configurable under the `images.kubectl` key in values.yaml.
+
 ## Upgrading to Helm chart version 4.2.0
 
 ### TLS configuration for ZooKeeper has changed
