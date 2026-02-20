@@ -1237,6 +1237,9 @@ broker:
   ##
   headlessService:
     annotations: {}
+  ## Broker statefulset upgrade job
+  statefulsetUpgrade:
+    enabled: true    
   ## Broker PodDisruptionBudget
   ## templates/broker-pdb.yaml
   ##
