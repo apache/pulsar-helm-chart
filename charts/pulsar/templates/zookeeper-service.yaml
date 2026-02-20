@@ -27,7 +27,6 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
-  annotations:
 {{- with .Values.zookeeper.service.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
