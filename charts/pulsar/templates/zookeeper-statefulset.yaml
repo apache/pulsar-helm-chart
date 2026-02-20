@@ -29,7 +29,7 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
 spec:
-  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+  serviceName: "{{ template "pulsar.zookeeper.service.headless" . }}"
   replicas: {{ .Values.zookeeper.replicaCount }}
   selector:
     matchLabels:

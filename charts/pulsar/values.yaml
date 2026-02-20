@@ -572,6 +572,11 @@ zookeeper:
   ##
   service:
     annotations: {}
+  ## Zookeeper headless service
+  ## templates/zookeeper-headless-service.yaml
+  ##
+  headlessService:
+    annotations: {}
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
