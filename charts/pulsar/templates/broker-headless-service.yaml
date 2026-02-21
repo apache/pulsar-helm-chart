@@ -35,7 +35,7 @@ spec:
   ports:
   - name: http
     port: {{ .Values.broker.ports.http }}
-  {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}
+  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled .Values.tls.function_instance.enabled) }}
   - name: "{{ .Values.tcpPrefix }}pulsar"
     port: {{ .Values.broker.ports.pulsar }}
   {{- end }}
