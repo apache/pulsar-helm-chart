@@ -17,19 +17,19 @@
 # under the License.
 #
 
-# only when `components.zookeeper` is true and `zookeeper.statefulsetUpgrade.enabled` is true,
-# this pre-upgrade hook job will be created to clean up the old zookeeper statefulset if the existing statefulset is created 
+# only when `components.broker` is true and `broker.statefulsetUpgrade.enabled` is true,
+# this pre-upgrade hook job will be created to clean up the old broker statefulset if the existing statefulset is created 
 # by a chart older than 4.6.0, which has a different headless service name and will cause issue if not deleted before
 # the new statefulset is created.
-{{- if and .Values.components.zookeeper .Values.zookeeper.statefulsetUpgrade.enabled }}
+{{- if and .Values.components.broker .Values.broker.statefulsetUpgrade.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.zookeeper.component }}-sts-cleanup
+    component: {{ .Values.broker.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -38,11 +38,11 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.zookeeper.component }}-sts-cleanup
+    component: {{ .Values.broker.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -55,31 +55,31 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.zookeeper.component }}-sts-cleanup
+    component: {{ .Values.broker.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
     "helm.sh/hook-delete-policy": hook-succeeded
 subjects:
   - kind: ServiceAccount
-    name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+    name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
 roleRef:
   kind: Role
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
-    component: {{ .Values.zookeeper.component }}-sts-cleanup
+    component: {{ .Values.broker.component }}-sts-cleanup
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "0"
@@ -88,7 +88,7 @@ spec:
   backoffLimit: 1
   template:
     spec:
-      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
       restartPolicy: Never
       containers:
         - name: sts-cleanup
@@ -97,7 +97,7 @@ spec:
             - sh
             - -c
             - |
-              STS="{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+              STS="{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
               CHART_LABEL=$(kubectl get statefulset "$STS" -o jsonpath='{.metadata.labels.chart}' 2>/dev/null || true)
               if [ -z "$CHART_LABEL" ]; then
                 echo "StatefulSet $STS not found or has no chart label, skipping delete"

@@ -17,23 +17,22 @@
 # under the License.
 #
 
+# deploy broker only when `components.broker` is true
 {{- if .Values.components.broker }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  name: "{{ template "pulsar.broker.service.headless" . }}"
   namespace: {{ template "pulsar.namespace" . }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
-{{- with .Values.broker.service.annotations }}
+{{- with .Values.broker.headlessService.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
-  type: ClusterIP
   ports:
-  # prometheus needs to access /metrics endpoint
   - name: http
     port: {{ .Values.broker.ports.http }}
   {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled .Values.tls.function_instance.enabled) }}
@@ -46,7 +45,8 @@ spec:
   - name: "{{ .Values.tlsPrefix }}pulsarssl"
     port: {{ .Values.broker.ports.pulsarssl }}
   {{- end }}
-  clusterIP: "{{ .Values.broker.service.clusterIP }}"
+  clusterIP: None
+  publishNotReadyAddresses: true
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
