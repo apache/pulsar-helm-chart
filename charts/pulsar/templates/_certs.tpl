@@ -107,6 +107,10 @@ spec:
     {{- end }}
     - {{ printf "*.%s-%s.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
     - {{ printf "%s-%s" (include "pulsar.fullname" .root) .componentConfig.component | quote }}
+{{- if .tlsConfig.ipAddresses }}
+  ipAddresses:
+{{ toYaml .tlsConfig.ipAddresses | indent 4 }}
+{{- end }}
   # Issuer references are always required.
   issuerRef:
     name: "{{ template "pulsar.certs.issuers.ca.name" .root }}"
