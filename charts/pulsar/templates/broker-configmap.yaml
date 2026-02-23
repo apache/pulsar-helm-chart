@@ -30,22 +30,15 @@ data:
   # Metadata settings
   {{- if .Values.components.zookeeper }}
   metadataStoreUrl: "zk:{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
-  {{- $configMetadataStoreUrl := "" }}
   {{- if .Values.pulsar_metadata.configurationStore }}
-  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.configurationStore.connect" .) .Values.pulsar_metadata.configurationStoreMetadataPrefix }}
-  {{- else }}
-  {{- $configMetadataStoreUrl = printf "zk:%s%s" (include "pulsar.zookeeper.connect" .) .Values.metadataPrefix }}
+  configurationMetadataStoreUrl: "zk:{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
   {{- end }}
-  configurationMetadataStoreUrl: "{{ $configMetadataStoreUrl }}"
-  {{- if .Values.pulsar_metadata.bookkeeper.usePulsarMetadataClientDriver }}
-  bookkeeperMetadataServiceUri: "metadata-store:{{ $configMetadataStoreUrl }}/ledgers"
-  {{- else }}
+  {{- if not .Values.pulsar_metadata.bookkeeper.usePulsarMetadataClientDriver }}
   bookkeeperMetadataServiceUri: "zk+hierarchical://{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}/ledgers"
   {{- end }}
   {{- end }}
   {{- if .Values.components.oxia }}
   metadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
-  configurationMetadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
   bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
   {{- end }}
 
