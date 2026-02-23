@@ -71,7 +71,7 @@ spec:
           - |
             {{- if $zk:=.Values.pulsar_metadata.userProvidedZookeepers }}
             export PULSAR_MEM="-Xmx128M";
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -r -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else }}

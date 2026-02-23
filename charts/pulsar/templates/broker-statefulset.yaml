@@ -155,10 +155,10 @@ spec:
             {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
             export PULSAR_MEM="-Xmx128M";
             {{- if .Values.pulsar_metadata.configurationStore }}
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -r -server {{ template "pulsar.configurationStore.connect" . }} get {{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
             {{- if not .Values.pulsar_metadata.configurationStore }}
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -r -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ template "pulsar.cluster.name" . }}; do
             {{- end }}
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
@@ -265,11 +265,11 @@ spec:
           echo "OK" > "${statusFilePath:-status}";
           {{- if .Values.components.zookeeper }}
           {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 10 }}
-          timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+          timeout 15 bin/pulsar zookeeper-shell -r -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           while [ $? -eq 0 ]; do
             echo "broker {{ template "pulsar.broker.hostname" . }} znode still exists ... check in 10 seconds ...";
             sleep 10;
-            timeout 15 bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+            timeout 15 bin/pulsar zookeeper-shell -r -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
           done;
           {{- end }}
           cat conf/pulsar_env.sh;
