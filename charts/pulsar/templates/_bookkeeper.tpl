@@ -150,8 +150,6 @@ zkTimeout: "{{ .Values.pulsar_metadata.bookkeeper.metadataStoreSessionTimeoutMil
 # enable bookkeeper http server
 httpServerEnabled: "true"
 httpServerPort: "{{ .Values.bookkeeper.ports.http }}"
-# config the stats provider
-statsProviderClass: org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider
 # use hostname as the bookie id
 useHostNameAsBookieID: "true"
 {{- end }}
