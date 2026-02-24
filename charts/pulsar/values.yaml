@@ -1025,6 +1025,7 @@ pulsar_metadata:
 
   ## Allow read-only operations on the metadata store when the metadata store is not available.
   ## This is useful when you want to continue serving requests even if the metadata store is not fully available with quorum.
+  ## NOTICE: This mode is not recommended for production use and no tests exist to validate the behavior.
   metadataStoreAllowReadOnlyOperations: false
 
   ## The session timeout for the metadata store in milliseconds.
