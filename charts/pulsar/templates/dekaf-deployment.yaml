@@ -108,6 +108,6 @@ spec:
       {{- end }}
 
       {{- if ((.Values.dekaf).deployment).extraVolumes }}
-        {{- toYaml .Values.dekaf.deployment.extraVolumes | default list | nindent 8 }}
+        {{- toYaml .Values.dekaf.deployment.extraVolumes | default list | nindent 6 }}
       {{- end }}
 {{- end }}
