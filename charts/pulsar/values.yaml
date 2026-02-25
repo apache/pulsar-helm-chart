@@ -251,6 +251,10 @@ tls:
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     dnsNames:
     # - example.com
+    # The ipAddresses fields specifies a list of IP addresses to include as SANs in the certificate.
+    # Useful for internal cluster communication or when DNS names are unavailable.
+    ipAddresses:
+    # - 10.84.12.9
     cacerts:
       enabled: false
       certs:
@@ -265,6 +269,10 @@ tls:
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     dnsNames:
     # - example.com
+    # The ipAddresses fields specifies a list of IP addresses to include as SANs in the certificate.
+    # Useful for internal cluster communication or when DNS names are unavailable.
+    ipAddresses:
+    # - 10.84.12.11
     cacerts:
       enabled: false
       certs:
