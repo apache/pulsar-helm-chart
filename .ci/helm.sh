@@ -85,6 +85,7 @@ function ci::helm_repo_add() {
     echo "Adding the helm repo ..."
     ${HELM} repo add prometheus-community https://prometheus-community.github.io/helm-charts
     ${HELM} repo add vm https://victoriametrics.github.io/helm-charts/
+    ${HELM} repo add codecentric https://codecentric.github.io/helm-charts
     ${HELM} repo update
     echo "Successfully added the helm repo."
 }
@@ -535,10 +536,10 @@ function ci::create_openid_resources() {
   ${KUBECTL} create secret generic keycloak-ci-realm-config --from-file=realm-pulsar.json=/tmp/realm-pulsar.json -n ${NAMESPACE}
 
   echo "Installing keycloak helm chart"
-  ${HELM} install keycloak-ci oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.6.4 --values ${PULSAR_HOME}/.ci/auth/keycloak/values.yaml -n ${NAMESPACE}
+  ${HELM} install keycloak-ci codecentric/keycloakx --version 7.1.8 --values ${PULSAR_HOME}/.ci/auth/keycloak/values.yaml -n ${NAMESPACE}
 
   echo "Wait until keycloak is running"
-  WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
+  WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-keycloakx-0 | wc -l)
   counter=1
   while [[ ${WC} -lt 1 ]]; do
     ((counter++))
@@ -553,15 +554,11 @@ function ci::create_openid_resources() {
         exit 1
       fi
     fi
-    WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-0 | wc -l)
+    WC=$(${KUBECTL} get pods -n ${NAMESPACE} --field-selector=status.phase=Running | grep keycloak-ci-keycloakx-0 | wc -l)
   done
 
   echo "Wait until keycloak is ready"
-  ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-0 -n ${NAMESPACE} --timeout 180s
-
-  echo "Check keycloack realm pulsar issuer url"
-  ${KUBECTL} exec -n ${NAMESPACE} keycloak-ci-0 -c keycloak -- bash -c 'curl -sSL http://keycloak-ci-headless:8080/realms/pulsar'
-
+  ${KUBECTL} wait --for=condition=Ready pod/keycloak-ci-keycloakx-0 -n ${NAMESPACE} --timeout 180s
 }
 
 # lists all available functions in this tool
