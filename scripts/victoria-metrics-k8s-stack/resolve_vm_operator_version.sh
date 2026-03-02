@@ -18,11 +18,16 @@
 # under the License.
 #
 
-# This script is used to upgrade the Victoria Metrics Operator CRDs before running "helm upgrade"
-#
-# Usage: ./upgrade_vm_operator_crds.sh [VM_OPERATOR_VERSION]
-# Use the resolve_vm_operator_version.sh script to get the correct version 
-# of the Victoria Metrics Operator from the Helm chart. If no version is provided, a default version will be used.
+# Use this script to resolve the Victoria Metrics Operator application version from the Helm chart and print it to stdout.
 
-VM_OPERATOR_VERSION="${1:-"v0.68.0"}"
-kubectl apply --server-side --force-conflicts -f "https://github.com/VictoriaMetrics/operator/releases/download/${VM_OPERATOR_VERSION}/crd.yaml"
+if ! command -v yq &>/dev/null; then
+    echo "yq is not installed. Please install yq to run this script." >&2
+    exit 1
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# Run "helm dependency update" in charts/pulsar
+cd "$SCRIPT_DIR/../../charts/pulsar"
+helm dependency update 2>/dev/null 1>&2
+tar -zxf charts/victoria-metrics-k8s-stack-*.tgz \
+  --to-stdout victoria-metrics-k8s-stack/charts/victoria-metrics-operator/Chart.yaml | yq .appVersion

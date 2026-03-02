@@ -33,6 +33,6 @@ maintainers:
     email: dev@pulsar.apache.org
 dependencies:
   - name: victoria-metrics-k8s-stack
-    version: 0.38.x
+    version: 0.72.x
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-metrics-k8s-stack.enabled
