@@ -217,7 +217,7 @@ images:
     pullPolicy:
   oxia:
     repository: oxia/oxia
-    tag: 0.15.3
+    tag: 0.16.0
     pullPolicy:
   kubectl:
     repository: alpine/k8s
