@@ -27,4 +27,5 @@ if [ -z "$PULSAR_VERSION" ]; then
         PULSAR_VERSION="4.0.3"
     fi
 fi
+# shellcheck disable=SC2034
 PULSAR_TOKENS_CONTAINER_IMAGE="apachepulsar/pulsar:${PULSAR_VERSION}"

@@ -18,10 +18,11 @@
 # under the License.
 #
 
-PULSAR_CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/.. && pwd)
-cd ${PULSAR_CHART_HOME}
+PULSAR_CHART_HOME=$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "${PULSAR_CHART_HOME}" || exit
 
-source ${PULSAR_CHART_HOME}/hack/common.sh
+# shellcheck source=hack/common.sh
+source "${PULSAR_CHART_HOME}/hack/common.sh"
 
 hack::ensure_kubectl
 hack::ensure_helm
@@ -107,18 +108,18 @@ done
 
 echo "############# start create cluster:[${clusterName}] #############"
 workDir=${HOME}/kind/${clusterName}
-mkdir -p ${workDir}
+mkdir -p "${workDir}"
 
 data_dir=${workDir}/data
 
 echo "clean data dir: ${data_dir}"
-if [ -d ${data_dir} ]; then
-    rm -rf ${data_dir}
+if [ -d "${data_dir}" ]; then
+    rm -rf "${data_dir}"
 fi
 
 configFile=${workDir}/kind-config.yaml
 
-cat <<EOF > ${configFile}
+cat <<EOF > "${configFile}"
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
@@ -132,39 +133,39 @@ nodes:
     protocol: TCP
 EOF
 
-for ((i=0;i<${nodeNum};i++))
+for ((i=0;i<nodeNum;i++))
 do
-    mkdir -p ${data_dir}/worker${i}
-    cat <<EOF >>  ${configFile}
+    mkdir -p "${data_dir}"/worker${i}
+    cat <<EOF >> "${configFile}"
 - role: worker
   extraMounts:
 EOF
-    for ((k=1;k<=${volumeNum};k++))
+    for ((k=1;k<=volumeNum;k++))
     do
-        mkdir -p ${data_dir}/worker${i}/vol${k}
-        cat <<EOF >> ${configFile}
+        mkdir -p "${data_dir}"/worker${i}/vol${k}
+        cat <<EOF >> "${configFile}"
   - containerPath: /mnt/disks/vol${k}
     hostPath: ${data_dir}/worker${i}/vol${k}
 EOF
     done
 done
 
-matchedCluster=$(kind get clusters | grep ${clusterName})
+matchedCluster=$(kind get clusters | grep "${clusterName}")
 if [[ "${matchedCluster}" == "${clusterName}" ]]; then
     echo "Kind cluster ${clusterName} already exists"
-    kind delete cluster --name=${clusterName}
+    kind delete cluster --name="${clusterName}"
 fi
 echo "start to create k8s cluster"
-kind create cluster --config ${configFile} --image kindest/node:${k8sVersion} --name=${clusterName} --verbosity 3
+kind create cluster --config "${configFile}" --image kindest/node:"${k8sVersion}" --name="${clusterName}" --verbosity 3
 export KUBECONFIG=${workDir}/kubeconfig.yaml
-kind get kubeconfig --name=${clusterName} > ${KUBECONFIG}
+kind get kubeconfig --name="${clusterName}" > "${KUBECONFIG}"
 
 echo "deploy docker registry in kind"
 registryNode=${clusterName}-control-plane
-registryNodeIP=$($KUBECTL_BIN get nodes ${registryNode} -o template --template='{{range.status.addresses}}{{if eq .type "InternalIP"}}{{.address}}{{end}}{{end}}')
+registryNodeIP=$($KUBECTL_BIN get nodes "${registryNode}" -o template --template='{{range.status.addresses}}{{if eq .type "InternalIP"}}{{.address}}{{end}}{{end}}')
 registryFile=${workDir}/registry.yaml
 
-cat <<EOF >${registryFile}
+cat <<EOF > "${registryFile}"
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -232,14 +233,14 @@ spec:
           - tcp-listen:5000,fork,reuseaddr
           - tcp-connect:${registryNodeIP}:5000
 EOF
-$KUBECTL_BIN apply -f ${registryFile}
+$KUBECTL_BIN apply -f "${registryFile}"
 
 echo "############# success create cluster:[${clusterName}] #############"
 
 echo "To start using your cluster, run:"
 echo "    export KUBECONFIG=${KUBECONFIG}"
 echo ""
-echo <<EOF
+cat <<EOF
 NOTE: In kind, nodes run docker network and cannot access host network.
 If you configured local HTTP proxy in your docker, images may cannot be pulled
 because http proxy is inaccessible.

@@ -30,7 +30,8 @@ FUNCTION=${FUNCTION:-"false"}
 MANAGER=${MANAGER:-"false"}
 ALLOW_LOADBALANCERS=${ALLOW_LOADBALANCERS:-"false"}
 
-source ${PULSAR_HOME}/.ci/helm.sh
+# shellcheck source=.ci/helm.sh
+source "${PULSAR_HOME}"/.ci/helm.sh
 
 # create cluster
 ci::create_cluster
@@ -46,11 +47,11 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-if [[ "x${SYMMETRIC}" == "xtrue" ]]; then
+if [[ "${SYMMETRIC}" == "true" ]]; then
     extra_opts+=("-s")
 fi
 
-if [[ "x${EXTRA_SUPERUSERS}" != "x" ]]; then
+if [[ "${EXTRA_SUPERUSERS}" != "" ]]; then
     extra_opts+=("--pulsar-superusers" "proxy-admin,broker-admin,admin,${EXTRA_SUPERUSERS}")
 fi
 
@@ -62,9 +63,9 @@ if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
     PULSAR_CHART_VERSION="$UPGRADE_FROM_VERSION"
 
     # Install Prometheus Operator CRDs using the upgrade script since kube-prometheus-stack is now disabled before the upgrade
-    ${PULSAR_HOME}/scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh
+    "${PULSAR_HOME}"/scripts/kube-prometheus-stack/upgrade_prometheus_operator_crds.sh
 
-    ci::install_pulsar_chart install ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} --set kube-prometheus-stack.enabled=false "${extra_opts[@]}"
+    ci::install_pulsar_chart install "${PULSAR_HOME}"/.ci/values-common.yaml "${PULSAR_HOME}"/"${VALUES_FILE}" --set kube-prometheus-stack.enabled=false "${extra_opts[@]}"
     install_type="upgrade"
     echo "Wait 10 seconds"
     sleep 10
@@ -78,13 +79,13 @@ if [[ "$UPGRADE_FROM_VERSION" != "" ]]; then
 
     if [[ "$(ci::helm_values_for_deployment | yq .victoria-metrics-k8s-stack.enabled)" == "true" ]]; then
         echo "Upgrade Victoria Metrics Operator CRDs before upgrading the deployment"
-        ${PULSAR_HOME}/scripts/victoria-metrics-k8s-stack/upgrade_vm_operator_crds.sh
+        "${PULSAR_HOME}"/scripts/victoria-metrics-k8s-stack/upgrade_vm_operator_crds.sh
     fi
 fi
 
 PULSAR_CHART_VERSION="local"
 # install (or upgrade) pulsar chart
-ci::install_pulsar_chart ${install_type} ${PULSAR_HOME}/.ci/values-common.yaml ${PULSAR_HOME}/${VALUES_FILE} "${extra_opts[@]}"
+ci::install_pulsar_chart "${install_type}" "${PULSAR_HOME}"/.ci/values-common.yaml "${PULSAR_HOME}"/"${VALUES_FILE}" "${extra_opts[@]}"
 
 echo "Wait 10 seconds"
 sleep 10

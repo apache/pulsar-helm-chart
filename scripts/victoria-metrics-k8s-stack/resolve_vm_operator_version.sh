@@ -27,7 +27,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 # Run "helm dependency update" in charts/pulsar
-cd "$SCRIPT_DIR/../../charts/pulsar"
+cd "$SCRIPT_DIR/../../charts/pulsar" || exit
 helm dependency update 2>/dev/null 1>&2
 tar -zxf charts/victoria-metrics-k8s-stack-*.tgz \
   --to-stdout victoria-metrics-k8s-stack/charts/victoria-metrics-operator/Chart.yaml | yq .appVersion
