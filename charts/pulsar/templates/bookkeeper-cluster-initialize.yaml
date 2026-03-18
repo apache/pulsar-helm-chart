@@ -26,6 +26,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: "{{ .Values.bookkeeper.component }}-init"
+  {{- with .Values.job.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
 # This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
 # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
