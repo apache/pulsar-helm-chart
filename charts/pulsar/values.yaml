@@ -2006,11 +2006,12 @@ dekaf:
     accessModes:
       - ReadWriteOnce
 
-# These are jobs where job ttl configuration is used
+# These are jobs where job ttl configuration is used / annotations are applied
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml
 # pulsar-helm-chart/charts/pulsar/templates/bookkeeper-cluster-initialize.yaml
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-manager-cluster-initialize.yaml
 job:
+  annotations: {}
   ttl:
     enabled: false
     secondsAfterFinished: 3600
