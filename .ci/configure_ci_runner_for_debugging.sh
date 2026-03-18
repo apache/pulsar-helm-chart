@@ -6,7 +6,7 @@ if [[ -z "${GITHUB_ACTIONS}" ]]; then
     exit 1
 fi
 
-cat >> $HOME/.bashrc <<'EOF'
+cat >> "$HOME"/.bashrc <<'EOF'
 function use_kind_kubeconfig() {
     export KUBECONFIG=$(ls $HOME/kind/pulsar-ci-*/kubeconfig.yaml)
 }
@@ -34,7 +34,7 @@ function k9s() {
 
 alias k=kubectl
 EOF
-cat >> $HOME/.bash_profile <<'EOF'
+cat >> "$HOME"/.bash_profile <<'EOF'
 if [ -f ~/.bashrc ]; then
     source ~/.bashrc
 fi

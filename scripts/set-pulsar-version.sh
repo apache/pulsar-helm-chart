@@ -29,7 +29,7 @@ set -e
 OLD_VERSION=${1}
 NEW_VERSION=${2}
 
-if [[ "" == ${OLD_VERSION} || "" == ${NEW_VERSION} ]]; then
+if [[ "" == "${OLD_VERSION}" || "" == "${NEW_VERSION}" ]]; then
   echo "You need to provide the old_version and new_version"
   exit 1
 fi

@@ -18,8 +18,8 @@
 # under the License.
 #
 
-CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
-cd ${CHART_HOME}
+CHART_HOME=$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "${CHART_HOME}" || exit
 
 usage() {
     cat <<EOF
@@ -73,12 +73,12 @@ release=${release:-pulsar-dev}
 
 function delete_namespace() {
     if [[ "${delete_namespace}" == "true" ]]; then
-        kubectl delete namespace ${namespace}
+        kubectl delete namespace "${namespace}"
     fi
 }
 
 # delete tokens
-kubectl get secrets -n ${namespace} | grep ${release}-token- | awk '{print $1}' | xargs kubectl delete secrets -n ${namespace}
+kubectl get secrets -n "${namespace}" | grep "${release}-token-" | awk '{print $1}' | xargs kubectl delete secrets -n "${namespace}"
 
 # delete namespace
 delete_namespace
