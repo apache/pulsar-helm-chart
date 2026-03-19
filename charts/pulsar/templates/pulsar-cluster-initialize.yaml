@@ -27,6 +27,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_metadata.component }}
+  {{- with .Values.job.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
 # This feature was previously behind a feature gate for several Kubernetes versions and will default to true in 1.23 and beyond
 # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
@@ -79,11 +83,11 @@ spec:
           - |
             {{- if $zk := .Values.pulsar_metadata.userProvidedZookeepers }}
             export PULSAR_MEM="-Xmx128M";
-            until timeout 15 bin/pulsar zookeeper-shell -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
+            until timeout 15 bin/pulsar zookeeper-shell -r -server {{ $zk }} ls {{ or .Values.metadataPrefix "/" }}; do
               echo "user provided zookeepers {{ $zk }} are unreachable... check in 3 seconds ..." && sleep 3;
             done;
             {{ else if .Values.components.zookeeper }}
-            until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}.{{ template "pulsar.namespace" . }}; do
+            until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ add (.Values.zookeeper.replicaCount | int) -1 }}.{{ template "pulsar.zookeeper.service.headless" . }}.{{ template "pulsar.namespace" . }}; do
               sleep 3;
             done;
             {{- end }}

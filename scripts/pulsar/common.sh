@@ -57,12 +57,12 @@ function validate_gke_required_tools(){
     command  -v "${comm}" > /dev/null 2>&1 || "need_${comm}"
   done
 
-  gcloud container clusters list --project $PROJECT >/dev/null 2>&1 || { echo >&2 "Gcloud seems to be configured incorrectly or authentication is unsuccessfull"; exit 1; }
+  gcloud container clusters list --project "$PROJECT" >/dev/null 2>&1 || { echo >&2 "Gcloud seems to be configured incorrectly or authentication is unsuccessfull"; exit 1; }
 
 }
 
 function cluster_admin_password_gke(){
-  gcloud container clusters describe $CLUSTER_NAME --zone $ZONE --project $PROJECT --format='value(masterAuth.password)';
+  gcloud container clusters describe "$CLUSTER_NAME" --zone "$ZONE" --project "$PROJECT" --format='value(masterAuth.password)';
 }
 
 function validate_eks_required_tools(){

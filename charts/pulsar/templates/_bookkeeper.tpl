@@ -150,8 +150,6 @@ zkTimeout: "{{ .Values.pulsar_metadata.bookkeeper.metadataStoreSessionTimeoutMil
 # enable bookkeeper http server
 httpServerEnabled: "true"
 httpServerPort: "{{ .Values.bookkeeper.ports.http }}"
-# config the stats provider
-statsProviderClass: org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider
 # use hostname as the bookie id
 useHostNameAsBookieID: "true"
 {{- end }}
@@ -169,6 +167,25 @@ PULSAR_PREFIX_tlsTrustStoreType: PEM
 PULSAR_PREFIX_tlsTrustStore: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.bookie.cacerts.enabled | quote }}
 {{- end }}
 {{- end }}
+
+{{/*
+Render BookKeeper indexDirectories as comma-separated string.
+Accepts either a string or a list of strings.
+*/}}
+{{- define "pulsar.bookkeeper.indexDirectories" -}}
+{{- $v := .Values.bookkeeper.indexDirectories -}}
+{{- if $v -}}
+{{- if kindIs "string" $v -}}
+{{- $v -}}
+{{- else -}}
+{{- $v | join "," -}}
+{{- end -}}
+{{- else if and .Values.bookkeeper.volumes.index.enabled .Values.bookkeeper.volumes.index.mountPath -}}
+{{- .Values.bookkeeper.volumes.index.mountPath -}}
+{{- else -}}
+{{- "" -}}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Define bookie init container : verify cluster id

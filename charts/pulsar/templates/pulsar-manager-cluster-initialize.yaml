@@ -27,6 +27,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.pulsar_manager.component }}-init
+  {{- with .Values.job.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   {{- if and .Values.job.ttl.enabled (semverCompare ">=1.23-0" .Capabilities.KubeVersion.Version) }}
   ttlSecondsAfterFinished: {{ .Values.job.ttl.secondsAfterFinished | default 600 }}

@@ -42,5 +42,9 @@ data:
   PULSAR_PREFIX_serverCnxnFactory: org.apache.zookeeper.server.NIOServerCnxnFactory
   serverCnxnFactory: org.apache.zookeeper.server.NIOServerCnxnFactory
   {{- end }}
+  {{- if .Values.pulsar_metadata.metadataStoreAllowReadOnlyOperations }}
+  PULSAR_PREFIX_localSessionsEnabled: "true"
+  PULSAR_PREFIX_localSessionsUpgradingEnabled: "true"
+  {{- end }}
 {{ toYaml .Values.zookeeper.configData | indent 2 }}
 {{- end }}

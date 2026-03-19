@@ -212,13 +212,16 @@ images:
     hasCommand: false
   dekaf:
     repository: visortelle/dekaf
-    tag: 1.0.0
+    tag: 1.1.0
     # uses defaultPullPolicy when unspecified
     pullPolicy:
   oxia:
     repository: oxia/oxia
-    tag: 0.14.4
+    tag: 0.16.0
     pullPolicy:
+  kubectl:
+    repository: alpine/k8s
+    tag: 1.32.12
 
 ## TLS
 ## templates/tls-certs.yaml
@@ -580,6 +583,14 @@ zookeeper:
   ##
   service:
     annotations: {}
+  ## Zookeeper headless service
+  ## templates/zookeeper-headless-service.yaml
+  ##
+  headlessService:
+    annotations: {}
+  ## Zookeeper statefulset upgrade job
+  statefulsetUpgrade:
+    enabled: true
   ## Zookeeper PodDisruptionBudget
   ## templates/zookeeper-pdb.yaml
   ##
@@ -826,6 +837,19 @@ bookkeeper:
           size: 10Gi
           # storageClassName: existent-storage-class
           mountPath: /pulsar/data/bookkeeper/ledgers1
+    # Optional dedicated volume for BookKeeper indexes / RocksDB (`indexDirectories`).
+    # Useful when ledgers are on HDD but you want indexes on NVMe.
+    index:
+      enabled: false
+      name: index
+      size: 10Gi
+      local_storage: true
+      # storageClassName: existent-storage-class
+      # storageClass:
+        # ...
+      # selector:
+        # ...
+      mountPath: /pulsar/data/bookkeeper/index
 
     ## use a single common volume for both journal and ledgers
     useSingleCommonVolume: false
@@ -838,6 +862,14 @@ bookkeeper:
         # ...
       # selector:
         # ...
+
+  # Configure BookKeeper `indexDirectories` (RocksDB/index location for DbLedgerStorage).
+  # When empty/unset, BookKeeper falls back to `ledgerDirectories`.
+  # If `bookkeeper.volumes.index.enabled=true` and this is empty, it defaults to `bookkeeper.volumes.index.mountPath`.
+  # Example: place indexes on NVMe by reusing the journal volume mount:
+  # indexDirectories:
+  #   - /pulsar/data/bookkeeper/journal/index
+  indexDirectories:
   ## Bookkeeper service account
   ## templates/bookkeeper-service-account.yaml
   service_account:
@@ -1001,6 +1033,7 @@ pulsar_metadata:
 
   ## Allow read-only operations on the metadata store when the metadata store is not available.
   ## This is useful when you want to continue serving requests even if the metadata store is not fully available with quorum.
+  ## NOTICE: This mode is not recommended for production use and no tests exist to validate the behavior.
   metadataStoreAllowReadOnlyOperations: false
 
   ## The session timeout for the metadata store in milliseconds.
@@ -1205,8 +1238,17 @@ broker:
     # 2. '' -> non-headless service, k8s picks an IPv4 address
     # 3. 'None' -> headless
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
-    clusterIP: "None"
+    clusterIP: ""
     annotations: {}
+  ## Broker headless service with publishNotReadyAddresses set to true and used for statefulset's pod hostname resolution
+  ## This service is used for broker pod DNS names in the broker statefulset.
+  ## templates/broker-headless-service.yaml
+  ##
+  headlessService:
+    annotations: {}
+  ## Broker statefulset upgrade job
+  statefulsetUpgrade:
+    enabled: true
   ## Broker PodDisruptionBudget
   ## templates/broker-pdb.yaml
   ##
@@ -1972,11 +2014,12 @@ dekaf:
     accessModes:
       - ReadWriteOnce
 
-# These are jobs where job ttl configuration is used
+# These are jobs where job ttl configuration is used / annotations are applied
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml
 # pulsar-helm-chart/charts/pulsar/templates/bookkeeper-cluster-initialize.yaml
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-manager-cluster-initialize.yaml
 job:
+  annotations: {}
   ttl:
     enabled: false
     secondsAfterFinished: 3600

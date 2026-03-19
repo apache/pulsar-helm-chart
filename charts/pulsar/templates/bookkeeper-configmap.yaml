@@ -55,6 +55,11 @@ data:
   {{- else }}
   ledgerDirectories: "/pulsar/data/bookkeeper/ledgers"
   {{- end }}
+  {{- $indexDirs := include "pulsar.bookkeeper.indexDirectories" . }}
+  {{- if $indexDirs }}
+  # Configure RocksDB/index location for DbLedgerStorage. When unset, BookKeeper falls back to ledgerDirectories.
+  indexDirectories: {{ $indexDirs | quote }}
+  {{- end }}
   {{- if .Values.functions.useBookieAsStateStore }}
   # Stateful function config
   extraServerComponents: "org.apache.bookkeeper.stream.server.StreamStorageLifecycleComponent"

@@ -18,10 +18,17 @@ under the License.
 */}}
 
 {{/*
-Define the pulsar brroker service
+Define the pulsar broker service (ordinary ClusterIP, used by clients)
 */}}
 {{- define "pulsar.broker.service" -}}
 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}
+{{- end }}
+
+{{/*
+Define the pulsar broker headless service (used as the StatefulSet serviceName for pod DNS)
+*/}}
+{{- define "pulsar.broker.service.headless" -}}
+{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-headless
 {{- end }}
 
 {{/*

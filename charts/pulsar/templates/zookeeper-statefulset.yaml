@@ -29,7 +29,7 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
 spec:
-  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+  serviceName: "{{ template "pulsar.zookeeper.service.headless" . }}"
   replicas: {{ .Values.zookeeper.replicaCount }}
   selector:
     matchLabels:
@@ -152,7 +152,11 @@ spec:
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
-          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar zookeeper;
+          {{- $readOnlyMode := false -}}
+          {{- if hasKey .Values.pulsar_metadata "metadataStoreAllowReadOnlyOperations" }}
+          {{- $readOnlyMode = not (not .Values.pulsar_metadata.metadataStoreAllowReadOnlyOperations) -}}
+          {{- end }}
+          OPTS="-Dreadonlymode.enabled={{ $readOnlyMode }} ${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar zookeeper;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http

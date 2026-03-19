@@ -22,8 +22,9 @@ set -e
 
 SCRIPT_DIR="$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CHART_HOME=$(unset CDPATH && cd "$SCRIPT_DIR/../.." && pwd)
-cd ${CHART_HOME}
+cd "${CHART_HOME}"
 
+# shellcheck source=scripts/pulsar/common_auth.sh
 source "${SCRIPT_DIR}/common_auth.sh"
 
 usage() {
@@ -83,7 +84,7 @@ case $key in
 esac
 done
 
-if [[ "x${role}" == "x" ]]; then
+if [[ "${role}" == "" ]]; then
     echo "No pulsar role is provided!"
     usage
     exit 1
@@ -96,11 +97,11 @@ function pulsar::jwt::get_secret() {
     local type=$1
     local tmpfile=$2
     local secret_name=$3
-    echo ${secret_name}
+    echo "${secret_name}"
     if [[ "${local}" == "true" ]]; then
-        cp ${type} ${tmpfile}
+        cp "${type}" "${tmpfile}"
     else
-        kubectl get -n ${namespace} secrets ${secret_name} -o jsonpath="{.data['${type}']}" | base64 --decode > ${tmpfile}
+        kubectl get -n "${namespace}" secrets "${secret_name}" -o jsonpath="{.data['${type}']}" | base64 --decode > "${tmpfile}"
     fi
 }
 
@@ -109,40 +110,42 @@ function pulsar::jwt::generate_symmetric_token() {
     local secret_name="${release}-token-symmetric-key"
 
 
-    local tmpdir=$(mktemp -d)
-    trap "test -d $tmpdir && rm -rf $tmpdir" RETURN
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    trap 'test -d "$tmpdir" && rm -rf "$tmpdir"' RETURN
     secretkeytmpfile=${tmpdir}/secret.key
     tokentmpfile=${tmpdir}/token.jwt
 
-    pulsar::jwt::get_secret SECRETKEY ${secretkeytmpfile} ${secret_name}
+    pulsar::jwt::get_secret SECRETKEY "${secretkeytmpfile}" "${secret_name}"
 
-    docker run --user 0 --rm -t -v ${tmpdir}:/keydir ${PULSAR_TOKENS_CONTAINER_IMAGE} bin/pulsar tokens create -a HS256 --subject "${role}" --secret-key=file:/keydir/secret.key > ${tokentmpfile}
+    docker run --user 0 --rm -v "${tmpdir}":/keydir "${PULSAR_TOKENS_CONTAINER_IMAGE}" bin/pulsar tokens create -a HS256 --subject "${role}" --secret-key=file:/keydir/secret.key > "${tokentmpfile}"
     
     newtokentmpfile=${tmpdir}/token.jwt.new
-    tr -d '\n' < ${tokentmpfile} > ${newtokentmpfile}
-    kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=symmetric" ${local:+ -o yaml --dry-run=client}
-    rm -rf $tmpdir
+    tr -d '\n' < "${tokentmpfile}" > "${newtokentmpfile}"
+    kubectl create secret generic "${token_name}" -n "${namespace}" --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=symmetric" ${local:+ -o yaml --dry-run=client}
+    rm -rf "$tmpdir"
 }
 
 function pulsar::jwt::generate_asymmetric_token() {
     local token_name="${release}-token-${role}"
     local secret_name="${release}-token-asymmetric-key"
 
-    local tmpdir=$(mktemp -d)
-    trap "test -d $tmpdir && rm -rf $tmpdir" RETURN
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    trap 'test -d "$tmpdir" && rm -rf "$tmpdir"' RETURN
 
     privatekeytmpfile=${tmpdir}/privatekey.der
     tokentmpfile=${tmpdir}/token.jwt
 
-    pulsar::jwt::get_secret PRIVATEKEY ${privatekeytmpfile} ${secret_name}
+    pulsar::jwt::get_secret PRIVATEKEY "${privatekeytmpfile}" "${secret_name}"
 
     # Generate token
-    docker run --user 0 --rm -t -v ${tmpdir}:/keydir ${PULSAR_TOKENS_CONTAINER_IMAGE} bin/pulsar tokens create -a RS256 --subject "${role}" --private-key=file:/keydir/privatekey.der > ${tokentmpfile}
+    docker run --user 0 --rm -v "${tmpdir}":/keydir "${PULSAR_TOKENS_CONTAINER_IMAGE}" bin/pulsar tokens create -a RS256 --subject "${role}" --private-key=file:/keydir/privatekey.der > "${tokentmpfile}"
 
     newtokentmpfile=${tmpdir}/token.jwt.new
-    tr -d '\n' < ${tokentmpfile} > ${newtokentmpfile}
-    kubectl create secret generic ${token_name} -n ${namespace} --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=asymmetric" ${local:+ -o yaml --dry-run=client}
-    rm -rf $tmpdir
+    tr -d '\n' < "${tokentmpfile}" > "${newtokentmpfile}"
+    kubectl create secret generic "${token_name}" -n "${namespace}" --from-file="TOKEN=${newtokentmpfile}" --from-literal="TYPE=asymmetric" ${local:+ -o yaml --dry-run=client}
+    rm -rf "$tmpdir"
 }
 
 if [[ "${symmetric}" == "true" ]]; then

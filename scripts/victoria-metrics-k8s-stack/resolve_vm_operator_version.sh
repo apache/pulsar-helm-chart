@@ -18,14 +18,16 @@
 # under the License.
 #
 
-if [ -z "$PULSAR_VERSION" ]; then
-    if command -v yq &> /dev/null; then
-        # use yq to get the appVersion from the Chart.yaml file
-        PULSAR_VERSION=$(yq .appVersion charts/pulsar/Chart.yaml)
-    else
-        # use a default version if yq is not installed
-        PULSAR_VERSION="4.0.3"
-    fi
+# Use this script to resolve the Victoria Metrics Operator application version from the Helm chart and print it to stdout.
+
+if ! command -v yq &>/dev/null; then
+    echo "yq is not installed. Please install yq to run this script." >&2
+    exit 1
 fi
-# shellcheck disable=SC2034
-PULSAR_TOKENS_CONTAINER_IMAGE="apachepulsar/pulsar:${PULSAR_VERSION}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# Run "helm dependency update" in charts/pulsar
+cd "$SCRIPT_DIR/../../charts/pulsar" || exit
+helm dependency update 2>/dev/null 1>&2
+tar -zxf charts/victoria-metrics-k8s-stack-*.tgz \
+  --to-stdout victoria-metrics-k8s-stack/charts/victoria-metrics-operator/Chart.yaml | yq .appVersion

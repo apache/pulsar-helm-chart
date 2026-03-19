@@ -69,15 +69,16 @@ function hack::ensure_kubectl() {
     fi
     echo "Installing kubectl v$KUBECTL_VERSION..."
     tmpfile=$(mktemp)
-    trap "test -f $tmpfile && rm $tmpfile" RETURN
-    curl --retry 10 -L -o $tmpfile https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl
-    mv $tmpfile $KUBECTL_BIN
-    chmod +x $KUBECTL_BIN
+    trap 'test -f "$tmpfile" && rm "$tmpfile"' RETURN
+    curl --retry 10 -L -o "$tmpfile" https://dl.k8s.io/release/v"${KUBECTL_VERSION}"/bin/"${OS}"/"${ARCH}"/kubectl
+    mv "$tmpfile" "$KUBECTL_BIN"
+    chmod +x "$KUBECTL_BIN"
 }
 
 function hack::verify_helm() {
     if test -x "$HELM_BIN"; then
-        local v=$($HELM_BIN version --short --client | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
+        local v
+        v=$($HELM_BIN version --short --client | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
         [[ "$v" == "$HELM_VERSION" ]]
         return
     fi
@@ -88,8 +89,9 @@ function hack::ensure_helm() {
     if hack::verify_helm; then
         return 0
     fi
-    local HELM_URL=https://get.helm.sh/helm-v${HELM_VERSION}-${OS}-${ARCH}.tar.gz
-    curl --retry 10 -L -s "$HELM_URL" | tar --strip-components 1 -C $OUTPUT_BIN -zxf - ${OS}-${ARCH}/helm
+    local HELM_URL
+    HELM_URL=https://get.helm.sh/helm-v${HELM_VERSION}-${OS}-${ARCH}.tar.gz
+    curl --retry 10 -L -s "$HELM_URL" | tar --strip-components 1 -C "$OUTPUT_BIN" -zxf - "${OS}"-"${ARCH}"/helm
 }
 
 function hack::verify_kind() {
@@ -106,10 +108,10 @@ function hack::ensure_kind() {
     fi
     echo "Installing kind v$KIND_VERSION..."
     tmpfile=$(mktemp)
-    trap "test -f $tmpfile && rm $tmpfile" RETURN
-    curl --retry 10 -L -o $tmpfile https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
-    mv $tmpfile $KIND_BIN
-    chmod +x $KIND_BIN
+    trap 'test -f "$tmpfile" && rm "$tmpfile"' RETURN
+    curl --retry 10 -L -o "$tmpfile" https://github.com/kubernetes-sigs/kind/releases/download/v"${KIND_VERSION}"/kind-"${OS}"-"${ARCH}"
+    mv "$tmpfile" "$KIND_BIN"
+    chmod +x "$KIND_BIN"
 }
 
 # hack::version_ge "$v1" "$v2" checks whether "v1" is greater or equal to "v2"
@@ -131,16 +133,16 @@ function hack::ensure_cr() {
     fi
     echo "Installing chart-releaser ${CR_VERSION} ..."
     tmpfile=$(mktemp)
-    trap "test -f $tmpfile && rm $tmpfile" RETURN
-    echo curl --retry 10 -L -o $tmpfile https://github.com/helm/chart-releaser/releases/download/v${CR_VERSION}/chart-releaser_${CR_VERSION}_${OS}_${ARCH}.tar.gz
-    curl --retry 10 -L -o $tmpfile https://github.com/helm/chart-releaser/releases/download/v${CR_VERSION}/chart-releaser_${CR_VERSION}_${OS}_${ARCH}.tar.gz
-    mv $tmpfile $CR_BIN
-    chmod +x $CR_BIN
+    trap 'test -f "$tmpfile" && rm "$tmpfile"' RETURN
+    echo curl --retry 10 -L -o "$tmpfile" https://github.com/helm/chart-releaser/releases/download/v"${CR_VERSION}"/chart-releaser_"${CR_VERSION}"_"${OS}"_"${ARCH}".tar.gz
+    curl --retry 10 -L -o "$tmpfile" https://github.com/helm/chart-releaser/releases/download/v"${CR_VERSION}"/chart-releaser_"${CR_VERSION}"_"${OS}"_"${ARCH}".tar.gz
+    mv "$tmpfile" "$CR_BIN"
+    chmod +x "$CR_BIN"
     $CR_BIN version
 }
 
 function hack::ensure_kubeconform() {
     echo "Installing kubeconform v$KUBECONFORM_VERSION..."
-    curl -s --retry 10 -L https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-${OS}-${ARCH}.tar.gz | tar -xzO kubeconform > $KUBECONFORM_BIN
-    chmod +x $KUBECONFORM_BIN
+    curl -s --retry 10 -L https://github.com/yannh/kubeconform/releases/download/v"${KUBECONFORM_VERSION}"/kubeconform-"${OS}"-"${ARCH}".tar.gz | tar -xzO kubeconform > "$KUBECONFORM_BIN"
+    chmod +x "$KUBECONFORM_BIN"
 }

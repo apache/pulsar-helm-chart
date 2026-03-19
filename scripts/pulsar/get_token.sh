@@ -20,8 +20,8 @@
 
 set -e
 
-CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
-cd ${CHART_HOME}
+CHART_HOME=$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "${CHART_HOME}"
 
 usage() {
     cat <<EOF
@@ -68,7 +68,7 @@ case $key in
 esac
 done
 
-if [[ "x${role}" == "x" ]]; then
+if [[ "${role}" == "" ]]; then
     echo "No pulsar role is provided!"
     usage
     exit 1
@@ -80,8 +80,10 @@ release=${release:-pulsar-dev}
 function pulsar::jwt::get_token() {
     local token_name="${release}-token-${role}"
 
-    local token=$(kubectl get -n ${namespace} secrets ${token_name} -o jsonpath="{.data['TOKEN']}" | base64 --decode)
-    local token_type=$(kubectl get -n ${namespace} secrets ${token_name} -o jsonpath="{.data['TYPE']}" | base64 --decode)
+    local token
+    token=$(kubectl get -n "${namespace}" secrets "${token_name}" -o jsonpath="{.data['TOKEN']}" | base64 --decode)
+    local token_type
+    token_type=$(kubectl get -n "${namespace}" secrets "${token_name}" -o jsonpath="{.data['TYPE']}" | base64 --decode)
 
     echo "token type: ${token_type}"
     echo "-------------------------"
