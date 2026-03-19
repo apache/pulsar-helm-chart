@@ -1109,6 +1109,8 @@ broker:
     behavior: ~
   # The podManagementPolicy cannot be modified for an existing deployment. If you need to change this value, you will need to manually delete the existing broker StatefulSet and then redeploy the chart.
   podManagementPolicy:
+  updateStrategy:
+    type: RollingUpdate
   initContainers: []
   # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:
@@ -1370,6 +1372,8 @@ proxy:
     maxReplicas: 3
     metrics: ~
     behavior: ~
+  updateStrategy:
+    type: RollingUpdate
   initContainers: []
   # This is how Victoria Metrics or Prometheus discovers this component
   podMonitor:

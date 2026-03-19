@@ -36,8 +36,7 @@ spec:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
       component: {{ .Values.proxy.component }}
-  updateStrategy:
-    type: RollingUpdate
+  updateStrategy: {{ .Values.proxy.updateStrategy | toYaml | nindent 4 }}
   podManagementPolicy: Parallel
   template:
     metadata:
