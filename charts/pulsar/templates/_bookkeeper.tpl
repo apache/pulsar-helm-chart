@@ -165,7 +165,7 @@ PULSAR_PREFIX_tlsKeyStoreType: PEM
 PULSAR_PREFIX_tlsKeyStore: /pulsar/certs/bookie/tls.key
 PULSAR_PREFIX_tlsTrustStoreType: PEM
 PULSAR_PREFIX_tlsTrustStore: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.bookie.cacerts.enabled | quote }}
-PULSAR_PREFIX_tlsCertFilesRefreshDurationSeconds: 300
+PULSAR_PREFIX_tlsCertFilesRefreshDurationSeconds: "300"
 {{- end }}
 {{- end }}
 
