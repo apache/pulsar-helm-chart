@@ -38,8 +38,7 @@ spec:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
       component: {{ .Values.broker.component }}
-  updateStrategy:
-    type: RollingUpdate
+  updateStrategy: {{ .Values.broker.updateStrategy | toYaml | nindent 4 }}
   {{- /*
   When functions are enabled, podManagementPolicy must be OrderedReady to ensure that other started brokers are available via DNS
   for the function worker to connect to.
