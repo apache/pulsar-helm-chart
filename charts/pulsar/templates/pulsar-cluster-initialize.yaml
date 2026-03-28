@@ -70,8 +70,9 @@ spec:
         command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
           - |
-            until nslookup {{ .Values.pulsar_metadata.configurationStore}}; do
-              sleep 3;
+            export PULSAR_MEM="-Xmx128M";
+            until timeout 15 bin/pulsar zookeeper-shell -server {{ .Values.pulsar_metadata.configurationStore }} ls /; do
+              echo "configurationStore {{ .Values.pulsar_metadata.configurationStore }} is unreachable... check in 3 seconds ..." && sleep 3;
             done;
       {{- end }}
       - name: wait-zk-metastore-ready
