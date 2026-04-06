@@ -71,9 +71,12 @@ spec:
         args:
           - |
             export PULSAR_MEM="-Xmx128M";
+            {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
             until timeout 15 bin/pulsar zookeeper-shell -server "{{ template "pulsar.configurationStore.connect" . }}" ls /; do
               echo "configurationStore {{ template "pulsar.configurationStore.connect" . }} is unreachable... check in 3 seconds ..." && sleep 3;
             done;
+        volumeMounts:
+        {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
       - name: wait-zk-metastore-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
