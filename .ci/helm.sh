@@ -184,65 +184,101 @@ function ci::install_pulsar_chart() {
     ${HELM} "${install_type}" --values "${common_value_file}" --values "${value_file}" "${extra_values[@]}" --namespace="${NAMESPACE}" "${CLUSTER}" "${CHART_ARGS[@]}" "${install_args[@]}"
     set +x
 
+    local standalone
+    standalone=$(ci::helm_values_for_deployment | yq .standalone.enabled)
+
     if [[ "${install_type}" == "install" ]]; then
-      echo "wait until broker is alive"
-      # shellcheck disable=SC2126
-      WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-broker | wc -l)
-      counter=1
-      while [[ ${WC} -lt 1 ]]; do
-        ((counter++))
-        echo "${WC}";
-        sleep 15
-        ${KUBECTL} get pods,jobs -n "${NAMESPACE}"
-        ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
-        if [[ $((counter % 20)) -eq 0 ]]; then
-          ci::print_pod_logs
-          if [[ $counter -gt 100 ]]; then
-            echo >&2 "Timeout waiting..."
-            exit 1
-          fi
-        fi
+      if [[ "${standalone}" == "true" ]]; then
+        echo "wait until standalone is alive"
         # shellcheck disable=SC2126
-        WC=$(${KUBECTL} get pods -n "${NAMESPACE}" | grep "${CLUSTER}"-broker | wc -l)
-        if [[ ${WC} -gt 1 ]]; then
-          ${KUBECTL} describe pod -n "${NAMESPACE}" pulsar-ci-broker-0
-          ${KUBECTL} logs -n "${NAMESPACE}" pulsar-ci-broker-0
-        fi
+        WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-standalone | wc -l)
+        counter=1
+        while [[ ${WC} -lt 1 ]]; do
+          ((counter++))
+          echo "${WC}";
+          sleep 15
+          ${KUBECTL} get pods,jobs -n "${NAMESPACE}"
+          ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+          if [[ $((counter % 20)) -eq 0 ]]; then
+            ci::print_pod_logs
+            if [[ $counter -gt 100 ]]; then
+              echo >&2 "Timeout waiting..."
+              exit 1
+            fi
+          fi
+          # shellcheck disable=SC2126
+          WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-standalone | wc -l)
+        done
+        timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-standalone; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+        # shellcheck disable=SC2016
+        timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-standalone:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      else
+        echo "wait until broker is alive"
         # shellcheck disable=SC2126
         WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-broker | wc -l)
-      done
-      timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-      # shellcheck disable=SC2016
-      timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-
-      # shellcheck disable=SC2126
-      WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-proxy | wc -l)
-      counter=1
-      while [[ ${WC} -lt 1 ]]; do
-        ((counter++))
-        echo "${WC}";
-        sleep 15
-        ${KUBECTL} get pods,jobs -n "${NAMESPACE}"
-        ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
-        if [[ $((counter % 8)) -eq 0 ]]; then
-          ci::print_pod_logs
-          if [[ $counter -gt 16 ]]; then
-            echo >&2 "Timeout waiting..."
-            exit 1
+        counter=1
+        while [[ ${WC} -lt 1 ]]; do
+          ((counter++))
+          echo "${WC}";
+          sleep 15
+          ${KUBECTL} get pods,jobs -n "${NAMESPACE}"
+          ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+          if [[ $((counter % 20)) -eq 0 ]]; then
+            ci::print_pod_logs
+            if [[ $counter -gt 100 ]]; then
+              echo >&2 "Timeout waiting..."
+              exit 1
+            fi
           fi
-        fi
+          # shellcheck disable=SC2126
+          WC=$(${KUBECTL} get pods -n "${NAMESPACE}" | grep "${CLUSTER}"-broker | wc -l)
+          if [[ ${WC} -gt 1 ]]; then
+            ${KUBECTL} describe pod -n "${NAMESPACE}" pulsar-ci-broker-0
+            ${KUBECTL} logs -n "${NAMESPACE}" pulsar-ci-broker-0
+          fi
+          # shellcheck disable=SC2126
+          WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-broker | wc -l)
+        done
+        timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+        # shellcheck disable=SC2016
+        timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+
         # shellcheck disable=SC2126
-        WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep ${CLUSTER}-proxy | wc -l)
-      done
-      timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+        WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-proxy | wc -l)
+        counter=1
+        while [[ ${WC} -lt 1 ]]; do
+          ((counter++))
+          echo "${WC}";
+          sleep 15
+          ${KUBECTL} get pods,jobs -n "${NAMESPACE}"
+          ${KUBECTL} get events --sort-by=.lastTimestamp -A | tail -n 30 || true
+          if [[ $((counter % 8)) -eq 0 ]]; then
+            ci::print_pod_logs
+            if [[ $counter -gt 16 ]]; then
+              echo >&2 "Timeout waiting..."
+              exit 1
+            fi
+          fi
+          # shellcheck disable=SC2126
+          WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep ${CLUSTER}-proxy | wc -l)
+        done
+        timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      fi
       echo "Install complete"
     else
-      echo "wait until broker is alive"
-      timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-      # shellcheck disable=SC2016
-      timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-      echo "wait until proxy is alive"
-      timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      if [[ "${standalone}" == "true" ]]; then
+        echo "wait until standalone is alive"
+        timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-standalone; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+        # shellcheck disable=SC2016
+        timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-standalone:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      else
+        echo "wait until broker is alive"
+        timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+        # shellcheck disable=SC2016
+        timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-broker:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+        echo "wait until proxy is alive"
+        timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-proxy; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
+      fi
       echo "Upgrade complete"
     fi
 }
@@ -257,6 +293,11 @@ function ci::helm_values_for_deployment() {
 }
 
 function ci::check_pulsar_environment() {
+    if [[ "$(ci::helm_values_for_deployment | yq .standalone.enabled)" == "true" ]]; then
+        echo "Wait until pulsar-ci-standalone is ready"
+        ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-standalone; do sleep 3; done'
+        return
+    fi
     echo "Wait until pulsar-ci-broker is ready"
     ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done'
     echo "Wait until pulsar-ci-proxy is ready"
@@ -303,7 +344,13 @@ function ci::test_create_test_namespace() {
 function ci::test_pulsar_producer_consumer() {
     action="${1:-"produce-consume"}"
     echo "Testing with ${action}"
-    if [[ "$(ci::helm_values_for_deployment | yq .tls.proxy.enabled)" == "true" ]]; then
+    if [[ "$(ci::helm_values_for_deployment | yq .standalone.enabled)" == "true" ]]; then
+      if [[ "$(ci::helm_values_for_deployment | yq .tls.enabled)" == "true" ]]; then
+        PROXY_URL="pulsar+ssl://pulsar-ci-standalone:6651"
+      else
+        PROXY_URL="pulsar://pulsar-ci-standalone:6650"
+      fi
+    elif [[ "$(ci::helm_values_for_deployment | yq .tls.proxy.enabled)" == "true" ]]; then
       PROXY_URL="pulsar+ssl://pulsar-ci-proxy:6651"
     else
       PROXY_URL="pulsar://pulsar-ci-proxy:6650"

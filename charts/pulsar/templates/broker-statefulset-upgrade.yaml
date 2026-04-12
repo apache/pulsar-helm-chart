@@ -21,7 +21,7 @@
 # this pre-upgrade hook job will be created to clean up the old broker statefulset if the existing statefulset is created 
 # by a chart older than 4.6.0, which has a different headless service name and will cause issue if not deleted before
 # the new statefulset is created.
-{{- if and .Values.components.broker .Values.broker.statefulsetUpgrade.enabled }}
+{{- if and .Values.components.broker (not .Values.standalone.enabled) .Values.broker.statefulsetUpgrade.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:

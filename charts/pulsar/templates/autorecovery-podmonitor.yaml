@@ -18,6 +18,6 @@
 #
 
 # deploy autorecovery PodMonitor only when `$.Values.autorecovery.podMonitor.enabled` is true
-{{- if $.Values.autorecovery.podMonitor.enabled }}
+{{- if and $.Values.autorecovery.podMonitor.enabled (not $.Values.standalone.enabled) }}
 {{- include "pulsar.podMonitor" (list . "autorecovery" (printf "component: %s" .Values.autorecovery.component)) }}
 {{- end }}

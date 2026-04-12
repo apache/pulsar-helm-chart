@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.proxy.ingress.enabled }}
+{{- if and .Values.proxy.ingress.enabled (not .Values.standalone.enabled) }}
 {{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.Version }}
 apiVersion: extensions/v1beta1
 {{- else }}

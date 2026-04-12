@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.components.proxy }}
+{{- if and .Values.components.proxy (not .Values.standalone.enabled) }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

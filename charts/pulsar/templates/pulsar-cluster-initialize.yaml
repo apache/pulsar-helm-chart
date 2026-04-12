@@ -18,7 +18,7 @@
 #
 
 {{- if or (and .Values.useReleaseStatus .Release.IsInstall) .Values.initialize }}
-{{- if .Values.components.broker }}
+{{- if and .Values.components.broker (not .Values.standalone.enabled) }}
 apiVersion: batch/v1
 kind: Job
 metadata:

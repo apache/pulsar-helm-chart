@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.components.bookkeeper }}
+{{- if and .Values.components.bookkeeper (not .Values.standalone.enabled) }}
 {{- if .Values.bookkeeper.pdb.usePolicy }}
 # pdb version detection
 {{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}
