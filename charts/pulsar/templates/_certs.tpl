@@ -75,6 +75,10 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" .root | nindent 4 }}
 spec:
+{{- if .tlsConfig.secretAnnotations }}
+  secretTemplate:
+    annotations: {{ toYaml .tlsConfig.secretAnnotations | nindent 6 }}
+{{- end }}
   # Secret names are always required.
   secretName: "{{ .root.Release.Name }}-{{ .tlsConfig.cert_name }}"
 {{- if .root.Values.tls.zookeeper.enabled }}
