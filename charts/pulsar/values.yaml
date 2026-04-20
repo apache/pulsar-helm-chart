@@ -367,12 +367,13 @@ auth:
       secretAnnotations:
         # Annotations added to the signing key secret (asymmetric-key or symmetric-key)
         key: {}
-        # Per-subject annotations for token secrets. Map of subject name to annotation map.
+        # Per-role annotations for token secrets. Map of auth.superUsers role key to annotation map
+        # (for example: broker, proxy, client, manager).
         # Example:
-        #   admin:
+        #   client:
         #     reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
         #     reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
-        #   broker-admin: {}
+        #   broker: {}
         token: {}
     openid:
       enabled: false

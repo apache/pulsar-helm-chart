@@ -22,6 +22,7 @@ PULSAR_HOME="$(cd "${BINDIR}/.." && pwd)"
 CHARTS_HOME=${PULSAR_HOME}
 PULSAR_CHART_LOCAL=${CHARTS_HOME}/charts/pulsar
 PULSAR_CHART_VERSION=${PULSAR_CHART_VERSION:-"local"}
+SKIP_PREPARE_RELEASE=${SKIP_PREPARE_RELEASE:-0}
 OUTPUT_BIN=${CHARTS_HOME}/output/bin
 # shellcheck disable=SC2034
 KIND_BIN=$OUTPUT_BIN/kind
@@ -136,9 +137,13 @@ function ci::install_pulsar_chart() {
       echo "Installing the pulsar chart"
       ${KUBECTL} create namespace "${NAMESPACE}"
       ci::install_cert_manager
-      echo "${CHARTS_HOME}"/scripts/pulsar/prepare_helm_release.sh -k "${CLUSTER}" -n "${NAMESPACE}" "${extra_opts[@]}"
-      "${CHARTS_HOME}"/scripts/pulsar/prepare_helm_release.sh -k "${CLUSTER}" -n "${NAMESPACE}" "${extra_opts[@]}"
-      sleep 10
+      if [[ "${SKIP_PREPARE_RELEASE}" == "1" ]]; then
+        echo "Skipping ${CHARTS_HOME}/scripts/pulsar/prepare_helm_release.sh"
+      else
+        echo "${CHARTS_HOME}"/scripts/pulsar/prepare_helm_release.sh -k "${CLUSTER}" -n "${NAMESPACE}" "${extra_opts[@]}"
+        "${CHARTS_HOME}"/scripts/pulsar/prepare_helm_release.sh -k "${CLUSTER}" -n "${NAMESPACE}" "${extra_opts[@]}"
+        sleep 10
+      fi
 
       # install metallb for loadbalancer support
       # following instructions from https://kind.sigs.k8s.io/docs/user/loadbalancer/
