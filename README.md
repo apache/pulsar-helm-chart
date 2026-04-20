@@ -19,7 +19,7 @@
 
 -->
 
-# Apache Pulsar Helm Chart
+# Apache Pulsar Helm Chart [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/pulsar-helm-chart)
 
 This project provides Helm Charts for installing Apache Pulsar on Kubernetes.
 
