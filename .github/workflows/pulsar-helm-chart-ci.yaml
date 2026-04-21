@@ -209,6 +209,9 @@ jobs:
           - name: JWT Symmetric Key
             values_file: .ci/clusters/values-jwt-symmetric.yaml
             shortname: jwt-symmetric
+          - name: JWT Generated Keys
+            values_file: .ci/clusters/values-jwt-generated.yaml
+            shortname: jwt-generated
           - name: TLS
             values_file: .ci/clusters/values-tls.yaml
             shortname: tls
@@ -298,6 +301,9 @@ jobs:
               ;;
             "jwt-asymmetric")
               export EXTRA_SUPERUSERS=manager-admin
+              ;;
+            "jwt-generated")
+              export SKIP_PREPARE_RELEASE="1"
               ;;
             "openid")
               export AUTHENTICATION_PROVIDER=openid
