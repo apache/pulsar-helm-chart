@@ -1218,10 +1218,6 @@ standalone:
   service_account:
     annotations: {}
   additionalCommand: ""
-  # Enable the functions worker in standalone mode
-  functionsWorker: false
-  # Enable stream storage in standalone mode
-  streamStorage: false
   volumes:
     data:
       name: data

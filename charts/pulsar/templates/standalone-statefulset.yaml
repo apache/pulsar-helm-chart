@@ -154,10 +154,8 @@ spec:
           echo "OK" > "${statusFilePath:-status}";
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar standalone \
             --advertised-address "{{ template "pulsar.standalone.hostname" . }}" \
-            {{- if not .Values.standalone.functionsWorker }}
+            {{- if not .Values.components.functions }}
             --no-functions-worker \
-            {{- end }}
-            {{- if not .Values.standalone.streamStorage }}
             --no-stream-storage \
             {{- end }}
             ;
