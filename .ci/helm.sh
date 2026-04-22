@@ -160,9 +160,8 @@ function ci::install_pulsar_chart() {
       if [[ "${AUTHENTICATION_PROVIDER}" == "openid" ]]; then
           ci::create_openid_resources
       fi
-    else
-      install_args+=("--wait" "--wait-for-jobs" "--timeout=360s" "--debug")
     fi
+    install_args+=("--wait" "--wait-for-jobs" "--timeout=10m" "--debug")
 
     declare -a CHART_ARGS
     if [[ "${PULSAR_CHART_VERSION}" == "local" ]]; then
@@ -210,8 +209,6 @@ function ci::install_pulsar_chart() {
           WC=$(${KUBECTL} get pods -n "${NAMESPACE}" --field-selector=status.phase=Running | grep "${CLUSTER}"-standalone | wc -l)
         done
         timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-standalone; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-        # shellcheck disable=SC2016
-        timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-standalone:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
       else
         echo "wait until broker is alive"
         # shellcheck disable=SC2126
@@ -269,8 +266,6 @@ function ci::install_pulsar_chart() {
       if [[ "${standalone}" == "true" ]]; then
         echo "wait until standalone is alive"
         timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-standalone; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
-        # shellcheck disable=SC2016
-        timeout 120s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until [ "$(curl -s -L http://pulsar-ci-standalone:8080/status.html)" == "OK" ]; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
       else
         echo "wait until broker is alive"
         timeout 300s "${KUBECTL}" exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bash -c 'until nslookup pulsar-ci-broker; do sleep 3; done' || { echo >&2 "Timeout waiting..."; ci::print_pod_logs; exit 1; }
