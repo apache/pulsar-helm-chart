@@ -18,8 +18,37 @@
 #
 
 {{- if .Values.standalone.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.standalone.component }}-{{ .Values.standalone.volumes.data.name }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  annotations:
+    # Preserve standalone data on `helm uninstall`
+    helm.sh/resource-policy: keep
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.standalone.component }}
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: {{ .Values.standalone.volumes.data.size }}
+{{- if or .Values.standalone.volumes.data.storageClassName .Values.volumes.local_storage }}
+  {{- if .Values.standalone.volumes.data.storageClassName }}
+  storageClassName: "{{ .Values.standalone.volumes.data.storageClassName }}"
+  {{- end }}
+  {{- if .Values.volumes.local_storage }}
+  storageClassName: "local-storage"
+  {{- end }}
+{{- end }}
+{{- if .Values.standalone.volumes.data.selector }}
+  selector:
+{{ toYaml .Values.standalone.volumes.data.selector | indent 4 }}
+{{- end }}
+---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.standalone.component }}"
   namespace: {{ template "pulsar.namespace" . }}
@@ -28,14 +57,16 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.standalone.component }}
 spec:
-  serviceName: "{{ template "pulsar.standalone.service.headless" . }}"
-  replicas: {{ .Values.standalone.replicaCount }}
+  replicas: 1
+  # Recreate releases the ReadWriteOnce PVC before the new pod starts; a
+  # rolling update would deadlock because the replacement pod cannot attach
+  # the volume while the outgoing pod still holds it.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "pulsar.matchLabels" . | nindent 6 }}
       component: {{ .Values.standalone.component }}
-  updateStrategy: {{ .Values.standalone.updateStrategy | toYaml | nindent 4 }}
-  podManagementPolicy: OrderedReady
   template:
     metadata:
       labels:
@@ -53,6 +84,11 @@ spec:
 {{ toYaml . | indent 8 }}
 {{- end }}
     spec:
+      # hostname + subdomain give the pod a headless-service FQDN that
+      # `hostname -f` will return and DNS will resolve back to the pod,
+      # which is what --advertised-address needs to publish.
+      hostname: {{ .Values.standalone.component }}
+      subdomain: "{{ template "pulsar.standalone.service.headless" . }}"
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.standalone.component }}-acct"
     {{- if .Values.standalone.nodeSelector }}
       nodeSelector:
@@ -62,50 +98,9 @@ spec:
       tolerations:
 {{ toYaml .Values.standalone.tolerations | indent 8 }}
     {{- end }}
-      affinity:
-        {{- if and .Values.affinity.anti_affinity .Values.standalone.affinity.anti_affinity }}
-        podAntiAffinity:
-          {{- if eq .Values.standalone.affinity.type "requiredDuringSchedulingIgnoredDuringExecution" }}
-          {{ .Values.standalone.affinity.type }}:
-          - labelSelector:
-              matchExpressions:
-              - key: "app"
-                operator: In
-                values:
-                - "{{ template "pulsar.name" . }}"
-              - key: "release"
-                operator: In
-                values:
-                - {{ .Release.Name }}
-              - key: "component"
-                operator: In
-                values:
-                - {{ .Values.standalone.component }}
-            topologyKey: {{ .Values.standalone.affinity.anti_affinity_topology_key }}
-          {{- else }}
-          {{ .Values.standalone.affinity.type }}:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: "app"
-                      operator: In
-                      values:
-                      - "{{ template "pulsar.name" . }}"
-                    - key: "release"
-                      operator: In
-                      values:
-                      - {{ .Release.Name }}
-                    - key: "component"
-                      operator: In
-                      values:
-                      - {{ .Values.standalone.component }}
-                topologyKey: {{ .Values.standalone.affinity.anti_affinity_topology_key }}
-          {{- end }}
-        {{- end }}
       terminationGracePeriodSeconds: {{ .Values.standalone.gracePeriod }}
-      initContainers:
       {{- if .Values.standalone.initContainers }}
+      initContainers:
         {{- toYaml .Values.standalone.initContainers | nindent 6 }}
       {{- end }}
       containers:
@@ -152,8 +147,12 @@ spec:
           bin/apply-config-from-env.py conf/standalone.conf;
           bin/gen-yml-from-env.py conf/functions_worker.yml;
           echo "OK" > "${statusFilePath:-status}";
+          # --advertised-address is REQUIRED: Pulsar no longer defaults this
+          # to the FQDN since apache/pulsar#25523 reverted apache/pulsar#25238.
+          # Without it, client lookups return a non-resolvable address and
+          # connections fail.
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar standalone \
-            --advertised-address "{{ template "pulsar.standalone.hostname" . }}" \
+            --advertised-address "$(hostname -f)" \
             {{- if not .Values.components.functions }}
             --no-functions-worker \
             --no-stream-storage \
@@ -196,6 +195,9 @@ spec:
 {{- toYaml .Values.standalone.extraEnvs | nindent 10 }}
         {{- end }}
       volumes:
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.standalone.component }}-{{ .Values.standalone.volumes.data.name }}"
+        persistentVolumeClaim:
+          claimName: "{{ template "pulsar.fullname" . }}-{{ .Values.standalone.component }}-{{ .Values.standalone.volumes.data.name }}"
       {{- if .Values.standalone.extraVolumes }}
 {{ toYaml .Values.standalone.extraVolumes | indent 6 }}
       {{- end }}
@@ -227,24 +229,4 @@ spec:
       {{- end}}
       {{- include "pulsar.standalone.certs.volumes" . | nindent 6 }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
-  volumeClaimTemplates:
-  - metadata:
-      name: "{{ template "pulsar.fullname" . }}-{{ .Values.standalone.component }}-{{ .Values.standalone.volumes.data.name }}"
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: {{ .Values.standalone.volumes.data.size }}
-    {{- if or .Values.standalone.volumes.data.storageClassName .Values.volumes.local_storage }}
-      {{- if .Values.standalone.volumes.data.storageClassName }}
-      storageClassName: "{{ .Values.standalone.volumes.data.storageClassName }}"
-      {{- end }}
-      {{- if .Values.volumes.local_storage }}
-      storageClassName: "local-storage"
-      {{- end }}
-    {{- end }}
-    {{- if .Values.standalone.volumes.data.selector }}
-      selector:
-{{ toYaml .Values.standalone.volumes.data.selector | indent 8 }}
-    {{- end }}
 {{- end }}

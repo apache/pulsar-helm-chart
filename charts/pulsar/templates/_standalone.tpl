@@ -32,13 +32,6 @@ Define the standalone headless service
 {{- end }}
 
 {{/*
-Define the standalone hostname
-*/}}
-{{- define "pulsar.standalone.hostname" -}}
-${HOSTNAME}.{{ template "pulsar.standalone.service.headless" . }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}
-{{- end -}}
-
-{{/*
 Define standalone tls certs mounts
 */}}
 {{- define "pulsar.standalone.certs.volumeMounts" -}}

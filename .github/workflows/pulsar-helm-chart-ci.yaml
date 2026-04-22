@@ -310,6 +310,7 @@ jobs:
               ;;
             "standalone")
               export SKIP_PREPARE_RELEASE="1"
+              export HELM_INSTALL_TIMEOUT="10m"
               ;;
             "openid")
               export AUTHENTICATION_PROVIDER=openid

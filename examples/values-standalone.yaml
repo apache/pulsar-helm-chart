@@ -19,8 +19,8 @@
 
 # Standalone mode: runs all Pulsar components in a single process.
 # Suitable for development, testing, and small deployments.
-# Distributed components (zookeeper, bookkeeper, broker, proxy, autorecovery)
-# are automatically suppressed when standalone is enabled.
+# Distributed components (zookeeper, bookkeeper, broker, autorecovery) are
+# automatically suppressed when standalone is enabled.
 
 standalone:
   enabled: true
@@ -28,3 +28,9 @@ standalone:
 # Disable anti-affinity (standalone is a single instance)
 affinity:
   anti_affinity: false
+
+# Pulsar Proxy in front of standalone is a valid topology (TLS termination
+# at the edge, stable ingress endpoint, not exposing the standalone
+# listeners directly). Uncomment to enable:
+# components:
+#   proxy: true

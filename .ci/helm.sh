@@ -161,7 +161,7 @@ function ci::install_pulsar_chart() {
           ci::create_openid_resources
       fi
     fi
-    install_args+=("--wait" "--wait-for-jobs" "--timeout=10m" "--debug")
+    install_args+=("--wait" "--wait-for-jobs" "--timeout=${HELM_INSTALL_TIMEOUT:-6m}" "--debug")
 
     declare -a CHART_ARGS
     if [[ "${PULSAR_CHART_VERSION}" == "local" ]]; then

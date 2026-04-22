@@ -58,6 +58,9 @@ data:
   PULSAR_PREFIX_tlsCertificateFilePath: "/pulsar/certs/broker/tls.crt"
   PULSAR_PREFIX_tlsKeyFilePath: "/pulsar/certs/broker/tls.key"
   PULSAR_PREFIX_tlsTrustCertsFilePath: "/pulsar/certs/ca/ca.crt"
+  # Disable the non-TLS Pulsar wire-protocol listener. Without this, the
+  # standalone process keeps listening on 6650 in parallel with 6651.
+  PULSAR_PREFIX_brokerServicePort: ""
   {{- end }}
 
   # Authentication Settings

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if and .Values.components.proxy (not .Values.standalone.enabled) }}
+{{- if .Values.components.proxy }}
 {{- if .Values.proxy.pdb.usePolicy }}
 # pdb version detection
 {{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}
