@@ -1225,6 +1225,7 @@ standalone:
       # storageClassName:
       selector: {}
   configData:
+    PULSAR_STANDALONE_USE_ZOOKEEPER: "1"
     PULSAR_MEM: >
       -Xms256m -Xmx512m -XX:MaxDirectMemorySize=512m
     PULSAR_GC: >
