@@ -17,7 +17,20 @@
 # under the License.
 #
 
-# deploy bookkeeper PodMonitor only when `$.Values.bookkeeper.podMonitor.enabled` is true
-{{- if and $.Values.bookkeeper.podMonitor.enabled (not $.Values.standalone.enabled) }}
-{{- include "pulsar.podMonitor" (list . "bookkeeper" (printf "component: %s" .Values.bookkeeper.component)) }}
-{{- end }}
+# Standalone mode: runs all Pulsar components in a single process.
+# Suitable for development, testing, and small deployments.
+# Distributed components (zookeeper, bookkeeper, broker, autorecovery) are
+# automatically suppressed when standalone is enabled.
+
+standalone:
+  enabled: true
+
+# Disable anti-affinity (standalone is a single instance)
+affinity:
+  anti_affinity: false
+
+# Pulsar Proxy in front of standalone is a valid topology (TLS termination
+# at the edge, stable ingress endpoint, not exposing the standalone
+# listeners directly). Uncomment to enable:
+# components:
+#   proxy: true

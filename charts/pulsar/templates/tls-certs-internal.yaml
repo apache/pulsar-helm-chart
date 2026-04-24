@@ -27,7 +27,14 @@
 {{- end }}
 
 {{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
+{{- if not .Values.standalone.enabled }}
 {{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.broker "tlsConfig" .Values.tls.broker) }}
+---
+{{- end }}
+{{- end }}
+
+{{- if .Values.standalone.enabled }}
+{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.standalone "tlsConfig" .Values.tls.standalone) }}
 ---
 {{- end }}
 

@@ -18,7 +18,7 @@
 #
 
 # deploy zookeeper PodMonitor only when `$.Values.zookeeper.podMonitor.enabled` is true
-{{- if .Values.components.zookeeper }}
+{{- if and .Values.components.zookeeper (not .Values.standalone.enabled) }}
 {{- if $.Values.zookeeper.podMonitor.enabled }}
 {{- include "pulsar.podMonitor" (list . "zookeeper" (printf "component: %s" .Values.zookeeper.component)) }}
 {{- end }}

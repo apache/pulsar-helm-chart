@@ -123,7 +123,7 @@ spec:
         volumeMounts:
         {{- include "pulsar.proxy.certs.volumeMounts" . | nindent 8 }}
       {{- end }}
-      {{- if and .Values.components.zookeeper .Values.proxy.waitZookeeperTimeout (gt (.Values.proxy.waitZookeeperTimeout | int) 0) }}
+      {{- if and .Values.components.zookeeper (not .Values.standalone.enabled) .Values.proxy.waitZookeeperTimeout (gt (.Values.proxy.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
@@ -148,7 +148,7 @@ spec:
             done;
             {{- end}}
       {{- end}}
-      {{- if and .Values.components.oxia .Values.proxy.waitOxiaTimeout (gt (.Values.proxy.waitOxiaTimeout | int) 0) }}
+      {{- if and .Values.components.oxia (not .Values.standalone.enabled) .Values.proxy.waitOxiaTimeout (gt (.Values.proxy.waitOxiaTimeout | int) 0) }}
       - name: wait-oxia-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
@@ -161,8 +161,10 @@ spec:
             done;
       {{- end }}      
       {{- if and .Values.proxy.waitBrokerTimeout (gt (.Values.proxy.waitBrokerTimeout | int) 0) }}
-      # This init container will wait for at least one broker to be ready before
-      # deploying the proxy
+      {{- $backendService := ternary (include "pulsar.standalone.service" .) (printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component) .Values.standalone.enabled }}
+      # This init container waits for the broker backend (either the broker
+      # StatefulSet or the standalone pod) to be reachable before starting
+      # the proxy.
       - name: wait-broker-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
@@ -171,11 +173,11 @@ spec:
         args:
           - |
             set -e;
-            brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
+            brokerServiceNumber="$(nslookup -timeout=10 {{ $backendService }} | grep Name | wc -l)";
             until [ ${brokerServiceNumber} -ge 1 ]; do
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 10 seconds ...";
               sleep 10;
-              brokerServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} | grep Name | wc -l)";
+              brokerServiceNumber="$(nslookup -timeout=10 {{ $backendService }} | grep Name | wc -l)";
             done;
       {{- end}}
       {{- if .Values.proxy.initContainers }}

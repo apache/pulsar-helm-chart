@@ -242,6 +242,9 @@ jobs:
           - name: CA certificates
             values_file: .ci/clusters/values-cacerts.yaml
             shortname: cacerts
+          - name: Standalone
+            values_file: .ci/clusters/values-standalone.yaml
+            shortname: standalone
         include:
           - k8sVersion:
               version: "1.25.16"
@@ -304,6 +307,10 @@ jobs:
               ;;
             "jwt-generated")
               export SKIP_PREPARE_RELEASE="1"
+              ;;
+            "standalone")
+              export SKIP_PREPARE_RELEASE="1"
+              export HELM_INSTALL_TIMEOUT="10m"
               ;;
             "openid")
               export AUTHENTICATION_PROVIDER=openid

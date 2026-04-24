@@ -18,7 +18,7 @@
 #
 
 # deploy broker only when `components.broker` is true
-{{- if .Values.components.broker }}
+{{- if and .Values.components.broker (not .Values.standalone.enabled) }}
 apiVersion: v1
 kind: Service
 metadata:

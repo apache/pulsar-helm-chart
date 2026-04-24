@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.broker.autoscaling.enabled }}
+{{- if and .Values.broker.autoscaling.enabled (not .Values.standalone.enabled) }}
 {{- if (semverCompare "<1.23-0" .Capabilities.KubeVersion.Version) }}
 apiVersion: autoscaling/v2beta2
 {{- else }}
