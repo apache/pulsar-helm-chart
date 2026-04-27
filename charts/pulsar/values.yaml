@@ -686,6 +686,11 @@ oxia:
     extraVolumeMounts: []
     # customConfigMapName: ""
     # entrypoint: []
+    # Extra entries appended to the cluster config's allowExtraAuthorities list.
+    # Use this when a proxy or alternate DNS hostname (e.g. an external ingress)
+    # is in front of Oxia and clients connect through it. Each entry must be a
+    # "host:port" string with no scheme or path. Required since Oxia 0.16.3.
+    allowExtraAuthorities: []
 ## templates/server-statefulset.yaml
   server:
     # annotations for the app (statefulset/deployment)
