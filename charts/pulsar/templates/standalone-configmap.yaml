@@ -29,6 +29,11 @@ metadata:
 data:
   clusterName: {{ template "pulsar.cluster.name" . }}
 
+  # Use embedded ZooKeeper as the metadata store. Set to "0" in values.yaml to use RocksDB instead.
+  # ZooKeeper is preferred here because it is more battle-tested as a Pulsar metadata store
+  # and leaves the door open for migrating the data to a real cluster later.
+  PULSAR_STANDALONE_USE_ZOOKEEPER: "1"
+
   # Standalone-specific defaults: single-node replication
   managedLedgerDefaultEnsembleSize: "1"
   managedLedgerDefaultWriteQuorum: "1"
