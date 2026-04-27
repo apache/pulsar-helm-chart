@@ -89,14 +89,28 @@ namespaces:
     replicationFactor: {{ .Values.oxia.replicationFactor }}
 servers:
   {{- $servicename := printf "%s-%s-svc" (include "pulsar.fullname" .) .Values.oxia.component }}
+  {{- $publicservicename := printf "%s-%s" (include "pulsar.fullname" .) .Values.oxia.component }}
   {{- $fqdnSuffix := printf "%s.svc.cluster.local" (include "pulsar.namespace" .) }}
   {{- $podnamePrefix := printf "%s-%s-server-" (include "pulsar.fullname" .) .Values.oxia.component }}
+  {{- $publicPort := $.Values.oxia.server.ports.public }}
   {{- range until (int .Values.oxia.server.replicas) }}
   {{- $podnameIndex := . }}
   {{- $podname := printf "%s%d.%s" $podnamePrefix $podnameIndex $servicename }}
   {{- $podnameFQDN := printf "%s.%s" $podname $fqdnSuffix }}
-  - public: {{ $podnameFQDN }}:{{ $.Values.oxia.server.ports.public }}
+  - public: {{ $podnameFQDN }}:{{ $publicPort }}
     internal: {{ $podname }}:{{ $.Values.oxia.server.ports.internal }}
+  {{- end }}
+allowExtraAuthorities:
+  # Authority hostnames clients use before they receive shard assignments.
+  # Required since Oxia 0.16.3 (oxia-db/oxia#1038) — bootstrap connections
+  # to the headless/public services must be in this list or be a configured
+  # public address; otherwise the data server rejects them.
+  - {{ $servicename }}:{{ $publicPort }}
+  - {{ $servicename }}.{{ $fqdnSuffix }}:{{ $publicPort }}
+  - {{ $publicservicename }}:{{ $publicPort }}
+  - {{ $publicservicename }}.{{ $fqdnSuffix }}:{{ $publicPort }}
+  {{- range .Values.oxia.coordinator.allowExtraAuthorities }}
+  - {{ . }}
   {{- end }}
 {{- end }}
 
