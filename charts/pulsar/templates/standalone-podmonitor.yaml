@@ -17,7 +17,6 @@
 # under the License.
 #
 
-# deploy bookkeeper PodMonitor only when `$.Values.bookkeeper.podMonitor.enabled` is true
-{{- if and $.Values.bookkeeper.podMonitor.enabled (not $.Values.standalone.enabled) }}
-{{- include "pulsar.podMonitor" (list . "bookkeeper" (printf "component: %s" .Values.bookkeeper.component)) }}
+{{- if and $.Values.standalone.enabled $.Values.standalone.podMonitor.enabled }}
+{{- include "pulsar.podMonitor" (list . "standalone" (printf "component: %s" .Values.standalone.component)) }}
 {{- end }}

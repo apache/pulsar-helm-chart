@@ -120,3 +120,8 @@ oxia:
   server:
     podMonitor:
       enabled: false
+
+standalone:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false

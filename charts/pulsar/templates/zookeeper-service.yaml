@@ -18,7 +18,7 @@
 #
 
 # deploy zookeeper only when `components.zookeeper` is true
-{{- if .Values.components.zookeeper }}
+{{- if and .Values.components.zookeeper (not .Values.standalone.enabled) }}
 apiVersion: v1
 kind: Service
 metadata:

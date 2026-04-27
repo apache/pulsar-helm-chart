@@ -18,6 +18,14 @@
 #
 
 {{- if .Values.components.proxy }}
+{{- /*
+  The proxy can sit in front of either the distributed broker or the
+  standalone pod. Resolve backend host/ports and whether the backend speaks
+  TLS once, so the URL blocks below stay readable.
+*/}}
+{{- $backendHost := ternary (include "pulsar.standalone.service" .) (printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component) .Values.standalone.enabled }}
+{{- $backendPorts := ternary .Values.standalone.ports .Values.broker.ports .Values.standalone.enabled }}
+{{- $backendTls := ternary .Values.tls.enabled (and .Values.tls.enabled .Values.tls.broker.enabled) .Values.standalone.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -33,8 +41,8 @@ data:
   webServicePort: "{{ .Values.proxy.ports.containerPorts.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
   servicePort: "{{ .Values.proxy.ports.pulsar }}"
-  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
-  brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
+  brokerServiceURL: pulsar://{{ $backendHost }}:{{ $backendPorts.pulsar }}
+  brokerWebServiceURL: http://{{ $backendHost }}:{{ $backendPorts.http }}
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
   tlsEnabledInProxy: "true"
@@ -43,17 +51,17 @@ data:
   tlsCertificateFilePath: "/pulsar/certs/proxy/tls.crt"
   tlsKeyFilePath: "/pulsar/certs/proxy/tls.key"
   tlsTrustCertsFilePath: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.proxy.cacerts.enabled | quote }}
-  {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
-  # if broker enables TLS, configure proxy to talk to broker using TLS
-  brokerServiceURLTLS: pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}
-  brokerWebServiceURLTLS: https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}
+  {{- if $backendTls }}
+  # backend speaks TLS, so configure proxy to talk to it using TLS
+  brokerServiceURLTLS: pulsar+ssl://{{ $backendHost }}:{{ $backendPorts.pulsarssl }}
+  brokerWebServiceURLTLS: https://{{ $backendHost }}:{{ $backendPorts.https }}
   tlsEnabledWithBroker: "true"
   tlsCertRefreshCheckDurationSec: "300"
   brokerClientTrustCertsFilePath: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.proxy.cacerts.enabled | quote }}
   {{- end }}
-  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
-  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
-  brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
+  {{- if not $backendTls }}
+  brokerServiceURL: pulsar://{{ $backendHost }}:{{ $backendPorts.pulsar }}
+  brokerWebServiceURL: http://{{ $backendHost }}:{{ $backendPorts.http }}
   {{- end }}
   {{- end }}
 

@@ -23,6 +23,8 @@ tls:
   enabled: true
   proxy:
     enabled: true
+    secretAnnotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
   broker:
     enabled: true
   bookie:

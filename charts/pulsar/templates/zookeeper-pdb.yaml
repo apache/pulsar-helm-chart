@@ -18,7 +18,7 @@
 #
 
 # deploy zookeeper only when `components.zookeeper` is true
-{{- if .Values.components.zookeeper }}
+{{- if and .Values.components.zookeeper (not .Values.standalone.enabled) }}
 {{- if .Values.zookeeper.pdb.usePolicy }}
 # pdb version detection
 {{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}

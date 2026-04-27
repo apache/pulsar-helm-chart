@@ -18,6 +18,8 @@
 # under the License.
 #
 
+set -euo pipefail
+
 PULSAR_CHART_HOME=$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "${PULSAR_CHART_HOME}" || exit
 
@@ -86,7 +88,7 @@ clusterName=${clusterName:-pulsar-dev}
 nodeNum=${nodeNum:-6}
 # k8sVersion must be compatible with the used kind version
 # see https://github.com/kubernetes-sigs/kind/releases/tag/v0.22.0 for the list of supported k8s versions for kind 0.22.0
-k8sVersion=${k8sVersion:-v1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3}
+k8sVersion=${k8sVersion:-v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025}
 volumeNum=${volumeNum:-9}
 
 echo "clusterName: ${clusterName}"
@@ -150,8 +152,7 @@ EOF
     done
 done
 
-matchedCluster=$(kind get clusters | grep "${clusterName}")
-if [[ "${matchedCluster}" == "${clusterName}" ]]; then
+if kind get clusters | grep -qx "${clusterName}"; then
     echo "Kind cluster ${clusterName} already exists"
     kind delete cluster --name="${clusterName}"
 fi

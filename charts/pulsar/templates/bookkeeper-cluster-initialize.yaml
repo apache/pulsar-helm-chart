@@ -17,7 +17,7 @@
 # under the License.
 #
 {{- if or (and .Values.useReleaseStatus .Release.IsInstall) .Values.initialize }}
-{{- if .Values.components.bookkeeper }}
+{{- if and .Values.components.bookkeeper (not .Values.standalone.enabled) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
