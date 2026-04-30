@@ -418,15 +418,49 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
-## Upgrading to Helm chart version 4.6.0 (upcoming release)
+## Upgrading to Helm chart version 4.6.0
 
-The ZooKeeper StatefulSet and Broker StatefulSet have been modified to use a separate headless service and a separate ClusterIP service.
-The StatefulSet will be deleted and re-created during an upgrade. Deleting the StatefulSet will not delete data for ZooKeeper. The pods will
-remain running until the upgrade has replaced them. The deletion is handled using a Helm pre-upgrade hook, which runs a Kubernetes job using a container that contains `kubectl`. The image is `alpine/k8s` by default and is configurable under the `images.kubectl` key in values.yaml.
+### ZooKeeper and Broker Services split into ClusterIP + headless
 
-When TLS is enabled for ZooKeeper and Brokers, it is recommended to perform a rolling restart after the new certificates have been issued by cert-manager. The hostnames of the broker and zookeeper pods have changed and the certificate CRDs reflect this change.
+> **Note:** Upgrading existing installs may cause a brief service disruption. The StatefulSet's `serviceName` is immutable, so the ZooKeeper and Broker StatefulSets are re-created during the upgrade (see [Upgrading: pre-upgrade cleanup Job](#upgrading-pre-upgrade-cleanup-job) below).
 
-In addition, the default for the main Broker service has been changed from headless to default ClusterIP service.
+PRs [#649](https://github.com/apache/pulsar-helm-chart/pull/649) and [#650](https://github.com/apache/pulsar-helm-chart/pull/650) replace the single Service that fronted each of the ZooKeeper and Broker StatefulSets with two:
+
+- a regular **ClusterIP Service** (`<release>-zookeeper`, `<release>-broker`) — used by clients; only routes to ready pods. The default for the main Broker service has changed from headless to ClusterIP.
+- a **headless Service** (`*-headless`, `clusterIP: None`, `publishNotReadyAddresses: true`) — used as the StatefulSet `serviceName` for stable per-pod DNS.
+
+#### Why
+
+**ZooKeeper.** The previous Service had `publishNotReadyAddresses: true`, so brokers and bookies could be routed to ZK pods that were still starting or unhealthy. Splitting into a ready-only ClusterIP Service for clients and a headless Service for per-pod DNS fixes that.
+
+**Brokers** (issue [#437](https://github.com/apache/pulsar-helm-chart/issues/437)). A broker registers itself in ZooKeeper using its **per-pod** DNS name; other brokers and clients then resolve that name to reach it. The previous headless Service did **not** set `publishNotReadyAddresses`, so the per-pod name only became resolvable after the pod's readiness probe passed (plus DNS-cache TTL). Meanwhile the load manager could already have assigned namespace bundles to the new broker, causing a brief disruption on those topics. The new headless Service sets `publishNotReadyAddresses: true`, so the per-pod name resolves immediately. Two further benefits:
+
+- Client lookups now go through a regular ClusterIP Service that returns a single IP. The previous headless Service returned one A record per broker, which can exceed the 512-byte UDP DNS limit in larger clusters. Some DNS clients cannot handle this due to lack of TCP fallback for DNS (for example Alpine <3.18).
+- StatefulSets require a headless Service for pod identity, so the headless Service can only be paired with — not replaced by — a ClusterIP Service.
+
+#### Upgrading: pre-upgrade cleanup Job
+
+Because `serviceName` is immutable, an in-place upgrade from a pre-4.6.0 chart would fail. The chart ships a **`pre-upgrade` Job** per component that uses `kubectl` (image `images.kubectl`, default `alpine/k8s`) to delete the old StatefulSet with `--cascade=orphan`. Pods (and ZooKeeper on-disk data) are preserved and keep running until the new StatefulSet rolls them, but a brief disruption around the cutover is possible. The Job reads the existing chart label and only acts when the prior version is < 4.6.0; disable with `zookeeper.statefulsetUpgrade.enabled=false` or `broker.statefulsetUpgrade.enabled=false` to manage the migration manually.
+
+> **GitOps users (ArgoCD, Flux, Pulumi, etc.):** the cleanup relies on Helm's `pre-upgrade` hook lifecycle, which isn't always honored by GitOps tooling that renders the chart and applies the manifests directly. Verify that your tool runs `helm.sh/hook: pre-upgrade` Jobs before the rest of the release — or disable the hook flags above and handle the StatefulSet deletion (with `--cascade=orphan`) as part of your migration — before upgrading to 4.6.0.
+
+#### TLS
+
+The hostnames of the broker and ZooKeeper pods have changed, and certificates now include the new `*-headless` DNS names as SANs. After cert-manager reissues them, do a rolling restart of ZooKeeper and brokers so the running pods pick up matching certificates.
+
+### In-chart JWT secret generation
+
+PR [#672](https://github.com/apache/pulsar-helm-chart/pull/672) removes the need to run `prepare_helm_release.sh` — or any out-of-band script — to seed JWT secrets before installing.
+
+Opt in with `auth.authentication.jwt.generateSecrets.enabled: true`. A `pre-install`/`pre-upgrade` Job mints the signing key (symmetric or RSA) and one token per `auth.superUsers` entry, storing them as the same `<release>-token-*` secrets the rest of the chart already consumes. The Job is idempotent — skipped if the signing key secret exists, and existing token secrets are never overwritten — and supports annotations on generated secrets for tooling like [reflector](https://github.com/emberstack/kubernetes-reflector). Default is `false`, so existing installs are unaffected.
+
+A fully-authenticated cluster can now be deployed with a single `helm install`.
+
+### Standalone deployment mode
+
+PR [#674](https://github.com/apache/pulsar-helm-chart/pull/674) adds a top-level `standalone` toggle that deploys a single Pulsar standalone instance instead of separate ZooKeeper, BookKeeper, Broker, etc. workloads.
+
+The goal is to use the **same Helm chart for minimal development and test deployments on Kubernetes** — local Kind/k3d/minikube, ephemeral CI, developer sandboxes — without a separate chart or installer. Existing values, image overrides, and tooling carry over.
 
 ## Upgrading to Helm chart version 4.2.0
 
