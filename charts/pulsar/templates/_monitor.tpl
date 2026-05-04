@@ -44,6 +44,9 @@ metadata:
   name: {{ template "pulsar.fullname" $root }}-{{ replace "." "-" $component }}
   labels:
     {{- include "pulsar.standardLabels" $root | nindent 4 }}
+    {{- if and $root.Values.podMonitor $root.Values.podMonitor.customLabels }}
+    {{- toYaml $root.Values.podMonitor.customLabels | nindent 4 }}
+    {{- end }}
 spec:
   jobLabel: {{ replace "." "-" $component }}
   podMetricsEndpoints:

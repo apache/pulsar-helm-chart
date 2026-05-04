@@ -81,6 +81,17 @@ affinity:
   type: requiredDuringSchedulingIgnoredDuringExecution
 
 # -----------------------------------------------------------------------------
+# Global pod-scrape settings -- multi-element customLabels map exercises the
+# `toYaml | nindent` injection in the shared `pulsar.podMonitor` helper
+# (_monitor.tpl), which feeds every *-podmonitor.yaml template (Prometheus
+# PodMonitor here, VictoriaMetrics VMPodScrape when the subchart is enabled).
+# -----------------------------------------------------------------------------
+podMonitor:
+  customLabels:
+    monitoring-team: platform
+    cost-center: infra-prod
+
+# -----------------------------------------------------------------------------
 # Persistence -- on, with non-local storage classes
 # Exercises: bookkeeper-statefulset.yaml volumeClaimTemplates and
 #            zookeeper-statefulset.yaml volumeClaimTemplates branches that
