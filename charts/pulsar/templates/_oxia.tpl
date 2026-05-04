@@ -90,7 +90,8 @@ namespaces:
 servers:
   {{- $servicename := printf "%s-%s-svc" (include "pulsar.fullname" .) .Values.oxia.component }}
   {{- $publicservicename := printf "%s-%s" (include "pulsar.fullname" .) .Values.oxia.component }}
-  {{- $fqdnSuffix := printf "%s.svc.cluster.local" (include "pulsar.namespace" .) }}
+  {{- $fqdnSuffix := printf "%s.svc.%s" (include "pulsar.namespace" .) .Values.clusterDomain }}
+
   {{- $podnamePrefix := printf "%s-%s-server-" (include "pulsar.fullname" .) .Values.oxia.component }}
   {{- $publicPort := $.Values.oxia.server.ports.public }}
   {{- range until (int .Values.oxia.server.replicas) }}
@@ -133,4 +134,3 @@ Define coordinator entrypoint
 - "--profile"
 {{- end}}
 {{- end}}
-
