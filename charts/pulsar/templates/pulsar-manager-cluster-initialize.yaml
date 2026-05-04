@@ -44,11 +44,11 @@ spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       nodeSelector:
       {{- if .Values.pulsar_metadata.nodeSelector }}
-      {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
+{{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
       tolerations:
       {{- if .Values.pulsar_metadata.tolerations }}
-      {{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
+{{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
       {{- end }}
       restartPolicy: OnFailure
       initContainers:
