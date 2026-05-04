@@ -1,0 +1,98 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- if .Values.components.oxia }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.oxia.component }}-coordinator
+  annotations: {{ .Values.oxia.coordinator.appAnnotations | toYaml | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.oxia.component }}-coordinator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.oxia.component }}-coordinator
+      annotations:
+        {{- if not .Values.oxia.coordinator.podMonitor.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.oxia.coordinator.ports.metrics }}"
+        {{- end }}
+{{- with .Values.oxia.coordinator.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+    {{- if .Values.oxia.coordinator.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.oxia.coordinator.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.oxia.coordinator.tolerations }}
+      tolerations:
+{{ toYaml .Values.oxia.coordinator.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.oxia.coordinator.priorityClassName }}
+      priorityClassName: {{ .Values.oxia.coordinator.priorityClassName }}
+    {{- end }}
+      serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
+      containers:
+        - command:
+{{- if .Values.oxia.coordinator.entrypoint }}
+{{ toYaml .Values.oxia.coordinator.entrypoint | indent 12 }}
+{{- else }}
+            {{- include "oxia.coordinator.entrypoint" . | nindent 12 }}
+{{- end }}
+          image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
+          name: coordinator
+          ports:
+            {{- range $key, $value := .Values.oxia.coordinator.ports }}
+            - containerPort: {{ $value | int }}
+              name: {{ $key }}
+            {{- end}}
+          resources:
+            limits:
+              cpu: {{ .Values.oxia.coordinator.cpuLimit }}
+              memory: {{ .Values.oxia.coordinator.memoryLimit }}
+      {{- if .Values.oxia.coordinator.extraVolumeMounts }}
+          volumeMounts:
+        {{- toYaml .Values.oxia.coordinator.extraVolumeMounts | nindent 12 }}
+      {{- end }}
+          livenessProbe:
+            {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
+          readinessProbe:
+            {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
+      {{- if .Values.oxia.coordinator.extraContainers }}
+        {{- toYaml .Values.oxia.coordinator.extraContainers | nindent 8 }}
+      {{- end }}
+      {{- if .Values.oxia.coordinator.extraVolumes }}
+      volumes:
+{{- toYaml .Values.oxia.coordinator.extraVolumes | nindent 8 }}
+      {{- end }}
+{{- end }}

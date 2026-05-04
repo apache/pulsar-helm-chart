@@ -18,17 +18,18 @@
 #
 
 # deploy zookeeper only when `components.zookeeper` is true
-{{- if .Values.components.zookeeper }}
+{{- if and .Values.components.zookeeper (not .Values.standalone.enabled) }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.zookeeper.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
 spec:
-  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+  serviceName: "{{ template "pulsar.zookeeper.service.headless" . }}"
   replicas: {{ .Values.zookeeper.replicaCount }}
   selector:
     matchLabels:
@@ -43,6 +44,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.zookeeper.component }}
       annotations:
+        {{- if not .Values.zookeeper.podMonitor.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.zookeeper.ports.http }}"
+        {{- end }}
         {{- if .Values.zookeeper.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/zookeeper-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -54,9 +59,16 @@ spec:
       nodeSelector:
 {{ toYaml .Values.zookeeper.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.zookeeper.priorityClassName }}
+      priorityClassName: {{ .Values.zookeeper.priorityClassName }}
+    {{- end }}
     {{- if .Values.zookeeper.tolerations }}
       tolerations:
 {{ toYaml .Values.zookeeper.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.zookeeper.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.zookeeper.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
@@ -100,31 +112,54 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.zookeeper.gracePeriod }}
-    {{- if and .Values.rbac.enabled .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
-    {{- end }}
       {{- if .Values.zookeeper.securityContext }}
       securityContext:
 {{ toYaml .Values.zookeeper.securityContext | indent 8 }}
       {{- end }}
+      initContainers:
+      {{- if .Values.tls.zookeeper.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.zookeeper "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.zookeeper "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+        - |
+          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.zookeeper.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.zookeeper.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.zookeeper.initContainers }}
+        {{- toYaml .Values.zookeeper.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.zookeeper "root" .) }}"
-        imagePullPolicy: {{ .Values.images.zookeeper.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.zookeeper "root" .) }}"
       {{- if .Values.zookeeper.resources }}
         resources:
 {{ toYaml .Values.zookeeper.resources | indent 10 }}
       {{- end }}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
         {{- if .Values.zookeeper.additionalCommand }}
           {{ .Values.zookeeper.additionalCommand }}
         {{- end }}
+          {{- if .Values.tls.zookeeper.cacerts.enabled }}
+          cd /pulsar/certs/cacerts;
+          nohup /pulsar/bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.zookeeper.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
+          {{- end }}
           bin/apply-config-from-env.py conf/zookeeper.conf;
           {{- include "pulsar.zookeeper.tls.settings" . | nindent 10 }}
           bin/generate-zookeeper-config.sh conf/zookeeper.conf;
-          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar zookeeper;
+          {{- $readOnlyMode := false -}}
+          {{- if hasKey .Values.pulsar_metadata "metadataStoreAllowReadOnlyOperations" }}
+          {{- $readOnlyMode = not (not .Values.pulsar_metadata.metadataStoreAllowReadOnlyOperations) -}}
+          {{- end }}
+          OPTS="-Dreadonlymode.enabled={{ $readOnlyMode }} ${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar zookeeper;
         ports:
         # prometheus needs to access /metrics endpoint
         - name: http
@@ -135,6 +170,10 @@ spec:
           containerPort: {{ .Values.zookeeper.ports.follower }}
         - name: leader-election
           containerPort: {{ .Values.zookeeper.ports.leaderElection }}
+        {{- if .Values.zookeeper.ports.admin }}
+        - name: admin
+          containerPort: {{ .Values.zookeeper.ports.admin }}
+        {{- end }}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
         - name: client-tls
           containerPort: {{ .Values.zookeeper.ports.clientTls }}
@@ -158,23 +197,17 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
         {{- $zkConnectCommand := "" -}}
         {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-        {{- $zkConnectCommand = print "openssl s_client -quiet -crlf -connect localhost:" .Values.zookeeper.ports.clientTls " -cert /pulsar/certs/zookeeper/tls.crt -key /pulsar/certs/zookeeper/tls.key" -}}
+        {{- $zkConnectCommand = print "openssl s_client -quiet -crlf -connect 127.0.0.1:" .Values.zookeeper.ports.clientTls " -cert /pulsar/certs/zookeeper/tls.crt -key /pulsar/certs/zookeeper/tls.key" -}}
         {{- else -}}
-        {{- $zkConnectCommand = print "nc -q 1 localhost " .Values.zookeeper.ports.client -}}
+        {{- $zkConnectCommand = print "nc 127.0.0.1 " .Values.zookeeper.ports.client -}}
         {{- end }}
         {{- if .Values.zookeeper.probe.readiness.enabled }}
-        {{- if and .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-        {{- end}}
         readinessProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.readiness.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.readiness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.readiness.timeoutSeconds }}
@@ -184,11 +217,9 @@ spec:
         livenessProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.liveness.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.liveness.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.liveness.timeoutSeconds }}
@@ -198,11 +229,9 @@ spec:
         startupProbe:
           exec:
             command:
-            - timeout
-            - "{{ .Values.zookeeper.probe.startup.timeoutSeconds }}"
             - bash
             - -c
-            - 'echo ruok | {{ $zkConnectCommand }} | grep imok'
+            - '{ echo ruok; sleep 1; } | {{ $zkConnectCommand }} | grep imok'
           initialDelaySeconds: {{ .Values.zookeeper.probe.startup.initialDelaySeconds }}
           periodSeconds: {{ .Values.zookeeper.probe.startup.periodSeconds }}
           timeoutSeconds: {{ .Values.zookeeper.probe.startup.timeoutSeconds }}
@@ -211,17 +240,11 @@ spec:
         volumeMounts:
         - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
           mountPath: /pulsar/data
-        {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-        - mountPath: "/pulsar/certs/zookeeper"
-          name: zookeeper-certs
-          readOnly: true
-        - mountPath: "/pulsar/certs/ca"
-          name: ca
-          readOnly: true
-        - name: keytool
-          mountPath: "/pulsar/keytool/keytool.sh"
-          subPath: keytool.sh
+        {{- if .Values.zookeeper.volumes.useSeparateDiskForTxlog }}
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
+          mountPath: /pulsar/data-log
         {{- end }}
+        {{- include "pulsar.zookeeper.certs.volumeMounts" . | nindent 8 }}
         {{- if .Values.zookeeper.extraVolumeMounts }}
 {{ toYaml .Values.zookeeper.extraVolumeMounts | indent 8 }}
         {{- end }}
@@ -230,29 +253,10 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.data.name }}"
         emptyDir: {}
       {{- end }}
+      {{- include "pulsar.zookeeper.certs.volumes" . | nindent 6 }}
       {{- if .Values.zookeeper.extraVolumes }}
 {{ toYaml .Values.zookeeper.extraVolumes | indent 6 }}
       {{- end }}
-      {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-      - name: zookeeper-certs
-        secret:
-          secretName: "{{ .Release.Name }}-{{ .Values.tls.zookeeper.cert_name }}"
-          items:
-            - key: tls.crt
-              path: tls.crt
-            - key: tls.key
-              path: tls.key
-      - name: ca
-        secret:
-          secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
-          items:
-            - key: ca.crt
-              path: ca.crt
-      - name: keytool
-        configMap:
-          name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
-          defaultMode: 0755
-      {{- end}}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- if and (and .Values.persistence .Values.volumes.persistence) .Values.zookeeper.volumes.persistence }}
   volumeClaimTemplates:
@@ -274,5 +278,25 @@ spec:
       selector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+  {{- if .Values.zookeeper.volumes.useSeparateDiskForTxlog }}
+  - metadata:
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.zookeeper.volumes.datalog.size }}
+    {{- if .Values.zookeeper.volumes.datalog.storageClassName }}
+      storageClassName: "{{ .Values.zookeeper.volumes.datalog.storageClassName }}"
+    {{- else if and (not (and .Values.volumes.local_storage .Values.zookeeper.volumes.datalog.local_storage)) .Values.zookeeper.volumes.datalog.storageClass }}
+      storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-{{ .Values.zookeeper.volumes.datalog.name }}"
+    {{- else if and .Values.volumes.local_storage .Values.zookeeper.volumes.datalog.local_storage }}
+      storageClassName: "local-storage"
+    {{- end }}
+    {{- with .Values.zookeeper.volumes.datalog.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 {{- end }}

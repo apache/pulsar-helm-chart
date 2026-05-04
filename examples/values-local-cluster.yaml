@@ -28,7 +28,7 @@ components:
   pulsar_manager: true
 
 ## disable monitoring stack
-kube-prometheus-stack:
+victoria-metrics-k8s-stack:
   enabled: false
   prometheusOperator:
     enabled: false

@@ -17,7 +17,15 @@
 # under the License.
 #
 
-{{- if or .Values.components.proxy .Values.extra.proxy }}
+{{- if .Values.components.proxy }}
+{{- /*
+  The proxy can sit in front of either the distributed broker or the
+  standalone pod. Resolve backend host/ports and whether the backend speaks
+  TLS once, so the URL blocks below stay readable.
+*/}}
+{{- $backendHost := ternary (include "pulsar.standalone.service" .) (printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component) .Values.standalone.enabled }}
+{{- $backendPorts := ternary .Values.standalone.ports .Values.broker.ports .Values.standalone.enabled }}
+{{- $backendTls := ternary .Values.tls.enabled (and .Values.tls.enabled .Values.tls.broker.enabled) .Values.standalone.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -28,13 +36,13 @@ metadata:
     component: {{ .Values.proxy.component }}
 data:
   clusterName: {{ template "pulsar.cluster.name" . }}
-  statusFilePath: "{{ template "pulsar.home" . }}/status"
+  statusFilePath: "{{ template "pulsar.home" . }}/logs/status"
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.proxy.ports.containerPorts.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.proxy.enabled) }}
   servicePort: "{{ .Values.proxy.ports.pulsar }}"
-  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
-  brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
+  brokerServiceURL: pulsar://{{ $backendHost }}:{{ $backendPorts.pulsar }}
+  brokerWebServiceURL: http://{{ $backendHost }}:{{ $backendPorts.http }}
   {{- end }}
   {{- if and .Values.tls.enabled .Values.tls.proxy.enabled }}
   tlsEnabledInProxy: "true"
@@ -42,18 +50,18 @@ data:
   webServicePortTls: "{{ .Values.proxy.ports.containerPorts.https }}"
   tlsCertificateFilePath: "/pulsar/certs/proxy/tls.crt"
   tlsKeyFilePath: "/pulsar/certs/proxy/tls.key"
-  tlsTrustCertsFilePath: "/pulsar/certs/ca/ca.crt"
-  {{- if and .Values.tls.enabled .Values.tls.broker.enabled }}
-  # if broker enables TLS, configure proxy to talk to broker using TLS
-  brokerServiceURLTLS: pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}
-  brokerWebServiceURLTLS: https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}
+  tlsTrustCertsFilePath: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.proxy.cacerts.enabled | quote }}
+  {{- if $backendTls }}
+  # backend speaks TLS, so configure proxy to talk to it using TLS
+  brokerServiceURLTLS: pulsar+ssl://{{ $backendHost }}:{{ $backendPorts.pulsarssl }}
+  brokerWebServiceURLTLS: https://{{ $backendHost }}:{{ $backendPorts.https }}
   tlsEnabledWithBroker: "true"
   tlsCertRefreshCheckDurationSec: "300"
-  brokerClientTrustCertsFilePath: "/pulsar/certs/ca/ca.crt"
+  brokerClientTrustCertsFilePath: {{ ternary "/pulsar/certs/cacerts/ca-combined.pem" "/pulsar/certs/ca/ca.crt" .Values.tls.proxy.cacerts.enabled | quote }}
   {{- end }}
-  {{- if not (and .Values.tls.enabled .Values.tls.broker.enabled) }}
-  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
-  brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
+  {{- if not $backendTls }}
+  brokerServiceURL: pulsar://{{ $backendHost }}:{{ $backendPorts.pulsar }}
+  brokerWebServiceURL: http://{{ $backendHost }}:{{ $backendPorts.http }}
   {{- end }}
   {{- end }}
 
@@ -64,11 +72,20 @@ data:
   # disable authorization on proxy and forward authorization credentials to broker
   authorizationEnabled: "false"
   forwardAuthorizationCredentials: "true"
-  superUserRoles: {{ .Values.auth.superUsers | values | sortAlpha | join "," }}
+  {{- if .Values.auth.useProxyRoles }}
+  superUserRoles: {{ omit .Values.auth.superUsers "proxy" | values | compact | sortAlpha | join "," }}
+  {{- else }}
+  superUserRoles: {{ .Values.auth.superUsers | values | compact | sortAlpha | join "," }}
   {{- end }}
-  {{- if eq .Values.auth.authentication.provider "jwt" }}
+  {{- end }}
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled  }}
   # token authentication configuration
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled .Values.auth.authentication.openid.enabled }}
+  authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken,org.apache.pulsar.broker.authentication.oidc.AuthenticationProviderOpenID"
+  {{- end }}
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled ( not .Values.auth.authentication.openid.enabled ) }}
   authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken"
+  {{- end }}
   brokerClientAuthenticationParameters: "file:///pulsar/tokens/proxy/token"
   brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
   {{- if .Values.auth.authentication.jwt.usingSecretKey }}
@@ -76,6 +93,25 @@ data:
   {{- else }}
   tokenPublicKey: "file:///pulsar/keys/token/public.key"
   {{- end }}
+  {{- end }}
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.openid.enabled  }}
+  # openid authentication configuration
+  {{- if and .Values.auth.authentication.enabled .Values.auth.authentication.openid.enabled ( not .Values.auth.authentication.jwt.enabled ) }}
+  authenticationProviders: "org.apache.pulsar.broker.authentication.oidc.AuthenticationProviderOpenID"
+  {{- end }}
+  PULSAR_PREFIX_openIDAllowedTokenIssuers: {{ .Values.auth.authentication.openid.openIDAllowedTokenIssuers | uniq | compact | sortAlpha | join "," | quote }}
+  PULSAR_PREFIX_openIDAllowedAudiences: {{ .Values.auth.authentication.openid.openIDAllowedAudiences | uniq | compact | sortAlpha | join "," | quote }}
+  PULSAR_PREFIX_openIDTokenIssuerTrustCertsFilePath: {{ .Values.auth.authentication.openid.openIDTokenIssuerTrustCertsFilePath | quote }}
+  PULSAR_PREFIX_openIDRoleClaim: {{  .Values.auth.authentication.openid.openIDRoleClaim | quote }}
+  PULSAR_PREFIX_openIDAcceptedTimeLeewaySeconds: {{ .Values.auth.authentication.openid.openIDAcceptedTimeLeewaySeconds | quote }}
+  PULSAR_PREFIX_openIDCacheSize: {{ .Values.auth.authentication.openid.openIDCacheSize | quote }}
+  PULSAR_PREFIX_openIDCacheRefreshAfterWriteSeconds: {{ .Values.auth.authentication.openid.openIDCacheRefreshAfterWriteSeconds | quote }}
+  PULSAR_PREFIX_openIDCacheExpirationSeconds: {{ .Values.auth.authentication.openid.openIDCacheExpirationSeconds | quote }}
+  PULSAR_PREFIX_openIDHttpConnectionTimeoutMillis: {{ .Values.auth.authentication.openid.openIDHttpConnectionTimeoutMillis | quote }}
+  PULSAR_PREFIX_openIDHttpReadTimeoutMillis: {{ .Values.auth.authentication.openid.openIDHttpReadTimeoutMillis | quote }}
+  PULSAR_PREFIX_openIDKeyIdCacheMissRefreshSeconds: {{ .Values.auth.authentication.openid.openIDKeyIdCacheMissRefreshSeconds | quote }}
+  PULSAR_PREFIX_openIDRequireIssuersUseHttps: {{ .Values.auth.authentication.openid.openIDRequireIssuersUseHttps | quote }}
+  PULSAR_PREFIX_openIDFallbackDiscoveryMode: {{ .Values.auth.authentication.openid.openIDFallbackDiscoveryMode | quote }}
   {{- end }}
   {{- end }}
 {{ toYaml .Values.proxy.configData | indent 2 }}

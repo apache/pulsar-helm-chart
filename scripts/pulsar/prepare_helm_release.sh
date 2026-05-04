@@ -18,8 +18,8 @@
 # under the License.
 #
 
-CHART_HOME=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/../.. && pwd)
-cd ${CHART_HOME}
+CHART_HOME=$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "${CHART_HOME}" || exit
 
 usage() {
     cat <<EOF
@@ -97,31 +97,30 @@ function new_k8s_object() {
 function do_create_namespace() {
     if [[ "${create_namespace}" == "true" ]]; then
         new_k8s_object
-        kubectl create namespace ${namespace} ${local:+ -o yaml --dry-run=client}
+        kubectl create namespace "${namespace}" ${local:+ -o yaml --dry-run=client}
     fi
 }
 
 do_create_namespace
 
-kubectl get namespace "${namespace}" > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+if ! kubectl get namespace "${namespace}" > /dev/null 2>&1; then
   echo "error: failed to get namespace '${namespace}'"
   echo "please check that this namespace exists, or use the '-c' option to create it"
   exit 1
 fi
 
-extra_opts=""
+declare -a extra_opts
 if [[ "${symmetric}" == "true" ]]; then
-  extra_opts="${extra_opts} -s"
+  extra_opts+=("-s")
 fi
 
 if [[ "${local}" == "true" ]]; then
-  extra_opts="${extra_opts} -l"
+  extra_opts+=("-l")
 fi
 
 echo "generate the token keys for the pulsar cluster" >&2
 new_k8s_object
-${CHART_HOME}/scripts/pulsar/generate_token_secret_key.sh -n ${namespace} -k ${release} ${extra_opts}
+"${CHART_HOME}"/scripts/pulsar/generate_token_secret_key.sh -n "${namespace}" -k "${release}" "${extra_opts[@]}"
 
 echo "generate the tokens for the super-users: ${pulsar_superusers}" >&2
 
@@ -130,7 +129,7 @@ for user in "${superusers[@]}"
 do
     echo "generate the token for $user" >&2
     new_k8s_object
-    ${CHART_HOME}/scripts/pulsar/generate_token.sh -n ${namespace} -k ${release} -r ${user} ${extra_opts} 
+    "${CHART_HOME}"/scripts/pulsar/generate_token.sh -n "${namespace}" -k "${release}" -r "${user}" "${extra_opts[@]}"
 done
 
 echo "-------------------------------------" >&2

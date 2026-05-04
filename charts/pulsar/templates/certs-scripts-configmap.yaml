@@ -1,0 +1,82 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: certs-scripts 
+data:
+    certs-combine-pem.sh: |
+      #!/bin/bash
+      # This script combines all certificates into a single file.
+      # Usage: certs-combine-pem.sh <output_file> <cert1> <cert2> ...
+      set -eu -o pipefail
+
+      if [ "$#" -lt 2 ]; then
+        echo "Usage: $0 <output_file> <cert1> <cert2> ..."
+        exit 1
+      fi
+
+      OUTPUT_FILE="$1"
+      shift
+
+      OUTPUT_FILE_TMP="${OUTPUT_FILE}.tmp"
+      rm -f "$OUTPUT_FILE_TMP"
+
+      for CERT in "$@"; do
+        if [ -f "$CERT" ]; then
+          echo "# $CERT" >> "$OUTPUT_FILE_TMP"
+          cat "$CERT" >> "$OUTPUT_FILE_TMP"
+        else
+          echo "Certificate file '$CERT' does not exist, skipping"
+        fi
+      done
+
+      if [ ! -f "$OUTPUT_FILE" ]; then
+        touch "$OUTPUT_FILE"
+      fi
+
+      if diff -q "$OUTPUT_FILE" "$OUTPUT_FILE_TMP" > /dev/null; then
+        # No changes detected, skipping update
+        rm -f "$OUTPUT_FILE_TMP"
+      else
+        # Update $OUTPUT_FILE with new certificates
+        mv "$OUTPUT_FILE_TMP" "$OUTPUT_FILE"
+      fi
+
+    certs-combine-pem-infinity.sh: |
+      #!/bin/bash
+      # This script combines all certificates into a single file, every minutes.
+      # Usage: certs-combine-pem-infinity.sh <output_file> <cert1> <cert2> ...
+      set -eu -o pipefail
+
+      if [ "$#" -lt 2 ]; then
+        echo "Usage: $0 <output_file> <cert1> <cert2> ..."
+        exit 1
+      fi
+
+      while true; do
+        /pulsar/bin/certs-combine-pem.sh "$@"
+        sleep 60
+      done
+    

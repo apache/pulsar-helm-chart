@@ -18,7 +18,7 @@
 #
 
 # deploy zookeeper only when `components.zookeeper` is true
-{{- if .Values.components.zookeeper }}
+{{- if and .Values.components.zookeeper (not .Values.standalone.enabled) }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -27,25 +27,25 @@ metadata:
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}
+{{- with .Values.zookeeper.service.annotations }}
   annotations:
-{{ toYaml .Values.zookeeper.service.annotations | indent 4 }}
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   ports:
     # prometheus needs to access /metrics endpoint
     - name: http
       port: {{ .Values.zookeeper.ports.http }}
-    - name: "{{ .Values.tcpPrefix }}follower"
-      port: {{ .Values.zookeeper.ports.follower }}
-    - name: "{{ .Values.tcpPrefix }}leader-election"
-      port: {{ .Values.zookeeper.ports.leaderElection }}
     - name: "{{ .Values.tcpPrefix }}client"
       port: {{ .Values.zookeeper.ports.client }}
+    {{- if .Values.zookeeper.ports.admin }}
+    - name: admin
+      port: {{ .Values.zookeeper.ports.admin }}
+    {{- end }}
     {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
     - name: "{{ .Values.tlsPrefix }}client-tls"
       port: {{ .Values.zookeeper.ports.clientTls }}
     {{- end }}
-  clusterIP: None
-  publishNotReadyAddresses: true
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.zookeeper.component }}

@@ -18,41 +18,8 @@
 #
 
 # deploy zookeeper PodMonitor only when `$.Values.zookeeper.podMonitor.enabled` is true
+{{- if and .Values.components.zookeeper (not .Values.standalone.enabled) }}
 {{- if $.Values.zookeeper.podMonitor.enabled }}
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-  name: {{ template "pulsar.fullname" . }}-zookeeper
-  labels:
-    app: {{ template "pulsar.name" . }}
-    chart: {{ template "pulsar.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    {{- if $.Values.podMonitor.customLabels }}
-    {{ $.Values.podMonitor.customLabels | toYaml | trim }}
-    {{- end }}
-spec:
-  jobLabel: zookeeper
-  podMetricsEndpoints:
-    - port: http
-      path: /metrics
-      scheme: http
-      interval: {{ $.Values.zookeeper.podMonitor.interval }}
-      scrapeTimeout: {{ $.Values.zookeeper.podMonitor.scrapeTimeout }}
-      relabelings:
-        - action: labelmap
-          regex: __meta_kubernetes_pod_label_(.+)
-        - sourceLabels: [__meta_kubernetes_namespace]
-          action: replace
-          targetLabel: kubernetes_namespace
-        - sourceLabels: [__meta_kubernetes_pod_label_component]
-          action: replace
-          targetLabel: job
-        - sourceLabels: [__meta_kubernetes_pod_name]
-          action: replace
-          targetLabel: kubernetes_pod_name
-  selector:
-    matchLabels:
-      {{- include "pulsar.matchLabels" . | nindent 6 }}
-      component: zookeeper
+{{- include "pulsar.podMonitor" (list . "zookeeper" (printf "component: %s" .Values.zookeeper.component)) }}
+{{- end }}
 {{- end }}

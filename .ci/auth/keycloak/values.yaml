@@ -1,0 +1,50 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Uses quay.io/keycloak/keycloak (official image, default for codecentric/keycloakx chart)
+# Run Keycloak in development mode with realm import for CI testing
+# https://www.keycloak.org/server/containers
+command:
+  - "/opt/keycloak/bin/kc.sh"
+  - "start-dev"
+  - "--import-realm"
+
+# Bootstrap admin credentials
+# https://www.keycloak.org/server/containers#_bootstrap_admin_and_creating_initial_admin_user
+extraEnv: |
+  - name: KC_BOOTSTRAP_ADMIN_USERNAME
+    value: admin
+  - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+    value: admin
+
+# This block sets up an example Pulsar Realm
+# https://www.keycloak.org/server/importExport#_importing_a_realm_from_a_directory
+extraVolumes: |
+  - name: realm-config
+    secret:
+      secretName: keycloak-ci-realm-config
+
+extraVolumeMounts: |
+  - name: realm-config
+    mountPath: "/opt/keycloak/data/import"
+    readOnly: true
+
+resources:
+  limits:
+    memory: 768Mi

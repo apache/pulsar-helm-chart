@@ -17,12 +17,13 @@
 # under the License.
 #
 
-{{- if or .Values.components.autorecovery .Values.extra.autoRecovery }}
+{{- if and .Values.components.autorecovery (not .Values.standalone.enabled) }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.autorecovery.appAnnotations | toYaml | nindent 4 }}
   labels:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.autorecovery.component }}
@@ -43,8 +44,10 @@ spec:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.autorecovery.component }}
       annotations:
+        {{- if not .Values.autorecovery.podMonitor.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "{{ .Values.autorecovery.ports.http }}"
+        {{- end }}
         {{- if .Values.autorecovery.restartPodsOnConfigMapChange }}
         checksum/config: {{ include (print $.Template.BasePath "/autorecovery-configmap.yaml") . | sha256sum }}
         {{- end }}
@@ -56,11 +59,18 @@ spec:
       nodeSelector:
 {{ toYaml .Values.autorecovery.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.autorecovery.priorityClassName }}
+      priorityClassName: {{ .Values.autorecovery.priorityClassName }}
+    {{- end }}
     {{- if .Values.autorecovery.tolerations }}
       tolerations:
 {{- with .Values.autorecovery.tolerations }}
 {{ toYaml . | indent 8 }}
 {{- end }}
+    {{- end }}
+    {{- if .Values.autorecovery.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.autorecovery.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
         {{- if and .Values.affinity.anti_affinity .Values.autorecovery.affinity.anti_affinity}}
@@ -104,39 +114,62 @@ spec:
         {{ end }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
-    {{- if and .Values.rbac.enabled  .Values.rbac.psp }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
-    {{- end}}
       initContainers:
+      {{- if .Values.tls.autorecovery.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+        - |
+          bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.autorecovery.cacerts.certs) }}
+        volumeMounts:
+        {{- if .Values.autorecovery.initContainersExtraVolumeMounts }}
+{{ toYaml .Values.autorecovery.initContainersExtraVolumeMounts | indent 8 }}
+        {{- end }}
+        {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.autorecovery.waitBookkeeperTimeout (gt (.Values.autorecovery.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
-        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
-        command: ["sh", "-c"]
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.autorecovery.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
-        - >
+        - |
           {{- include "pulsar.autorecovery.init.verify_cluster_id" . | nindent 10 }}
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
+        {{- if .Values.autorecovery.initContainersExtraVolumeMounts }}
+{{ toYaml .Values.autorecovery.initContainersExtraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.autorecovery.initContainers }}
+        {{- toYaml .Values.autorecovery.initContainers | nindent 6 }}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
-        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
       {{- if .Values.autorecovery.resources }}
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
       {{- end }}
-      {{- if and .Values.rbac.enabled .Values.rbac.psp }}
-        securityContext:
-          readOnlyRootFilesystem: false
-      {{- end}}
         command: ["sh", "-c"]
         args:
-        - >
+        - |
+          {{- if .Values.tls.autorecovery.cacerts.enabled }}
+          cd /pulsar/certs/cacerts;
+          nohup /pulsar/bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.autorecovery.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
+          {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/bookkeeper autorecovery
@@ -147,9 +180,15 @@ spec:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         volumeMounts:
+        {{- if .Values.autorecovery.extraVolumeMounts }}
+{{ toYaml .Values.autorecovery.extraVolumeMounts | indent 8 }}
+        {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
       volumes:
       {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
+      {{- if .Values.autorecovery.extraVolumes }}
+{{ toYaml .Values.autorecovery.extraVolumes | indent 6 }}
+      {{- end }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
 {{- end }}
 

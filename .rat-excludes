@@ -17,4 +17,6 @@
 
 .gitignore
 # Generated Helm file
-Chart.lock
+charts/pulsar/Chart.lock
+# installation notice file
+charts/pulsar/templates/NOTES.txt

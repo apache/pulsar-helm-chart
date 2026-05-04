@@ -1,0 +1,185 @@
+======================================================================================
+                           APACHE PULSAR HELM CHART
+======================================================================================
+
+======================================================================================
+                           SECURITY ADVISORY
+======================================================================================
+
+This Helm chart's default configuration DOES NOT meet production security requirements.
+Users MUST review and customize security settings for their specific environment.
+
+IMPORTANT: This Helm chart provides a starting point for Pulsar deployments but requires
+significant security customization before use in production environments. We strongly
+recommend implementing:
+
+1. Proper network isolation and access controls
+2. Authentication and authorization for all components
+3. TLS encryption for all communication channels
+4. Regular security updates and vulnerability assessments
+
+As an open source project, we welcome contributions to improve security features.
+Please consider submitting pull requests to address security gaps or enhance
+existing security implementations.
+
+---------------------------------------------------------------------------------------
+
+SECURITY NOTICE: The Pulsar proxy is not designed for direct public internet exposure.
+It lacks security features required for untrusted networks and should only be deployed
+within secured environments with proper network controls.
+
+IMPORTANT CHANGE IN v4.0.0: Default service type changed from LoadBalancer to ClusterIP
+for security reasons. This limits access to within the Kubernetes environment by default.
+
+---------------------------------------------------------------------------------------
+IF YOU NEED EXTERNAL ACCESS FOR YOUR PULSAR CLUSTER:
+---------------------------------------------------------------------------------------
+
+Note: This information might be outdated. Please go to https://github.com/apache/pulsar-helm-chart for updated information.
+
+If you need to expose the Pulsar Proxy outside the cluster using a LoadBalancer service type:
+
+1. USE INTERNAL LOAD BALANCERS ONLY
+   - Set type to LoadBalancer only in secured environments with proper network controls
+   - Add cloud provider-specific annotations for internal load balancers
+   - See cloud provider documentation:
+     * AWS / EKS: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/service/annotations/
+     * Azure / AKS: https://learn.microsoft.com/en-us/azure/aks/internal-lb
+     * GCP / GKE: https://cloud.google.com/kubernetes-engine/docs/concepts/service-load-balancer-parameters
+   - Examples (verify correctness for your environment):
+     * AWS / EKS:  service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+     * Azure / AKS: service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+     * GCP / GKE:   networking.gke.io/load-balancer-type: "Internal"
+
+2. IMPLEMENT AUTHENTICATION AND AUTHORIZATION
+   - Configure all clients to authenticate properly
+   - Set up appropriate authorization policies
+
+3. USE TLS FOR ALL CONNECTIONS
+   - Enable TLS for client-to-proxy connections
+   - Enable TLS for proxy-to-broker connections
+   - Enable TLS for all internal cluster communications (brokers, zookeepers, bookies)
+   - Note: TLS alone is NOT sufficient as a security solution in Pulsar. Even with TLS enabled,
+     clusters exposed to untrusted networks remain vulnerable to denial-of-service attacks, 
+     authentication bypass attempts, and protocol-level exploits. Always implement defense-in-depth
+     security measures and limit exposure to trusted networks only.
+
+4. NETWORK SECURITY
+   - Use private networks (VPCs)
+   - Configure firewalls, security groups, and IP restrictions appropriately
+   - In addition, consider using loadBalancerSourceRanges to limit access to specific IP ranges
+
+5. CLIENT IP ADDRESS BASED ACCESS RESTRICTIONS
+   - When using a LoadBalancer service type, restrict access to specific IP ranges by configuring 
+     `proxy.service.loadBalancerSourceRanges` in your values.yaml
+   - Important: This should be implemented alongside other security measures (internal load balancer,
+     authentication, TLS, network policies) as part of a defense-in-depth strategy,
+     not as a standalone security solution
+
+---------------------------------------------------------------------------------------
+ALTERNATIVE FOR EXTERNAL ACCESS
+---------------------------------------------------------------------------------------
+
+As an alternative method for external access, Pulsar has support for SNI proxy routing:
+https://pulsar.apache.org/docs/next/concepts-proxy-sni-routing/
+SNI Proxy routing is supported with proxy servers such as Apache Traffic Server, HAProxy and Nginx.
+
+Note: This option isn't currently implemented in the Apache Pulsar Helm chart.
+
+IMPORTANT: Pulsar binary protocol cannot be exposed outside of the Kubernetes cluster
+using Kubernetes Ingress. Kubernetes Ingress works for the Admin REST API and topic lookups,
+but clients would be connecting to the advertised listener addresses returned by the brokers and it 
+would only work when clients can connect directly to brokers. This is not a supported secure option 
+for exposing Pulsar to untrusted networks.
+
+{{- if .Values.useReleaseStatus }}
+
+======================================================================================
+                           🚀 QUICK START 🚀
+======================================================================================
+
+Watching events to view progress of deployment:
+kubectl get -n {{ .Values.namespace | default .Release.Namespace }} events -o wide --watch
+
+Watching state of deployed Kubernetes objects, updated every 2 seconds:
+watch kubectl get -n {{ .Values.namespace | default .Release.Namespace }} all
+
+{{- if .Values.components.proxy }}
+
+Waiting until Pulsar Proxy is available:
+kubectl wait --timeout=600s --for=condition=ready pod -n {{ .Values.namespace | default .Release.Namespace }} -l component=proxy
+{{- end }}
+
+Watching state with k9s (https://k9scli.io/topics/install/):
+k9s -n {{ .Values.namespace | default .Release.Namespace }}
+
+{{- if and .Values.affinity.anti_affinity (or (gt (int .Values.bookkeeper.replicaCount) 1) (gt (int .Values.zookeeper.replicaCount) 1)) }}
+
+======================================================================================
+                      ⚠️  NOTICE FOR DEV K8S CLUSTER USERS  ⚠️
+======================================================================================
+
+Please note that anti-affinity rules for Zookeeper and Bookie components require at least 
+one node per replica. There are currently {{ .Values.bookkeeper.replicaCount }} bookies and {{ .Values.zookeeper.replicaCount }} zookeepers configured.
+
+For Kubernetes clusters with fewer than 3 nodes, such as single-node Kubernetes clusters in 
+development environments like minikube, Docker Desktop, Rancher Desktop (k3s), or Podman 
+Desktop, you must disable the anti-affinity feature by either:
+
+Adding to your values.yaml:
+affinity:
+  anti_affinity: false
+
+Or adding "--set affinity.anti_affinity=false" to the helm command line.
+
+After making the changes to your values yaml file, redeploy with "helm upgrade":
+helm upgrade -n {{ .Release.Namespace }} -f your_values_file.yaml {{ .Release.Name }} apachepulsar/pulsar
+
+These configuration instructions can be omitted for Kubernetes clusters with 3 or more nodes.
+{{- end }}
+{{- end }}
+{{- if and (eq .Values.proxy.service.type "LoadBalancer") (not .Values.proxy.service.annotations) }}
+
+======================================================================================
+                      ⚠️ 🚨 INSECURE CONFIGURATION DETECTED 🚨 ⚠️
+======================================================================================
+WARNING: You are using a LoadBalancer service type without internal load balancer
+annotations. This is potentially an insecure configuration. Please carefully review
+the security recommendations above and visit https://github.com/apache/pulsar-helm-chart
+for more information.
+======================================================================================
+{{- end }}
+
+======================================================================================
+                           DISCLAIMER
+======================================================================================
+
+The providers of this Helm chart make no guarantees regarding the security of the chart under
+any circumstances. It is the user's responsibility to ensure that their deployment is secure
+and complies with all relevant security standards and regulations.
+
+By using this Helm chart, the user acknowledges the risks associated with its default
+configuration and the necessity for proper security customization. The user further 
+agrees that the providers of the Helm chart shall not be liable for any security breaches
+or incidents resulting from the use of the chart.
+
+The user assumes full responsibility for the security and integrity of their deployment.
+This includes, but is not limited to, the proper configuration of security features and 
+adherence to best practices for securing network access. The providers of this Helm chart
+disclaim all warranties, whether express or implied, including any warranties of
+merchantability, fitness for a particular purpose, and non-infringement of third-party rights.
+
+======================================================================================
+                           RESOURCES
+======================================================================================
+
+- 🖥️ Install k9s terminal interface for viewing and managing k8s clusters: https://k9scli.io/topics/install/
+- ❓ Usage Questions: https://github.com/apache/pulsar/discussions/categories/q-a
+- 🐛 Report Issues: https://github.com/apache/pulsar-helm-chart/issues
+- 🔒 Security Issues: https://pulsar.apache.org/security/
+- 📚 Documentation: https://github.com/apache/pulsar-helm-chart
+
+🌟 Please contribute to improve the Apache Pulsar Helm chart and its documentation:
+- 🤝 Contribute: https://github.com/apache/pulsar-helm-chart
+
+Thank you for installing Apache Pulsar Helm chart version {{ .Chart.Version }}.

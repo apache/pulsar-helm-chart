@@ -36,7 +36,7 @@ Define autorecovery zookeeper client tls settings
 */}}
 {{- define "pulsar.autorecovery.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-/pulsar/keytool/keytool.sh autorecovery {{ template "pulsar.autorecovery.hostname" . }} true;
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "autorecovery" "isClient" true "isCacerts" .Values.tls.autorecovery.cacerts.enabled) -}}
 {{- end }}
 {{- end }}
 
@@ -51,11 +51,21 @@ Define autorecovery tls certs mounts
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  mountPath: "/pulsar/keytool/keytool.sh"
-  subPath: keytool.sh
 {{- end }}
+{{- if .Values.tls.autorecovery.cacerts.enabled }}
+- mountPath: "/pulsar/certs/cacerts"
+  name: autorecovery-cacerts
+{{- range $cert := .Values.tls.autorecovery.cacerts.certs }}
+- name: {{ $cert.name }}
+  mountPath: "/pulsar/certs/{{ $cert.name }}"
+  readOnly: true
+{{- end }}
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem.sh"
+  subPath: certs-combine-pem.sh
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem-infinity.sh"
+  subPath: certs-combine-pem-infinity.sh
 {{- end }}
 {{- end }}
 
@@ -72,18 +82,32 @@ Define autorecovery tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+    - key: tls-combined.pem
+      path: tls-combined.pem
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     items:
     - key: ca.crt
       path: ca.crt
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  configMap:
-    name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
-    defaultMode: 0755
 {{- end }}
+{{- if .Values.tls.autorecovery.cacerts.enabled }}
+- name: autorecovery-cacerts
+  emptyDir: {}
+{{- range $cert := .Values.tls.autorecovery.cacerts.certs }}
+- name: {{ $cert.name }}
+  secret:
+    secretName: "{{ $cert.existingSecret }}"
+    items:
+    {{- range $key := $cert.secretKeys }}
+      - key: {{ $key }}
+        path: {{ $key }}
+    {{- end }}
+{{- end }}
+- name: certs-scripts
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+    defaultMode: 0755
 {{- end }}
 {{- end }}
 
@@ -92,8 +116,9 @@ Define autorecovery init container : verify cluster id
 */}}
 {{- define "pulsar.autorecovery.init.verify_cluster_id" -}}
 bin/apply-config-from-env.py conf/bookkeeper.conf;
-{{- include "pulsar.autorecovery.zookeeper.tls.settings" . -}}
-until bin/bookkeeper shell whatisinstanceid; do
+export BOOKIE_MEM="-Xmx128M";
+{{- include "pulsar.autorecovery.zookeeper.tls.settings" . }}
+until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
 {{- end }}

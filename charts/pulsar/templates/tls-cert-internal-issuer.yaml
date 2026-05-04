@@ -24,17 +24,20 @@ kind: Issuer
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
   selfSigned: {}
 ---
-
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Certificate
 metadata:
   name: "{{ template "pulsar.fullname" . }}-ca"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
-  secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+  secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
   commonName: "{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}"
   duration: "{{ .Values.certs.internal_issuer.duration }}"
   renewBefore: "{{ .Values.certs.internal_issuer.renewBefore }}"
@@ -51,14 +54,18 @@ spec:
     # if you are using an external issuer, change this to that issuer group.
     group: cert-manager.io
 ---
-
+{{- end }}
+{{- if and (eq .Values.certs.internal_issuer.type "ca") (not (eq .Values.certs.issuers.ca.kind "Issuer")) -}}
+{{- fail "Set certs.internal_issuer.enabled to false when using certs.issuers.ca.kind other than Issuer." -}}
+{{- end }}
 apiVersion: "{{ .Values.certs.internal_issuer.apiVersion }}"
 kind: Issuer
 metadata:
-  name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}-ca-issuer"
+  name: "{{ template "pulsar.certs.issuers.ca.name" . }}"
   namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
 spec:
   ca:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
-{{- end }}
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
 {{- end }}

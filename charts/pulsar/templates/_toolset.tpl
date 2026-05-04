@@ -36,7 +36,7 @@ Define toolset zookeeper client tls settings
 */}}
 {{- define "pulsar.toolset.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled -}}
-/pulsar/keytool/keytool.sh toolset {{ template "pulsar.toolset.hostname" . }} true;
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "toolset" "isClient" true "isCacerts" .Values.tls.toolset.cacerts.enabled) -}}
 {{- end -}}
 {{- end }}
 
@@ -44,18 +44,30 @@ Define toolset zookeeper client tls settings
 Define toolset tls certs mounts
 */}}
 {{- define "pulsar.toolset.certs.volumeMounts" -}}
-{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+{{- if .Values.tls.enabled }}
+{{- if .Values.tls.zookeeper.enabled }}
 - name: toolset-certs
   mountPath: "/pulsar/certs/toolset"
   readOnly: true
+{{- end }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  mountPath: "/pulsar/keytool/keytool.sh"
-  subPath: keytool.sh
 {{- end }}
+{{- if .Values.tls.toolset.cacerts.enabled }}
+- mountPath: "/pulsar/certs/cacerts"
+  name: toolset-cacerts
+{{- range $cert := .Values.tls.toolset.cacerts.certs }}
+- name: {{ $cert.name }}
+  mountPath: "/pulsar/certs/{{ $cert.name }}"
+  readOnly: true
+{{- end }}
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem.sh"
+  subPath: certs-combine-pem.sh
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem-infinity.sh"
+  subPath: certs-combine-pem-infinity.sh
 {{- end }}
 {{- end }}
 
@@ -63,7 +75,8 @@ Define toolset tls certs mounts
 Define toolset tls certs volumes
 */}}
 {{- define "pulsar.toolset.certs.volumes" -}}
-{{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
+{{- if .Values.tls.enabled  }}
+{{- if .Values.tls.zookeeper.enabled }}
 - name: toolset-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.toolset.cert_name }}"
@@ -72,17 +85,32 @@ Define toolset tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+    - key: tls-combined.pem
+      path: tls-combined.pem
+{{- end }}
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     items:
     - key: ca.crt
       path: ca.crt
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  configMap:
-    name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
-    defaultMode: 0755
 {{- end }}
+{{- if .Values.tls.toolset.cacerts.enabled }}
+- name: toolset-cacerts
+  emptyDir: {}
+{{- range $cert := .Values.tls.toolset.cacerts.certs }}
+- name: {{ $cert.name }}
+  secret:
+    secretName: "{{ $cert.existingSecret }}"
+    items:
+    {{- range $key := $cert.secretKeys }}
+      - key: {{ $key }}
+        path: {{ $key }}
+    {{- end }}
+{{- end }}
+- name: certs-scripts
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+    defaultMode: 0755
 {{- end }}
 {{- end }}

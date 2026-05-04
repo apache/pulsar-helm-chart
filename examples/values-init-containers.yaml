@@ -1,0 +1,79 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+## start
+components:
+  # zookeeper
+  zookeeper: true
+  # bookkeeper
+  bookkeeper: true
+  # bookkeeper - autorecovery
+  autorecovery: true
+  # broker
+  broker: true
+  # functions
+  functions: true
+  # proxy
+  proxy: true
+  # toolset
+  toolset: true
+  # pulsar manager
+  pulsar_manager: true
+  
+zookeeper:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The zookeeper initContainers work as expected"']
+
+bookkeeper:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The bookkeeper initContainers work as expected"']
+      
+autorecovery:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The autorecovery initContainers work as expected"']
+      
+broker:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The broker initContainers work as expected"']
+  
+proxy:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The proxy initContainers work as expected"']
+      
+toolset:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The toolset initContainers work as expected"']
+
+pulsar_manager:
+  initContainers:
+    - name: pre-startup-checks
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "The pulsar_manager initContainers work as expected"']

@@ -35,9 +35,20 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-DEFAULT_CHART_TESTING_VERSION=v3.7.1
-DEFAULT_YAMLLINT_VERSION=1.27.1
-DEFAULT_YAMALE_VERSION=3.0.4
+DEFAULT_CHART_TESTING_VERSION=v3.12.0
+DEFAULT_YAMLLINT_VERSION=1.35.1
+DEFAULT_YAMALE_VERSION=6.0.0
+
+ARCH=$(uname -m)
+case $ARCH in
+    x86) ARCH="386";;
+    x86_64) ARCH="amd64";;
+    i686) ARCH="386";;
+    i386) ARCH="386";;
+    arm64) ARCH="arm64";;
+    aarch64) ARCH="arm64";;
+esac
+OS=$(uname|tr '[:upper:]' '[:lower:]')
 
 show_help() {
 cat << EOF
@@ -109,31 +120,35 @@ install_chart_testing() {
         exit 1
     fi
 
-    local arch
-    arch=$(uname -m)
-    local cache_dir="$RUNNER_TOOL_CACHE/ct/$version/$arch"
+    local cache_dir="$RUNNER_TOOL_CACHE/ct/$version/${ARCH}"
     local venv_dir="$cache_dir/venv"
 
     if [[ ! -d "$cache_dir" ]]; then
         mkdir -p "$cache_dir"
 
         echo "Installing chart-testing..."
-        curl -sSLo ct.tar.gz "https://github.com/helm/chart-testing/releases/download/$version/chart-testing_${version#v}_linux_amd64.tar.gz"
+        curl -sSLo ct.tar.gz "https://github.com/helm/chart-testing/releases/download/$version/chart-testing_${version#v}_${OS}_${ARCH}.tar.gz"
         tar -xzf ct.tar.gz -C "$cache_dir"
         rm -f ct.tar.gz
 
+        # if uv (https://docs.astral.sh/uv/) is not installed, install it
+        if ! command -v uv &> /dev/null; then
+            echo 'Installing uv...'
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+        fi
+
         echo 'Creating virtual Python environment...'
-        python3 -m venv "$venv_dir"
+        uv venv "$venv_dir"
 
         echo 'Activating virtual environment...'
         # shellcheck disable=SC1090
         source "$venv_dir/bin/activate"
 
         echo 'Installing yamllint...'
-        pip3 install "yamllint==${yamllint_version}"
+        uv pip install "yamllint==${yamllint_version}"
 
         echo 'Installing Yamale...'
-        pip3 install "yamale==${yamale_version}"
+        uv pip install "yamale==${yamale_version}"
     fi
 
     # https://github.com/helm/chart-testing-action/issues/62

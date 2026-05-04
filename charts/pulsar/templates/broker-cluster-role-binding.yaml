@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.components.broker }}
+{{- if and .Values.components.broker (not .Values.standalone.enabled) }}
 ## TODO create our own cluster role with less privledges than admin
 apiVersion: rbac.authorization.k8s.io/v1
 {{- if .Values.rbac.limit_to_namespace }}
@@ -63,12 +63,22 @@ rules:
   resources:
   - configmaps
   verbs: ["get", "list", "watch"]
-- apiGroups: ["", "extensions", "apps"]
+- apiGroups: [""]
   resources:
     - pods
     - services
-    - deployments
     - secrets
+  verbs:
+    - list
+    - watch
+    - get
+    - update
+    - create
+    - delete
+    - patch
+- apiGroups: ["apps"]
+  resources:
+    - deployments
     - statefulsets
   verbs:
     - list

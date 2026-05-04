@@ -18,10 +18,17 @@ under the License.
 */}}
 
 {{/*
-Define the pulsar brroker service
+Define the pulsar broker service (ordinary ClusterIP, used by clients)
 */}}
 {{- define "pulsar.broker.service" -}}
 {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}
+{{- end }}
+
+{{/*
+Define the pulsar broker headless service (used as the StatefulSet serviceName for pod DNS)
+*/}}
+{{- define "pulsar.broker.service.headless" -}}
+{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-headless
 {{- end }}
 
 {{/*
@@ -43,7 +50,7 @@ Define broker zookeeper client tls settings
 */}}
 {{- define "pulsar.broker.zookeeper.tls.settings" -}}
 {{- if and .Values.tls.enabled .Values.tls.zookeeper.enabled }}
-/pulsar/keytool/keytool.sh broker {{ template "pulsar.broker.hostname" . }} true;
+{{- include "pulsar.component.zookeeper.tls.settings" (dict "component" "broker" "isClient" true "isCacerts" .Values.tls.broker.cacerts.enabled) -}}
 {{- end }}
 {{- end }}
 
@@ -51,18 +58,30 @@ Define broker zookeeper client tls settings
 Define broker tls certs mounts
 */}}
 {{- define "pulsar.broker.certs.volumeMounts" -}}
-{{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled)) }}
+{{- if .Values.tls.enabled }}
+{{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: broker-certs
   mountPath: "/pulsar/certs/broker"
   readOnly: true
+{{- end }}
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  mountPath: "/pulsar/keytool/keytool.sh"
-  subPath: keytool.sh
 {{- end }}
+{{- if .Values.tls.broker.cacerts.enabled }}
+- mountPath: "/pulsar/certs/cacerts"
+  name: broker-cacerts
+{{- range $cert := .Values.tls.broker.cacerts.certs }}
+- name: {{ $cert.name }}
+  mountPath: "/pulsar/certs/{{ $cert.name }}"
+  readOnly: true
+{{- end }}
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem.sh"
+  subPath: certs-combine-pem.sh
+- name: certs-scripts
+  mountPath: "/pulsar/bin/certs-combine-pem-infinity.sh"
+  subPath: certs-combine-pem-infinity.sh
 {{- end }}
 {{- end }}
 
@@ -70,7 +89,8 @@ Define broker tls certs mounts
 Define broker tls certs volumes
 */}}
 {{- define "pulsar.broker.certs.volumes" -}}
-{{- if and .Values.tls.enabled (or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled)) }}
+{{- if .Values.tls.enabled }}
+{{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 - name: broker-certs
   secret:
     secretName: "{{ .Release.Name }}-{{ .Values.tls.broker.cert_name }}"
@@ -79,17 +99,34 @@ Define broker tls certs volumes
       path: tls.crt
     - key: tls.key
       path: tls.key
+{{- if .Values.tls.zookeeper.enabled }}
+    - key: tls-combined.pem
+      path: tls-combined.pem
+{{- end }}
+{{- end }}
 - name: ca
   secret:
-    secretName: "{{ .Release.Name }}-{{ .Values.tls.ca_suffix }}"
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
     items:
     - key: ca.crt
       path: ca.crt
-{{- if .Values.tls.zookeeper.enabled }}
-- name: keytool
-  configMap:
-    name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
-    defaultMode: 0755
 {{- end }}
+{{- if .Values.tls.broker.cacerts.enabled }}
+- name: broker-cacerts
+  emptyDir: {}
+{{- range $cert := .Values.tls.broker.cacerts.certs }}
+- name: {{ $cert.name }}
+  secret:
+    secretName: "{{ $cert.existingSecret }}"
+    items:
+    {{- range $key := $cert.secretKeys }}
+      - key: {{ $key }}
+        path: {{ $key }}
+    {{- end }}
+{{- end }}
+- name: certs-scripts
+  configMap:
+    name: "{{ template "pulsar.fullname" . }}-certs-scripts"
+    defaultMode: 0755
 {{- end }}
 {{- end }}

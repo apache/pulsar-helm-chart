@@ -17,7 +17,7 @@
 # under the License.
 #
 
-{{- if .Values.components.broker }}
+{{- if and .Values.components.broker (not .Values.standalone.enabled) }}
 {{- if .Values.broker.pdb.usePolicy }}
 # pdb version detection
 {{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}
