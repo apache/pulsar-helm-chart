@@ -94,6 +94,9 @@ spec:
       nodeSelector:
 {{ toYaml .Values.standalone.nodeSelector | indent 8 }}
     {{- end }}
+    {{- if .Values.standalone.priorityClassName }}
+      priorityClassName: {{ .Values.standalone.priorityClassName }}
+    {{- end }}
     {{- if .Values.standalone.tolerations }}
       tolerations:
 {{ toYaml .Values.standalone.tolerations | indent 8 }}
