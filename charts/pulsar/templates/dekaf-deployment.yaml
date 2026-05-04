@@ -45,12 +45,12 @@ spec:
     spec:
       {{- if ((.Values.dekaf).deployment).nodeSelector }}
       nodeSelector:
-        {{ toYaml .Values.dekaf.deployment.nodeSelector | default dict | indent 10 }}
+        {{ toYaml .Values.dekaf.deployment.nodeSelector | default dict | indent 6 }}
       {{- end }}
 
       {{- if ((.Values.dekaf).deployment).tolerations }}
       tolerations:
-        {{ toYaml .Values.dekaf.deployment.tolerations | default list | indent 8 }}
+        {{ toYaml .Values.dekaf.deployment.tolerations | default list | indent 4 }}
       {{- end }}
 
       containers:
