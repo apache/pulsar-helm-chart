@@ -1,0 +1,1001 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# =============================================================================
+# templates-all-values.yaml
+# =============================================================================
+# This file is consumed by the "ct-lint" CI job to render the chart with every
+# optional feature turned on, then validate the rendered manifests with
+# kubeconform. The goal is to catch indent/`range`/`toYaml | nindent` bugs in
+# template authoring that wouldn't surface in the existing scenario files,
+# each of which only enables one or two features at a time.
+#
+# Two principles for editing this file:
+#   1. Every feature toggle that has an off-by-default `enabled: true/false`
+#      should be set to `true` here (with limited exceptions called out
+#      inline -- e.g. the victoria-metrics-k8s-stack subchart).
+#   2. Every value that takes a list or map should contain at least two
+#      entries so that nested `range` / `toYaml | nindent` indentation is
+#      exercised.
+#
+# Mutually-exclusive choices (Zookeeper vs Oxia, JWT symmetric vs asymmetric,
+# selfsigning vs ca cert issuer, etc.) live in the companion overlay file
+# `.ci/templates-all-values-patch1.yaml`. Apply that overlay on top of this
+# file to exercise the alternative branches.
+#
+# Usage:
+#   helm template charts/pulsar -f .ci/templates-all-values.yaml
+#   helm template charts/pulsar -f .ci/templates-all-values.yaml \
+#                               -f .ci/templates-all-values-patch1.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Components -- enable every optional component
+# Exercises: pulsar-manager-*.yaml, dekaf-*.yaml, broker-rbac.yaml,
+#            broker-cluster-role-binding.yaml, jwt-secret-init.yaml
+# -----------------------------------------------------------------------------
+components:
+  zookeeper: true
+  oxia: false           # patch1 flips this -> oxia (and zookeeper -> false)
+  bookkeeper: true
+  autorecovery: true
+  broker: true
+  functions: true       # exercises function RBAC / serviceaccount paths
+  proxy: true
+  toolset: true
+  pulsar_manager: true  # exercises pulsar-manager-*.yaml
+  dekaf: true           # exercises dekaf-*.yaml
+
+# -----------------------------------------------------------------------------
+# RBAC -- exercise per-namespace bindings
+# Exercises: broker-rbac.yaml, broker-cluster-role-binding.yaml
+# -----------------------------------------------------------------------------
+rbac:
+  enabled: true
+  limit_to_namespace: true
+
+# -----------------------------------------------------------------------------
+# Anti-affinity -- "hard" mode (patch1 flips to "soft")
+# Exercises the `eq .Values.<component>.affinity.type
+# "requiredDuringSchedulingIgnoredDuringExecution"` branches in every
+# StatefulSet / Deployment.
+# -----------------------------------------------------------------------------
+affinity:
+  anti_affinity: true
+  type: requiredDuringSchedulingIgnoredDuringExecution
+
+# -----------------------------------------------------------------------------
+# Persistence -- on, with non-local storage classes
+# Exercises: bookkeeper-statefulset.yaml volumeClaimTemplates and
+#            zookeeper-statefulset.yaml volumeClaimTemplates branches that
+#            depend on storageClassName / volumes.local_storage.
+# -----------------------------------------------------------------------------
+persistence: true
+volumes:
+  persistence: true
+  local_storage: false  # patch1 flips this -> true (local-storage branch)
+
+# -----------------------------------------------------------------------------
+# Image pull secrets (multi-element list of secret names -- exercises the
+# `pulsar.imagePullSecrets` helper's `range` and the matching iterations in
+# the oxia ServiceAccount templates).
+# -----------------------------------------------------------------------------
+images:
+  imagePullSecrets:
+    - regcred-1
+    - regcred-2
+
+# -----------------------------------------------------------------------------
+# TLS -- enable globally and per-component
+# Exercises: tls-certs-internal.yaml plus the per-component
+#            `pulsar.<component>.certs.volumeMounts` / `volumes` includes.
+# -----------------------------------------------------------------------------
+tls:
+  enabled: true
+  proxy:
+    enabled: true
+  broker:
+    enabled: true
+  bookie:
+    enabled: true
+  zookeeper:
+    enabled: true
+  autorecovery:
+    cacerts:
+      enabled: true
+      certs:
+        - name: autorecovery-cacert-a
+          existingSecret: autorecovery-cacert-a
+          secretKeys:
+            - ca.crt
+        - name: autorecovery-cacert-b
+          existingSecret: autorecovery-cacert-b
+          secretKeys:
+            - ca.crt
+  toolset:
+    cacerts:
+      enabled: true
+      certs:
+        - name: toolset-cacert-a
+          existingSecret: toolset-cacert-a
+          secretKeys:
+            - ca.crt
+        - name: toolset-cacert-b
+          existingSecret: toolset-cacert-b
+          secretKeys:
+            - ca.crt
+  function_instance:
+    enabled: true
+  oxia:
+    enabled: true
+  pulsar_metadata:
+    cacerts:
+      enabled: true
+      certs:
+        - name: pulsar-metadata-cacert-a
+          existingSecret: pulsar-metadata-cacert-a
+          secretKeys:
+            - ca.crt
+        - name: pulsar-metadata-cacert-b
+          existingSecret: pulsar-metadata-cacert-b
+          secretKeys:
+            - ca.crt
+
+# -----------------------------------------------------------------------------
+# Cert-manager internal issuer -- selfsigning branch (patch1 flips to "ca")
+# Exercises: tls-cert-internal-issuer.yaml selfsigning Issuer + Certificate
+# -----------------------------------------------------------------------------
+certs:
+  internal_issuer:
+    enabled: true
+    type: selfsigning
+  issuers:
+    selfsigning:
+      name: selfsigned-issuer
+    ca:
+      name: ca-issuer
+      secretName: ca-secret
+      kind: Issuer
+      group: cert-manager.io
+
+# -----------------------------------------------------------------------------
+# Authentication / Authorization -- JWT (symmetric) + multiple super users
+# Exercises: jwt-secret-init.yaml (symmetric branch + range over superUsers
+#            and over secretAnnotations.key / .token map).
+# -----------------------------------------------------------------------------
+auth:
+  authentication:
+    enabled: true
+    jwt:
+      enabled: true
+      usingSecretKey: true   # symmetric -- patch1 flips to asymmetric
+      generateSecrets:
+        enabled: true
+        nodeSelector:
+          disktype: ssd
+          tier: backend
+        tolerations:
+          - key: jwt-init
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+          - key: arch
+            operator: Equal
+            value: amd64
+            effect: NoSchedule
+        affinity:
+          anti_affinity: true
+          type: requiredDuringSchedulingIgnoredDuringExecution
+      # Two annotation keys on the signing-key secret -- exercises the
+      # `range $k, $v := ...secretAnnotations.key` loop in jwt-secret-init.yaml
+      secretAnnotations:
+        key:
+          reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+          reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+        token:
+          # Per-role token annotation maps (multi-element each)
+          broker:
+            reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+            reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+          client:
+            reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+            reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+    openid:
+      # Disabled here; patch1 disables JWT and enables this instead.
+      enabled: false
+  authorization:
+    enabled: true
+  superUsers:
+    broker: "broker-admin"
+    proxy: "proxy-admin"
+    client: "admin"
+    manager: "manager-admin"
+
+# -----------------------------------------------------------------------------
+# Job TTL -- exercises `if and .Values.job.ttl.enabled` in *-cluster-initialize
+# -----------------------------------------------------------------------------
+job:
+  ttl:
+    enabled: true
+    secondsAfterFinished: 300
+
+# -----------------------------------------------------------------------------
+# extraDeploy -- multi-element list, exercises templates/extra-list.yaml `range`
+# -----------------------------------------------------------------------------
+extraDeploy:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: extra-cm-1
+    data:
+      key1: value1
+      key2: value2
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: extra-cm-2
+    data:
+      hello: world
+
+# -----------------------------------------------------------------------------
+# Zookeeper -- multi-element lists/maps + separate txlog disk
+# Exercises: zookeeper-statefulset.yaml `useSeparateDiskForTxlog` branch and
+#            tolerations / nodeSelector / topologySpreadConstraints / labels
+#            / annotations indent.
+# -----------------------------------------------------------------------------
+zookeeper:
+  replicaCount: 3
+  podMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 30s
+    metricRelabelings:
+      - action: labeldrop
+        regex: cluster
+      - action: labeldrop
+        regex: pod
+  probe:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true   # off by default
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: zookeeper
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-zk-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-zk-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-zk-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-zk-2
+      mountPath: /extra/cm2
+      readOnly: true
+  volumes:
+    useSeparateDiskForTxlog: true
+    persistence: true
+    data:
+      name: data
+      size: 20Gi
+      local_storage: false
+      storageClassName: fast-ssd
+    datalog:
+      name: datalog
+      size: 20Gi
+      local_storage: false
+      storageClassName: fast-ssd
+
+# -----------------------------------------------------------------------------
+# Bookkeeper -- multi-volume journal + ledgers + index
+# Exercises: bookkeeper-statefulset.yaml multi-volume `range` branches plus
+#            bookkeeper-configmap.yaml multi-volume directory list rendering.
+# -----------------------------------------------------------------------------
+bookkeeper:
+  replicaCount: 4
+  podMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 30s
+    metricRelabelings:
+      - action: labeldrop
+        regex: cluster
+      - action: labeldrop
+        regex: pod
+  probe:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true   # off by default
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: bookie
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-bk-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-bk-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-bk-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-bk-2
+      mountPath: /extra/cm2
+      readOnly: true
+  volumes:
+    persistence: true
+    journal:
+      name: journal
+      size: 10Gi
+      local_storage: false
+      storageClassName: fast-ssd
+      useMultiVolumes: true
+      multiVolumes:
+        - name: journal0
+          size: 10Gi
+          storageClassName: fast-ssd
+          mountPath: /pulsar/data/bookkeeper/journal0
+        - name: journal1
+          size: 10Gi
+          storageClassName: fast-ssd
+          mountPath: /pulsar/data/bookkeeper/journal1
+    ledgers:
+      name: ledgers
+      size: 50Gi
+      local_storage: false
+      storageClassName: fast-ssd
+      useMultiVolumes: true
+      multiVolumes:
+        - name: ledgers0
+          size: 50Gi
+          storageClassName: fast-ssd
+          mountPath: /pulsar/data/bookkeeper/ledgers0
+        - name: ledgers1
+          size: 50Gi
+          storageClassName: fast-ssd
+          mountPath: /pulsar/data/bookkeeper/ledgers1
+    # Dedicated index volume -- exercises bookkeeper-statefulset.yaml
+    # `if .Values.bookkeeper.volumes.index.enabled` branches.
+    index:
+      enabled: true
+      name: index
+      size: 10Gi
+      local_storage: false
+      storageClassName: fast-ssd
+      mountPath: /pulsar/data/bookkeeper/index
+    useSingleCommonVolume: false   # patch1 flips this on
+  # Two index directories -- exercises the comma-split init container loop in
+  # bookkeeper-statefulset.yaml when indexDirectories is non-empty.
+  indexDirectories:
+    - /pulsar/data/bookkeeper/index/a
+    - /pulsar/data/bookkeeper/index/b
+
+# -----------------------------------------------------------------------------
+# Autorecovery -- multi-element lists/maps + custom timeout
+# -----------------------------------------------------------------------------
+autorecovery:
+  podMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 30s
+    metricRelabelings:
+      - action: labeldrop
+        regex: cluster
+      - action: labeldrop
+        regex: pod
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: recovery
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-ar-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-ar-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-ar-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-ar-2
+      mountPath: /extra/cm2
+      readOnly: true
+  initContainersExtraVolumeMounts:
+    - name: extra-cm-ar-1
+      mountPath: /init/extra1
+      readOnly: true
+    - name: extra-cm-ar-2
+      mountPath: /init/extra2
+      readOnly: true
+
+# -----------------------------------------------------------------------------
+# pulsar_metadata -- exercise PIP-45 metadata driver toggles + extra init cmd
+# -----------------------------------------------------------------------------
+pulsar_metadata:
+  bookkeeper:
+    usePulsarMetadataClientDriver: true
+    usePulsarMetadataBookieDriver: true
+extraInitCommand: "echo 'extra init command'"
+
+# -----------------------------------------------------------------------------
+# Standalone -- left disabled (mutually exclusive with the distributed setup)
+# -----------------------------------------------------------------------------
+standalone:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Broker -- autoscaling + all probes + multi-element lists/maps + storageOffload
+# Exercises: broker-hpa.yaml (the `if not .Values.broker.autoscaling.enabled`
+#            branch in broker-statefulset.yaml line 34 takes the
+#            "no-replicas" path), and broker-statefulset.yaml's storageOffload
+#            block.
+# -----------------------------------------------------------------------------
+broker:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+  podMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 30s
+    dropUnderscoreCreatedMetrics:
+      enabled: true
+      excludePatterns:
+        - pulsar_topic_load_times_created
+        - pulsar_subscription_back_log_created
+    metricRelabelings:
+      - action: labeldrop
+        regex: cluster
+      - action: labeldrop
+        regex: pod
+  probe:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true   # off by default -- exercises the startup probe block
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: broker
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-br-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-br-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-br-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-br-2
+      mountPath: /extra/cm2
+      readOnly: true
+  extraEnvs:
+    - name: BROKER_EXTRA_FOO
+      value: foo
+    - name: BROKER_EXTRA_BAR
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  service_account:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/broker-irsa
+      iam.gke.io/gcp-service-account: broker-gcp-sa@example.iam.gserviceaccount.com
+  # Tiered storage offload block -- exercises broker-statefulset.yaml's
+  # storageOffload mounting and broker-configmap.yaml `range` over keys.
+  storageOffload:
+    driver: aws-s3
+    bucket: pulsar-offload-test
+    region: us-east-1
+    secret: pulsar-offload-aws-creds
+    maxBlockSizeInBytes: "64000000"
+    readBufferSizeInBytes: "1000000"
+    managedLedgerOffloadDeletionLagMs: "14400000"
+    managedLedgerOffloadAutoTriggerSizeThresholdBytes: "-1"
+
+# -----------------------------------------------------------------------------
+# Functions worker (embedded in broker)
+# -----------------------------------------------------------------------------
+functions:
+  useBookieAsStateStore: false
+  rbac:
+    limit_to_namespace: true
+
+# -----------------------------------------------------------------------------
+# Proxy -- all probes + ingress with TLS + multi-element lists/maps
+# Exercises: proxy-ingress.yaml TLS branch, proxy-hpa.yaml is gated by
+#            `proxy.autoscaling.enabled` (left disabled here -- exercising
+#            that path requires conflicting StatefulSet replicaCount logic
+#            and is covered indirectly by other scenarios).
+# -----------------------------------------------------------------------------
+proxy:
+  replicaCount: 3
+  podMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 30s
+    dropUnderscoreCreatedMetrics:
+      enabled: true
+      excludePatterns:
+        - pulsar_proxy_new_connections_created
+        - pulsar_proxy_active_connections_created
+    metricRelabelings:
+      - action: labeldrop
+        regex: cluster
+      - action: labeldrop
+        regex: pod
+  probe:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true   # off by default
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: proxy
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-px-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-px-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-px-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-px-2
+      mountPath: /extra/cm2
+      readOnly: true
+  extraEnvs:
+    - name: PROXY_EXTRA_FOO
+      value: foo
+    - name: PROXY_EXTRA_BAR
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+  service:
+    type: ClusterIP
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: ca-issuer
+    ingressClassName: nginx
+    tls:
+      enabled: true
+      secretName: proxy-ingress-tls
+    hostname: pulsar.example.com
+    path: /
+    pathType: Prefix
+
+# -----------------------------------------------------------------------------
+# Toolset -- multi-element lists/maps
+# -----------------------------------------------------------------------------
+toolset:
+  useProxy: true
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: toolset
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-ts-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-ts-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-ts-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-ts-2
+      mountPath: /extra/cm2
+      readOnly: true
+
+# -----------------------------------------------------------------------------
+# Oxia -- left disabled here (Zookeeper is the metadata store in the base
+# render). patch1 flips this on. Multi-element ports and tolerations stay
+# defined so the values are exercised when patch1 is layered.
+# Exercises (in patch1): oxia-coordinator-*.yaml, oxia-server-*.yaml.
+# -----------------------------------------------------------------------------
+oxia:
+  initialShardCount: 3
+  replicationFactor: 3
+  coordinator:
+    appAnnotations:
+      deploy/owner: pulsar-team
+      deploy/policy: rolling
+    annotations:
+      prometheus.io/scrape: "true"
+      audit.k8s.io/log: "true"
+    podMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 30s
+    tolerations:
+      - key: dedicated
+        operator: Equal
+        value: oxia
+        effect: NoSchedule
+      - key: arch
+        operator: Equal
+        value: amd64
+        effect: NoSchedule
+    extraVolumes:
+      - name: extra-cm-ox-1
+        configMap:
+          name: extra-cm-1
+      - name: extra-cm-ox-2
+        configMap:
+          name: extra-cm-2
+    extraVolumeMounts:
+      - name: extra-cm-ox-1
+        mountPath: /extra/cm1
+        readOnly: true
+      - name: extra-cm-ox-2
+        mountPath: /extra/cm2
+        readOnly: true
+    extraContainers:
+      - name: sidecar-exporter
+        image: busybox:1.36
+        command: ["sh", "-c", "while true; do sleep 30; done"]
+      - name: sidecar-tail
+        image: busybox:1.36
+        command: ["sh", "-c", "tail -f /dev/null"]
+    allowExtraAuthorities:
+      - oxia-internal.example.com:6648
+      - oxia-external.example.com:6648
+  server:
+    appAnnotations:
+      deploy/owner: pulsar-team
+      deploy/policy: rolling
+    annotations:
+      prometheus.io/scrape: "true"
+      audit.k8s.io/log: "true"
+    podMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 30s
+    storageClassName: fast-ssd
+    tolerations:
+      - key: dedicated
+        operator: Equal
+        value: oxia
+        effect: NoSchedule
+      - key: arch
+        operator: Equal
+        value: amd64
+        effect: NoSchedule
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+
+# -----------------------------------------------------------------------------
+# Pulsar Manager -- enabled with ingress + admin secret credentials
+# Exercises: pulsar-manager-statefulset.yaml, pulsar-manager-service.yaml,
+#            pulsar-manager-ingress.yaml (TLS branch),
+#            pulsar-manager-admin-secret.yaml,
+#            pulsar-manager-cluster-initialize.yaml.
+# -----------------------------------------------------------------------------
+pulsar_manager:
+  appAnnotations:
+    deploy/owner: pulsar-team
+    deploy/policy: rolling
+  annotations:
+    prometheus.io/scrape: "true"
+    audit.k8s.io/log: "true"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: pulsar-manager
+      effect: NoSchedule
+    - key: arch
+      operator: Equal
+      value: amd64
+      effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  extraVolumes:
+    - name: extra-cm-pm-1
+      configMap:
+        name: extra-cm-1
+    - name: extra-cm-pm-2
+      configMap:
+        name: extra-cm-2
+  extraVolumeMounts:
+    - name: extra-cm-pm-1
+      mountPath: /extra/cm1
+      readOnly: true
+    - name: extra-cm-pm-2
+      mountPath: /extra/cm2
+      readOnly: true
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: ca-issuer
+    ingressClassName: nginx
+    tls:
+      enabled: true
+      secretName: pulsar-manager-ingress-tls
+    hostname: pulsar-manager.example.com
+    path: /
+    pathType: Prefix
+  admin:
+    ui_username: pulsar
+    ui_password: change-me     # pragma: allowlist secret
+    db_username: pulsar
+    db_password: change-me-db  # pragma: allowlist secret
+
+# -----------------------------------------------------------------------------
+# Dekaf UI -- enabled with persistence + multi-element extras
+# Exercises: dekaf-deployment.yaml (extraContainers `range`),
+#            dekaf-persistence.yaml, dekaf-service.yaml.
+# -----------------------------------------------------------------------------
+dekaf:
+  deployment:
+    annotations:
+      deploy/owner: pulsar-team
+      deploy/policy: rolling
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      audit.k8s.io/log: "true"
+    nodeSelector:
+      disktype: ssd
+      tier: ui
+    tolerations:
+      - key: dedicated
+        operator: Equal
+        value: dekaf
+        effect: NoSchedule
+      - key: arch
+        operator: Equal
+        value: amd64
+        effect: NoSchedule
+    extraVolumes:
+      - name: extra-cm-dk-1
+        configMap:
+          name: extra-cm-1
+      - name: extra-cm-dk-2
+        configMap:
+          name: extra-cm-2
+    extraVolumeMounts:
+      - name: extra-cm-dk-1
+        mountPath: /extra/cm1
+        readOnly: true
+      - name: extra-cm-dk-2
+        mountPath: /extra/cm2
+        readOnly: true
+    extraContainers:
+      - name: dekaf-sidecar-1
+        image: busybox:1.36
+        command: ["sh", "-c", "while true; do sleep 30; done"]
+      - name: dekaf-sidecar-2
+        image: busybox:1.36
+        command: ["sh", "-c", "tail -f /dev/null"]
+    extraEnv:
+      - name: DEKAF_EXTRA_FOO
+        value: foo
+      - name: DEKAF_EXTRA_BAR
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+  persistence:
+    enabled: true
+    storageClass: fast-ssd
+    size: 2Gi
+    # Two custom labels (not "app", which would collide with the standard
+    # label injected by `pulsar.standardLabels`).
+    labels:
+      tier: ui
+      backup-tier: nightly
+    annotations:
+      backup.policy: nightly
+      prometheus.io/scrape: "true"
+    accessModes:
+      - ReadWriteOnce
+      - ReadWriteOncePod
+
+# -----------------------------------------------------------------------------
+# Victoria Metrics subchart -- left disabled here. The subchart's CRDs
+# (VMSingle, VMAgent, VMPodScrape, ...) are not part of the datreeio CRDs
+# catalog used by kubeconform, so enabling it would produce schema-validation
+# failures unrelated to the chart we're testing. With the subchart off, the
+# chart's own *-podmonitor.yaml templates emit standard
+# `monitoring.coreos.com/v1/PodMonitor` objects, which are in the catalog.
+# -----------------------------------------------------------------------------
+victoria-metrics-k8s-stack:
+  enabled: false
+  victoria-metrics-operator:
+    enabled: false
+  vmsingle:
+    enabled: false
+  vmagent:
+    enabled: false
+  vmalert:
+    enabled: false
+  alertmanager:
+    enabled: false
+  grafana:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  kubelet:
+    enabled: false
+  kubeApiServer:
+    enabled: false
+  kubeControllerManager:
+    enabled: false
+  coreDns:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeScheduler:
+    enabled: false

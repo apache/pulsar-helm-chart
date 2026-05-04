@@ -1,0 +1,172 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# =============================================================================
+# templates-all-values-patch1.yaml
+# =============================================================================
+# Overlay for `.ci/templates-all-values.yaml`. Each section flips a
+# mutually-exclusive feature so the *other* branch of an `if/else` in the
+# templates is exercised. Apply on top of the base file:
+#
+#   helm template charts/pulsar -f .ci/templates-all-values.yaml \
+#                               -f .ci/templates-all-values-patch1.yaml
+#
+# Note on YAML semantics: helm merges values files at the top level, but
+# *within* a single file YAML keys must be unique -- duplicate top-level
+# keys silently override earlier ones. Keep each top-level key declared
+# exactly once and group all overrides for a component under it.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Metadata store: Zookeeper -> Oxia
+# Exercises: oxia-coordinator-*.yaml, oxia-server-*.yaml, and the
+#            `if and .Values.components.oxia ...` branches in
+#            broker-configmap.yaml, broker-statefulset.yaml,
+#            proxy-configmap.yaml, autorecovery-configmap.yaml,
+#            bookkeeper-cluster-initialize.yaml, pulsar-cluster-initialize.yaml.
+# -----------------------------------------------------------------------------
+components:
+  zookeeper: false
+  oxia: true
+
+# -----------------------------------------------------------------------------
+# Anti-affinity: hard -> soft
+# Exercises the `else` branch of `eq .Values.<component>.affinity.type
+# "requiredDuringSchedulingIgnoredDuringExecution"` in every
+# StatefulSet / Deployment.
+# -----------------------------------------------------------------------------
+affinity:
+  type: preferredDuringSchedulingIgnoredDuringExecution
+
+# -----------------------------------------------------------------------------
+# Storage: provisioned -> local
+# Exercises the `else if and .Values.volumes.local_storage
+#                             .Values.<component>.volumes.X.local_storage`
+# storageClassName: "local-storage" branches in bookkeeper-statefulset.yaml
+# and zookeeper-statefulset.yaml volumeClaimTemplates.
+# -----------------------------------------------------------------------------
+volumes:
+  local_storage: true
+
+# -----------------------------------------------------------------------------
+# Zookeeper:
+#   - flip statefulsetUpgrade off (exercises the path where
+#     zookeeper-statefulset-upgrade.yaml renders nothing)
+#   - flip useSeparateDiskForTxlog off (exercises the single-disk branch)
+#   - clear storageClassName / storageClass so volumes.local_storage drives
+#     the storageClassName: "local-storage" branch
+# -----------------------------------------------------------------------------
+zookeeper:
+  statefulsetUpgrade:
+    enabled: false
+  volumes:
+    useSeparateDiskForTxlog: false
+    data:
+      local_storage: true
+      storageClassName: ""
+      storageClass:
+    datalog:
+      local_storage: true
+      storageClassName: ""
+      storageClass:
+
+# -----------------------------------------------------------------------------
+# Bookkeeper volumes: separate journal/ledgers (with multiVolumes) ->
+# single common volume + index. Cannot coexist with multiVolumes, so
+# explicitly disable those flags.
+# Exercises: bookkeeper-statefulset.yaml `useSingleCommonVolume` branches
+#            (volumeMounts + volumeClaimTemplates) and
+#            bookkeeper-storageclass.yaml common-volume branch.
+# -----------------------------------------------------------------------------
+bookkeeper:
+  volumes:
+    useSingleCommonVolume: true
+    journal:
+      useMultiVolumes: false
+      local_storage: true
+      storageClassName: ""
+      storageClass:
+    ledgers:
+      useMultiVolumes: false
+      local_storage: true
+      storageClassName: ""
+      storageClass:
+    index:
+      enabled: true
+      local_storage: true
+      storageClassName: ""
+      storageClass:
+    common:
+      name: common
+      size: 60Gi
+      local_storage: true
+      storageClassName: ""
+      storageClass:
+
+# -----------------------------------------------------------------------------
+# Broker: flip statefulsetUpgrade off
+# Exercises: the path where broker-statefulset-upgrade.yaml renders nothing.
+# -----------------------------------------------------------------------------
+broker:
+  statefulsetUpgrade:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Cert-manager internal issuer: selfsigning -> ca
+# Exercises: tls-cert-internal-issuer.yaml's unconditional CA Issuer block
+#            (the selfsigning Issuer + Certificate block is skipped).
+# Note: when type == "ca" the chart hard-fails if certs.issuers.ca.kind is
+# not "Issuer", so this stays as "Issuer".
+# -----------------------------------------------------------------------------
+certs:
+  internal_issuer:
+    type: ca
+  issuers:
+    ca:
+      name: ca-issuer
+      secretName: ca-secret
+      kind: Issuer
+
+# -----------------------------------------------------------------------------
+# Auth:
+#   - JWT (symmetric) -> OpenID Connect (exercises the openid path in
+#     broker/proxy/standalone configmaps; jwt-secret-init.yaml renders
+#     nothing because JWT is fully off)
+#   - drop manager superuser (exercises the `if .auth.superUsers.manager`
+#     branches in pulsar-manager-cluster-initialize.yaml /
+#     broker-configmap.yaml that omit the manager-token wiring)
+# -----------------------------------------------------------------------------
+auth:
+  authentication:
+    jwt:
+      enabled: false
+      generateSecrets:
+        enabled: false
+    openid:
+      enabled: true
+      openIDAllowedTokenIssuers:
+        - https://issuer-a.example.com/realms/pulsar
+        - https://issuer-b.example.com/realms/pulsar
+      openIDAllowedAudiences:
+        - account
+        - pulsar
+      openIDRoleClaim: sub
+      openIDRequireIssuersUseHttps: "true"
+  superUsers:
+    manager: ""

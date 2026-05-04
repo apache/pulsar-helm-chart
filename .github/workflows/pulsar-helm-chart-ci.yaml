@@ -166,6 +166,57 @@ jobs:
             done
           done
 
+      - name: Validate "all features enabled" helm template renders cleanly
+        # Renders the chart with .ci/templates-all-values.yaml (every optional
+        # feature on, multi-element lists/maps everywhere) and the patch1
+        # overlay (mutually-exclusive flips: zookeeper -> oxia, JWT symmetric
+        # -> OpenID, selfsigning issuer -> CA issuer, multiVolumes -> single
+        # common volume, hard -> soft anti-affinity, ...). Catches indent /
+        # `range` / `toYaml | nindent` bugs that no individual scenario file
+        # in .ci/clusters/ would surface on its own.
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: |
+          PULSAR_CHART_HOME=$(pwd)
+          source ${PULSAR_CHART_HOME}/hack/common.sh
+          source ${PULSAR_CHART_HOME}/.ci/helm.sh
+          hack::ensure_kubectl
+          hack::ensure_helm
+          hack::ensure_kubeconform
+          ci::helm_repo_add
+          helm dependency build charts/pulsar
+          set -o pipefail
+          kube_version=1.34.0
+          schema_crd_url='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+          render_dir="$RUNNER_TEMP/templates-all-values"
+          render_dir_patch1="$RUNNER_TEMP/templates-all-values-patch1"
+          rm -rf "$render_dir" "$render_dir_patch1"
+          mkdir -p "$render_dir" "$render_dir_patch1"
+
+          echo "::group::helm template (.ci/templates-all-values.yaml)"
+          helm template charts/pulsar \
+            --kube-version $kube_version \
+            --values .ci/templates-all-values.yaml \
+            --output-dir "$render_dir"
+          echo "::endgroup::"
+
+          echo "::group::kubeconform validate (base)"
+          kubeconform -schema-location default -schema-location "$schema_crd_url" \
+            -strict -kubernetes-version $kube_version -summary "$render_dir"
+          echo "::endgroup::"
+
+          echo "::group::helm template (.ci/templates-all-values.yaml + patch1)"
+          helm template charts/pulsar \
+            --kube-version $kube_version \
+            --values .ci/templates-all-values.yaml \
+            --values .ci/templates-all-values-patch1.yaml \
+            --output-dir "$render_dir_patch1"
+          echo "::endgroup::"
+
+          echo "::group::kubeconform validate (patch1)"
+          kubeconform -schema-location default -schema-location "$schema_crd_url" \
+            -strict -kubernetes-version $kube_version -summary "$render_dir_patch1"
+          echo "::endgroup::"
+
       - name: Validate kustomize yaml for extra new lines in pulsar-init commands
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
