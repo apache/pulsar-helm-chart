@@ -341,14 +341,14 @@ function ci::test_pulsar_producer_consumer() {
     echo "Testing with ${action}"
     if [[ "$(ci::helm_values_for_deployment | yq .standalone.enabled)" == "true" ]]; then
       if [[ "$(ci::helm_values_for_deployment | yq .tls.enabled)" == "true" ]]; then
-        PROXY_URL="pulsar+ssl://pulsar-ci-standalone:6651"
+        PROXY_URL="pulsar+ssl://pulsar-ci-standalone.${NAMESPACE}.svc.cluster.local:6651"
       else
-        PROXY_URL="pulsar://pulsar-ci-standalone:6650"
+        PROXY_URL="pulsar://pulsar-ci-standalone.${NAMESPACE}.svc.cluster.local:6650"
       fi
     elif [[ "$(ci::helm_values_for_deployment | yq .tls.proxy.enabled)" == "true" ]]; then
-      PROXY_URL="pulsar+ssl://pulsar-ci-proxy:6651"
+      PROXY_URL="pulsar+ssl://pulsar-ci-proxy.${NAMESPACE}.svc.cluster.local:6651"
     else
-      PROXY_URL="pulsar://pulsar-ci-proxy:6650"
+      PROXY_URL="pulsar://pulsar-ci-proxy.${NAMESPACE}.svc.cluster.local:6650"
     fi
     set -x
     if [[ "${action}" == "produce" || "${action}" == "produce-consume" ]]; then
