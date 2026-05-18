@@ -107,7 +107,10 @@ spec:
 {{ toYaml .tlsConfig.dnsNames | indent 4 }}
 {{- end }}
     {{- if or (eq .componentConfig.component "broker") (eq .componentConfig.component "zookeeper") }}
+    - {{ printf "*.%s-%s-headless.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
     - {{ printf "%s-%s-headless.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
+    {{- else }}
+    - {{ printf "*.%s-%s.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
     {{- end }}
     - {{ printf "%s-%s.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
     - {{ printf "%s-%s" (include "pulsar.fullname" .root) .componentConfig.component | quote }}
