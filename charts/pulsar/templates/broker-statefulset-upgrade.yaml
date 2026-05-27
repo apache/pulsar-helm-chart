@@ -112,4 +112,7 @@ spec:
               else
                 echo "Chart version $CHART_LABEL is 4.6.0 or newer, skipping delete"
               fi
+            {{- if .Values.extraInitCommand }}
+              {{ .Values.extraInitCommand }}
+            {{- end }}
 {{- end }}
