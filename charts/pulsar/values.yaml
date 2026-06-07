@@ -222,7 +222,7 @@ images:
     pullPolicy:
   oxia:
     repository: oxia/oxia
-    tag: 0.16.4
+    tag: 0.16.6
     pullPolicy:
   standalone:
     # uses defaultPulsarImageRepository when unspecified
