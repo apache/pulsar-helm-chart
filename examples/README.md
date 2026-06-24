@@ -147,6 +147,7 @@ in examples that deploy a broker.
 | [`values-no-persistence.yaml`](values-no-persistence.yaml) | **Ephemeral.** Deploys stateful components with `emptyDir` instead of PVCs. All data is lost on pod restart / cluster shutdown. Sets `autoSkipNonRecoverableData` so BookKeeper tolerates the lost state. For throwaway testing/CI only. |
 | [`values-bookkeeper-aws.yaml`](values-bookkeeper-aws.yaml) | A 3-bookie cluster using AWS EBS (`gp2`) `PersistentVolumeClaims` for the BookKeeper journal and ledgers. Monitoring stack disabled. |
 | [`values-zookeeper-aws.yaml`](values-zookeeper-aws.yaml) | A configuration store running only ZooKeeper backed by AWS EBS (`gp2`) volumes, including the `externalZookeeperServerList` option for building a ZooKeeper cluster that spans namespaces/clusters. |
+| [`values-faster-disk-cleanup.yaml`](values-faster-disk-cleanup.yaml) | Tune BookKeeper and the broker to reclaim disk space faster: more frequent BookKeeper compaction/garbage collection with a smaller journal, and faster broker managed-ledger rollover so closed ledgers are trimmed sooner. Handy for space-constrained or test clusters. These are the same cleanup settings bundled into `values-testing.yaml`. |
 
 ### Security (TLS and authentication)
 
