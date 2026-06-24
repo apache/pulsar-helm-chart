@@ -21,8 +21,8 @@
 affinity:
   anti_affinity: false
 
-# disable auto recovery
 components:
+  # disable auto recovery
   autorecovery: false
 
 zookeeper:
