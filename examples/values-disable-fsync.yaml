@@ -17,30 +17,12 @@
 # under the License.
 #
 
-# disabled AntiAffinity
-affinity:
-  anti_affinity: false
-
-victoria-metrics-k8s-stack:
-  grafana:
-    adminPassword: verysecureword123
-
 bookkeeper:
   configData:
-    # more aggressive disk cleanup
-    journalMaxSizeMB: "256"
-    majorCompactionInterval: "600"
-    minorCompactionInterval: "300"
-    compactionRateByEntries: "5000"
-    gcWaitTime: "60000"
+    # disable fsync for testing purposes (not recommended for production)
+    journalSyncData: "false"
 
-broker:
+zookeeper:
   configData:
-    # more aggressive disk cleanup
-    managedLedgerMinLedgerRolloverTimeMinutes: "1"
-    managedLedgerMaxLedgerRolloverTimeMinutes: "5"
-    # configure deletion of inactive topics
-    brokerDeleteInactiveTopicsMaxInactiveDurationSeconds: "86400"
-
-proxy:
-  replicaCount: 1
+    # disable fsync for testing purposes (not recommended for production)
+    forceSync: "false"

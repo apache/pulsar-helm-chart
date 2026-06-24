@@ -23,9 +23,10 @@ pulsar_metadata:
   configurationStore: pulsar-cs-zookeeper
   configurationStoreMetadataPrefix: "/configuration-store"
 
-## disable pulsar-manager
+## use the Dekaf UI instead of pulsar-manager
 components:
-  pulsar_manager: true
+  pulsar_manager: false
+  dekaf: true
 
 ## disable monitoring stack
 victoria-metrics-k8s-stack:

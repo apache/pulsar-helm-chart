@@ -1,0 +1,61 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Faster disk cleanup settings for BookKeeper and the Pulsar broker.
+# Useful for testing scenarios where disk space is limited and you
+# want to reclaim disk space as quickly as possible.
+# These values are tuned for testing and are not optimal for production use.
+
+bookkeeper:
+  configData:
+    # roll the journal file more frequently
+    journalMaxSizeMB: "256"
+    # don't keep any journal backups, since we want to clean up disk space as fast as possible
+    journalMaxBackups: "0" # default 5
+    # configure the entry log size limit
+    logSizeLimit: "536870912" # 512MB, default 1073741824 (1024MB)
+    # configure the data compaction (bookie entry log compaction and gc) settings
+    # https://bookkeeper.apache.org/docs/reference/config#garbage-collection-settings
+    # https://bookkeeper.apache.org/docs/reference/config#entry-log-compaction-settings
+    minorCompactionThreshold: "0.2" # default 0.2 (use default)
+    minorCompactionInterval: "300" # default 3600 seconds (5 minutes vs default 1 hour)
+    majorCompactionThreshold: "0.8" # default 0.8 (use default)
+    majorCompactionInterval: "900" # default 86400 seconds (15 minutes vs default 1 day)
+    gcWaitTime: "60000" # default 600000 milli-seconds (1 minute vs default 10 minutes)
+    isForceGCAllowWhenNoSpace: "true" # default false
+    # disk utilization configuration
+    # https://bookkeeper.apache.org/docs/reference/config#disk-utilization
+    # Make sure that diskUsageLwmThreshold <= diskUsageWarnThreshold <= diskUsageThreshold
+    diskUsageLwmThreshold: "0.85" # default 0.95 (inherits diskUsageThreshold); GC keeps running until usage drops below this
+    diskUsageWarnThreshold: "0.9" # default 0.90 (use default)
+    diskUsageThreshold: "0.95" # default 0.95 (use default); bookie goes read-only above this
+    diskCheckInterval: "5000" # value is in milliseconds; check every 5s vs default 10s (10000)
+
+broker:
+  configData:
+    # more aggressive disk cleanup
+    managedLedgerMinLedgerRolloverTimeMinutes: "1"
+    managedLedgerMaxLedgerRolloverTimeMinutes: "5"
+    managedLedgerMaxSizePerLedgerMbytes: "256"
+    managedLedgerCursorRolloverTimeInSeconds: "900"
+    # inactive topic deletion is already enabled by default
+    # (brokerDeleteInactiveTopicsEnabled=true, mode delete_when_no_subscriptions, checked every 60s).
+    # Uncomment to set how long a topic may stay inactive before deletion;
+    # use a SMALL value for faster cleanup (default falls back to brokerDeleteInactiveTopicsFrequencySeconds=60).
+    # brokerDeleteInactiveTopicsMaxInactiveDurationSeconds: "60"

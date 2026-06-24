@@ -20,3 +20,6 @@
 components:
   zookeeper: false
   oxia: true
+  # disable functions for oxia tests since there's no support for Oxia in 
+  # BookKeeperPackagesStorage which requires Zookeeper
+  functions: false  

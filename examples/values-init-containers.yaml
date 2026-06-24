@@ -33,9 +33,11 @@ components:
   proxy: true
   # toolset
   toolset: true
-  # pulsar manager
-  pulsar_manager: true
-  
+  # pulsar manager (replaced by the Dekaf UI)
+  pulsar_manager: false
+  # dekaf UI
+  dekaf: true
+
 zookeeper:
   initContainers:
     - name: pre-startup-checks
@@ -72,8 +74,5 @@ toolset:
       image: busybox:1.28
       command: ['sh', '-c', 'echo "The toolset initContainers work as expected"']
 
-pulsar_manager:
-  initContainers:
-    - name: pre-startup-checks
-      image: busybox:1.28
-      command: ['sh', '-c', 'echo "The pulsar_manager initContainers work as expected"']
+# Note: the Dekaf UI deployment does not support initContainers, so it is not
+# included in this example. The components above cover initContainers support.

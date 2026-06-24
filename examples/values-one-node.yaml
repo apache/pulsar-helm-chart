@@ -21,9 +21,15 @@
 affinity:
   anti_affinity: false
 
-# disable auto recovery
 components:
+  # disable auto recovery
   autorecovery: false
+
+oxia:
+  initialShardCount: 3
+  replicationFactor: 1
+  server:
+    replicas: 1
 
 zookeeper:
   replicaCount: 1
@@ -34,9 +40,6 @@ bookkeeper:
 broker:
   replicaCount: 1
   configData:
-    ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
-    ## without persistence
-    autoSkipNonRecoverableData: "true"
     # storage settings
     managedLedgerDefaultEnsembleSize: "1"
     managedLedgerDefaultWriteQuorum: "1"
