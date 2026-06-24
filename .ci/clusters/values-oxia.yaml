@@ -20,9 +20,21 @@
 components:
   zookeeper: false
   oxia: true
-  # disable functions for oxia tests since there's no support for Oxia in 
-  # BookKeeperPackagesStorage which requires Zookeeper
-  functions: false
+  # Functions are enabled on Oxia together with broker.packageManagement (FileSystemPackagesStorage).
+  # The default BookKeeper package storage requires ZooKeeper, but FileSystemPackagesStorage does not, so
+  # this validates Oxia + FileSystemPackagesStorage end to end: the function smoke test
+  # (ci::test_pulsar_function) creates a function from a JAR, which uploads the package via the broker's
+  # FileSystem-backed Packages Management Service.
+  functions: true
+
+# Host the Packages Management Service on the broker with FileSystemPackagesStorage so functions work on
+# Oxia. broker.replicaCount is 1 in CI (.ci/values-common.yaml), so the default ReadWriteOnce PVC on the
+# kind default StorageClass is sufficient (no shared filesystem needed).
+broker:
+  packageManagement:
+    enabled: true
+    fileSystemStorage:
+      enabled: true
 
 oxia:
   initialShardCount: 3

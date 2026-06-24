@@ -384,6 +384,57 @@ The default user is `pulsar` and you can find out the password with this command
 kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
 ```
 
+## Pulsar Functions package storage (required for Oxia)
+
+The Pulsar **Packages Management Service** — which stores uploaded function packages
+(`pulsar-admin functions create --jar ...`) — runs on the **broker**. Its default storage provider,
+`BookKeeperPackagesStorage`, relies on DistributedLog metadata in **ZooKeeper**, so it does **not** work
+when [Oxia](https://github.com/streamnative/oxia) is used as the metadata store (`components.oxia: true`).
+
+To run Pulsar Functions on Oxia you must enable `FileSystemPackagesStorage` on the broker. The Packages
+Management Service is configured in two levels (like `auth.authentication` / `auth.authentication.jwt`):
+`broker.packageManagement.enabled` turns the service on, and
+`broker.packageManagement.fileSystemStorage.enabled` selects the FileSystem provider:
+
+```yaml
+components:
+  oxia: true
+  functions: true
+broker:
+  packageManagement:
+    enabled: true
+    fileSystemStorage:
+      enabled: true
+```
+
+This configures the broker with `enablePackagesManagement=true` and
+`packagesManagementStorageProvider=FileSystemPackagesStorageProvider`, and mounts a **shared
+`PersistentVolumeClaim`** on every broker pod as the package storage directory. If `components.functions`
+is enabled with Oxia but FileSystemPackagesStorage is not enabled, the chart **fails the Helm install** with
+an explanatory error (the default BookKeeper provider would not work without ZooKeeper).
+
+### Choosing a volume
+
+`FileSystemPackagesStorage` is a directory on disk, so the volume backing it determines how many broker
+replicas can use it (all keys below are under `broker.packageManagement.fileSystemStorage`):
+
+- **Single broker / single-node dev clusters (e.g. minikube):** the default `persistentVolumeClaim` is a
+  `ReadWriteOnce` claim on the cluster's default `StorageClass` — no extra configuration is required.
+- **Multiple broker replicas:** the package directory must be on a **`ReadWriteMany` shared filesystem**.
+  Provision one with a cloud CSI driver, set `persistentVolumeClaim: {}` so the chart does not create a
+  claim, and point `claimName` at the pre-created PVC:
+
+  | Cloud | CSI driver | Reference |
+  | ----- | ---------- | --------- |
+  | GCP / GKE | Filestore CSI (`filestore.csi.storage.gke.io`) | <https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver> |
+  | AWS / EKS | Amazon EFS CSI (`efs.csi.aws.com`) | <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html> |
+  | Azure / AKS | Azure Files CSI (`file.csi.azure.com`) | <https://learn.microsoft.com/azure/aks/azure-files-csi> |
+
+`broker.packageManagement.fileSystemStorage` can also create the `StorageClass`, `PersistentVolume`, and
+`PersistentVolumeClaim` directly from raw YAML — only `apiVersion`/`kind` are fixed by the chart, and a
+value of `{}` creates nothing. See the `broker.packageManagement` section in
+[`values.yaml`](charts/pulsar/values.yaml) and [`examples/values-oxia.yaml`](examples/values-oxia.yaml).
+
 ## Grafana Dashboards
 
 The Apache Pulsar Helm Chart uses the `victoria-metrics-k8s-stack` Helm Chart to deploy Grafana.

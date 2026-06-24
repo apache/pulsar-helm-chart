@@ -146,6 +146,11 @@ data:
   {{- end }}
   {{- if .Values.components.functions }}
   functionsWorkerEnabled: "true"
+  {{- if .Values.broker.packageManagement.enabled }}
+  # store function packages via the broker's Packages Management Service (FileSystemPackagesStorage)
+  # instead of BookKeeper/DLog, so functions work without ZooKeeper (e.g. with Oxia)
+  PF_functionsWorkerEnablePackageManagement: "true"
+  {{- end }}
   {{- if .Values.functions.useBookieAsStateStore }}
   PF_stateStorageServiceUrl: "bk://{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}:{{ .Values.bookkeeper.ports.statestore }}"
   {{- end }}
@@ -183,6 +188,21 @@ data:
   {{- else }}
   PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
+  {{- end }}
+  {{- end }}
+
+  # Package Management Service
+  # The broker hosts the Packages Management Service (packageManagement.enabled). With
+  # fileSystemStorage.enabled it uses FileSystemPackagesStorage, which lets Functions store packages without
+  # ZooKeeper (works with Oxia); the storage path is a shared volume mounted on every broker pod (see
+  # broker-statefulset.yaml / templates/broker-package-storage.yaml). Otherwise the broker keeps its default
+  # BookKeeperPackagesStorage provider.
+  {{- if .Values.broker.packageManagement.enabled }}
+  enablePackagesManagement: "true"
+  {{- if .Values.broker.packageManagement.fileSystemStorage.enabled }}
+  packagesManagementStorageProvider: "org.apache.pulsar.packages.management.storage.filesystem.FileSystemPackagesStorageProvider"
+  # STORAGE_PATH is not a broker.conf key, so add it to the properties map via PULSAR_PREFIX_
+  PULSAR_PREFIX_STORAGE_PATH: "{{ .Values.broker.packageManagement.fileSystemStorage.storagePath }}"
   {{- end }}
   {{- end }}
 

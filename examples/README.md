@@ -136,8 +136,41 @@ in examples that deploy a broker.
 
 | File | Description |
 | ---- | ----------- |
-| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled (`components.functions: false`) because their BookKeeper package storage still requires ZooKeeper. |
+| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are enabled (`components.functions: true`) together with broker-hosted [`FileSystemPackagesStorage`](#package-storage-filesystempackagesstorage) (`broker.packageManagement.enabled` + `fileSystemStorage.enabled`), since the default BookKeeper package storage requires ZooKeeper. |
 | [`values-cs.yaml`](values-cs.yaml) | Deploy **only** ZooKeeper as a shared configuration store (`metadataPrefix: /configuration-store`); all other components are disabled. Intended to be combined with `values-local-cluster.yaml`. |
+
+### Functions
+
+Pulsar Functions run in a worker that is **embedded in the broker** (`components.functions: true`).
+
+#### Package storage (FileSystemPackagesStorage)
+
+The Pulsar Packages Management Service — used to store uploaded function packages
+(`pulsar-admin functions create --jar ...`) — runs on the **broker**. Its default `BookKeeperPackagesStorage`
+requires ZooKeeper, so it does **not** work with Oxia. To support uploaded packages without ZooKeeper, enable
+the service and the FileSystem provider (two levels, like `auth.authentication` / `auth.authentication.jwt`):
+`broker.packageManagement.enabled: true` and `broker.packageManagement.fileSystemStorage.enabled: true`. This
+configures the broker to use **`FileSystemPackagesStorage`** on a shared volume mounted on every broker pod.
+(Enabling functions with Oxia but **without** FileSystemPackagesStorage fails chart rendering with a clear
+error.)
+
+All keys below are under `broker.packageManagement.fileSystemStorage`:
+
+- **Single broker / dev (minikube):** the default `persistentVolumeClaim` creates a `ReadWriteOnce` PVC on the
+  cluster's default `StorageClass` — no extra setup.
+- **Multiple broker replicas:** the volume must be a **`ReadWriteMany` shared filesystem**. Provision one with
+  a cloud CSI driver, set `persistentVolumeClaim: {}` (so the chart creates no claim), and reference the
+  pre-created PVC via `claimName`:
+  - **GCP / GKE** — Filestore CSI (`filestore.csi.storage.gke.io`):
+    <https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver>
+  - **AWS / EKS** — Amazon EFS CSI (`efs.csi.aws.com`):
+    <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html>
+  - **Azure / AKS** — Azure Files CSI (`file.csi.azure.com`):
+    <https://learn.microsoft.com/azure/aks/azure-files-csi>
+
+`broker.packageManagement.fileSystemStorage` can also create the `StorageClass`, `PersistentVolume`, and
+`PersistentVolumeClaim` directly from raw YAML — only `apiVersion`/`kind` are fixed by the chart, and a value
+of `{}` creates nothing.
 
 ### Storage
 

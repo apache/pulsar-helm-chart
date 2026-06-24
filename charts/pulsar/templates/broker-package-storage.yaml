@@ -1,0 +1,55 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Storage objects for the broker's FileSystemPackagesStorage (Packages Management Service).
+# Each of broker.packageManagement.fileSystemStorage.{storageClass,persistentVolume,persistentVolumeClaim} is
+# rendered verbatim from values with only apiVersion and kind fixed by the chart; an empty value ({}) renders
+# nothing. This lets you either create the objects here (default: a minikube-friendly PVC on the default
+# StorageClass) or set them to {} and reference a pre-created PVC (e.g. a ReadWriteMany cloud filesystem) via
+# broker.packageManagement.fileSystemStorage.claimName.
+{{- if and .Values.components.broker (not .Values.standalone.enabled) .Values.broker.packageManagement.enabled .Values.broker.packageManagement.fileSystemStorage.enabled }}
+{{- $pm := .Values.broker.packageManagement.fileSystemStorage }}
+{{- if $pm.storageClass }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+{{ toYaml (omit $pm.storageClass "apiVersion" "kind") | trim }}
+---
+{{- end }}
+{{- if $pm.persistentVolume }}
+apiVersion: v1
+kind: PersistentVolume
+{{ toYaml (omit $pm.persistentVolume "apiVersion" "kind") | trim }}
+---
+{{- end }}
+{{- if $pm.persistentVolumeClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  {{- if not (dig "metadata" "namespace" "" $pm.persistentVolumeClaim) }}
+  namespace: {{ template "pulsar.namespace" . }}
+  {{- end }}
+  {{- with $pm.persistentVolumeClaim.metadata }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- with $pm.persistentVolumeClaim.spec }}
+spec:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
