@@ -27,19 +27,38 @@ They are **not** complete production configurations — start from the chart
 [`values.yaml`](../charts/pulsar/values.yaml) and layer one or more of these
 examples on top.
 
+## Finding all available values
+
+These examples only set the keys that differ from the defaults. The full list of
+configurable values, with their defaults and inline documentation, is the chart
+`values.yaml`. You can view it in any of these ways:
+
+```bash
+# from the published chart (after `helm repo add apachepulsar https://pulsar.apache.org/charts`)
+helm show values apachepulsar/pulsar
+# pin a specific chart version with --version, e.g.
+helm show values apachepulsar/pulsar --version 4.6.1
+
+# or from a local checkout
+helm show values charts/pulsar
+```
+
+The latest version is also browsable on the `master` branch:
+<https://github.com/apache/pulsar-helm-chart/blob/master/charts/pulsar/values.yaml>
+
 ## How to use
 
 Pass an example to `helm install`/`helm upgrade` with `-f`:
 
 ```bash
-helm install pulsar apache/pulsar -f examples/values-one-node.yaml
+helm install pulsar apachepulsar/pulsar -f examples/values-one-node.yaml
 ```
 
 Examples are composable — pass `-f` multiple times and later files win:
 
 ```bash
 # A single-node cluster secured with self-signed TLS and JWT auth
-helm install pulsar apache/pulsar \
+helm install pulsar apachepulsar/pulsar \
   -f examples/values-one-node.yaml \
   -f examples/values-tls-selfsigned.yaml \
   -f examples/values-jwt-symmetric.yaml
@@ -50,6 +69,40 @@ what an example produces:
 
 ```bash
 helm template pulsar charts/pulsar -f examples/values-one-node.yaml
+```
+
+## Merging examples into a single file
+
+Repeated `-f` flags are usually all you need, but if you want a single merged
+values file (for review, for `helm template`, or to hand to other tooling) you
+can use [`merge-values.sh`](merge-values.sh). It deep-merges the given files
+(later files win, the same precedence as `-f`) and strips the license header:
+
+```bash
+# from the examples/ directory; requires yq (https://github.com/mikefarah/yq)
+./merge-values.sh values-jwt-asymmetric.yaml values-oxia.yaml values-one-node.yaml > merged-values.yaml
+helm install pulsar apachepulsar/pulsar -f merged-values.yaml
+```
+
+Pass `--download`/`-d` to fetch the files by name from the `examples/` directory
+on the `master` branch (via `curl`) instead of reading them from a local
+checkout:
+
+```bash
+./merge-values.sh -d values-jwt-asymmetric.yaml values-oxia.yaml values-one-node.yaml > merged-values.yaml
+```
+
+Combined with `-d`, the script itself can be fetched with `curl`, so no checkout
+is needed at all:
+
+```bash
+# download the script and make it executable
+curl -fsSL https://raw.githubusercontent.com/apache/pulsar-helm-chart/refs/heads/master/examples/merge-values.sh -o merge-values.sh
+chmod +x merge-values.sh
+
+# -d downloads the named values files from master and merges them to stdout
+./merge-values.sh -d values-jwt-symmetric.yaml values-oxia.yaml values-one-node.yaml > merged-values.yaml
+helm install pulsar apachepulsar/pulsar -f merged-values.yaml
 ```
 
 ## A note on persistence
