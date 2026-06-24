@@ -25,6 +25,16 @@ components:
   # disable auto recovery
   autorecovery: false
 
+oxia:
+  initialShardCount: 3
+  replicationFactor: 1
+  server:
+    replicas: 1
+    cpuLimit: 333m
+    memoryLimit: 200Mi
+    dbCacheSizeMb: 100
+    storageSize: 1Gi
+
 zookeeper:
   replicaCount: 1
 
