@@ -101,8 +101,8 @@ in examples that deploy a broker.
 | ---- | ----------- |
 | [`values-tls-selfsigned.yaml`](values-tls-selfsigned.yaml) | Enable TLS for proxy, broker and ZooKeeper using a self-signed internal cert-manager issuer. Requires [cert-manager](https://cert-manager.io/). |
 | [`values-tls-ca.yaml`](values-tls-ca.yaml) | Enable TLS (including the bookie) using a CA issuer that references an existing `ca-key-pair` secret, with custom DNS SANs for the proxy. Requires cert-manager. |
-| [`values-jwt-symmetric.yaml`](values-jwt-symmetric.yaml) | Enable JWT authentication and authorization using a symmetric (shared secret) key (`usingSecretKey: true`). |
-| [`values-jwt-asymmetric.yaml`](values-jwt-asymmetric.yaml) | Enable JWT authentication and authorization using an asymmetric (private/public) key pair (`usingSecretKey: false`). |
+| [`values-jwt-symmetric.yaml`](values-jwt-symmetric.yaml) | Enable JWT authentication and authorization using a symmetric (shared secret) key (`usingSecretKey: true`). The signing key and per-superuser tokens are generated [in-chart](../README.md#in-chart-jwt-secret-generation) (`generateSecrets.enabled: true`), so a fully authenticated cluster deploys with a single `helm install`. |
+| [`values-jwt-asymmetric.yaml`](values-jwt-asymmetric.yaml) | Enable JWT authentication and authorization using an asymmetric (RSA private/public) key pair (`usingSecretKey: false`). The signing key pair and per-superuser tokens are generated [in-chart](../README.md#in-chart-jwt-secret-generation) (`generateSecrets.enabled: true`), so a fully authenticated cluster deploys with a single `helm install`. |
 
 ### Monitoring
 
