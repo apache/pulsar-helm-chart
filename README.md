@@ -204,8 +204,10 @@ We provide some instructions to guide you through the preparation: http://pulsar
 
 ## Deploy Pulsar to Kubernetes
 
-1. Configure your values file. The best way to know which values are available is to read the [values.yaml](./charts/pulsar/values.yaml).
+1. Configure your values file. The best way to know which values are available is to read the [values.yaml](./charts/pulsar/values.yaml)
+   (or run `helm show values apachepulsar/pulsar`).
    A best practice is to start with an empty values file and only set the keys that differ from the default configuration.
+   Ready-made example value files for common scenarios (single-node, TLS, JWT, Oxia, and more) are in [`examples/`](examples/README.md).
 
    Anti-affinity rules for Zookeeper and Bookie components require at least one node per replica. For Kubernetes clusters with less than 3 nodes,
    you must disable this feature by adding this to your initial values.yaml file:
@@ -278,6 +280,11 @@ common ones:
 - [Deploy a Pulsar cluster with JWT authentication using symmetric key](examples/values-jwt-symmetric.yaml)
 - [Deploy a Pulsar cluster with JWT authentication using asymmetric key](examples/values-jwt-asymmetric.yaml)
 
+These example files are small, focused overrides meant to be combined: pass `-f`
+multiple times (later files win), or use the [`merge-values.sh`](examples/merge-values.sh)
+helper to merge several into a single file. See [`examples/README.md`](examples/README.md)
+for the full list and usage details.
+
 ## Disabling victoria-metrics-k8s-stack components
 
 In order to disable the victoria-metrics-k8s-stack, you can add the following to your `values.yaml`.
@@ -299,8 +306,9 @@ victoria-metrics-k8s-stack:
     enabled: false
   grafana:
     enabled: false
+```
 
-Additionally, you'll need to set each component's `podMonitor` property to `false`. 
+Additionally, you'll need to set each component's `podMonitor` property to `false`.
 
 ```yaml
 # disable pod monitors
@@ -344,7 +352,8 @@ This is shown in some [examples/values-disable-monitoring.yaml](examples/values-
 
 To enable the Dekaf component:
 
-- Set the `components.dekaf` property to `true` in the Helm release `values.yaml` file.
+- Set the `components.dekaf` property to `true` in the Helm release `values.yaml` file
+  (several [example values files](examples/README.md) already enable it).
 - Run the following command to make Dekaf service accessible on your local machine.
 
 ```
