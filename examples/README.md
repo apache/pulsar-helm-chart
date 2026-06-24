@@ -148,7 +148,7 @@ in examples that deploy a broker.
 | [`values-bookkeeper-aws.yaml`](values-bookkeeper-aws.yaml) | A 3-bookie cluster using AWS EBS (`gp2`) `PersistentVolumeClaims` for the BookKeeper journal and ledgers. Monitoring stack disabled. |
 | [`values-zookeeper-aws.yaml`](values-zookeeper-aws.yaml) | A configuration store running only ZooKeeper backed by AWS EBS (`gp2`) volumes, including the `externalZookeeperServerList` option for building a ZooKeeper cluster that spans namespaces/clusters. |
 | [`values-faster-disk-cleanup.yaml`](values-faster-disk-cleanup.yaml) | Tune BookKeeper and the broker to reclaim disk space as fast as possible: frequent BookKeeper entry-log compaction and garbage collection, lower disk-utilization GC thresholds, a smaller rollover-heavy journal with no backups, and faster broker managed-ledger rollover so closed ledgers are trimmed sooner. For space-constrained test clusters; the values are not tuned for production. |
-| [`values-disable-fsync.yaml`](values-disable-fsync.yaml) | Disable fsync on the BookKeeper journal (`journalSyncData: false`) and ZooKeeper (`forceSync: false`) for faster writes in tests. Trades durability for speed — data written just before a crash or power loss can be lost — so it is **not for production**. |
+| [`values-disable-fsync.yaml`](values-disable-fsync.yaml) | Disable fsync on the BookKeeper journal (`journalSyncData: false`), ZooKeeper (`forceSync: false`) and the Oxia WAL (`walSyncData: false`, when Oxia is the metadata store) for faster writes in tests. Trades durability for speed — data written just before a crash or power loss can be lost — so it is **not for production**. |
 
 ### Security (TLS and authentication)
 

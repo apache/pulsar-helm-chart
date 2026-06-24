@@ -118,6 +118,9 @@ spec:
             - "--data-dir=/data/db"
             - "--wal-dir=/data/wal"
             - "--db-cache-size-mb={{ .Values.oxia.server.dbCacheSizeMb }}"
+            {{- if and (hasKey .Values.oxia.server "walSyncData") (eq (.Values.oxia.server.walSyncData | toString) "false") }}
+            - "--wal-sync-data=false"
+            {{- end }}
             {{- if .Values.oxia.pprofEnabled }}
             - "--profile"
             {{- end}}
