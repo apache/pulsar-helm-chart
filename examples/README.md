@@ -139,6 +139,25 @@ in examples that deploy a broker.
 | [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled (`components.functions: false`) because their BookKeeper package storage still requires ZooKeeper. |
 | [`values-cs.yaml`](values-cs.yaml) | Deploy **only** ZooKeeper as a shared configuration store (`metadataPrefix: /configuration-store`); all other components are disabled. Intended to be combined with `values-local-cluster.yaml`. |
 
+### Functions
+
+By default the Pulsar Functions worker runs **embedded in the broker** (`components.functions: true`).
+Alternatively it can run as its own **standalone component** (`components.function_worker: true`), which
+disables the embedded worker.
+
+Running the function worker separately separates its workload from the brokers, which is useful for:
+
+- **Operational** reasons — scale, schedule and manage the function worker independently of the brokers.
+- **Security** reasons — a reduced attack surface. Functions run user code, so isolating the worker means a
+  compromise of the function worker (for example a remote code execution) does not directly impact the brokers.
+
+The standalone worker is "broker-attached" (it connects to the broker and keeps function metadata in system
+topics). Function instances run with the Kubernetes runtime (one pod per instance).
+
+| File | Description |
+| ---- | ----------- |
+| [`values-function-worker.yaml`](values-function-worker.yaml) | Run the Functions worker as a separate `function-worker` component (`components.function_worker: true`) instead of embedded in the broker. Deploys a single-replica function-worker StatefulSet, disables the broker's embedded worker, and points the proxy's Functions routing at the new service. **Functions run user code — enable only for trusted users.** |
+
 ### Storage
 
 | File | Description |

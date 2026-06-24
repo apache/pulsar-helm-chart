@@ -41,14 +41,14 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 {{- end }}
 metadata:
-  name: {{ template "pulsar.fullname" $root }}-{{ replace "." "-" $component }}
+  name: {{ template "pulsar.fullname" $root }}-{{ $component | replace "." "-" | replace "_" "-" }}
   labels:
     {{- include "pulsar.standardLabels" $root | nindent 4 }}
     {{- if and $root.Values.podMonitor $root.Values.podMonitor.customLabels }}
     {{- toYaml $root.Values.podMonitor.customLabels | nindent 4 }}
     {{- end }}
 spec:
-  jobLabel: {{ replace "." "-" $component }}
+  jobLabel: {{ $component | replace "." "-" | replace "_" "-" }}
   podMetricsEndpoints:
     - port: {{ $portName }}
       path: /metrics

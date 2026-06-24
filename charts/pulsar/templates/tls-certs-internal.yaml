@@ -33,6 +33,13 @@
 {{- end }}
 {{- end }}
 
+{{- if .Values.tls.function_worker.enabled }}
+{{- if and .Values.components.function_worker .Values.tls.function_worker.createCert }}
+{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.function_worker "tlsConfig" .Values.tls.function_worker) }}
+---
+{{- end }}
+{{- end }}
+
 {{- if .Values.standalone.enabled }}
 {{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.standalone "tlsConfig" .Values.tls.standalone) }}
 ---
