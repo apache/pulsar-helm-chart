@@ -127,7 +127,7 @@ in examples that deploy a broker.
 
 | File | Description |
 | ---- | ----------- |
-| [`values-one-node.yaml`](values-one-node.yaml) | Minimal distributed cluster with a single replica of each component (ZooKeeper, BookKeeper, broker, proxy). Auto-recovery and anti-affinity are disabled and the managed-ledger ensemble/quorum sizes are set to `1` to fit a single bookie. Persistence is kept enabled. Good for local development on a single node. |
+| [`values-one-node.yaml`](values-one-node.yaml) | Minimal distributed cluster with a single replica of each component (ZooKeeper, BookKeeper, broker, proxy). Auto-recovery and anti-affinity are disabled and the managed-ledger ensemble/quorum sizes are set to `1` to fit a single bookie. Single-node Oxia sizing is included as well (applied if Oxia is enabled as the metadata store). Persistence is kept enabled. Good for local development on a single node. |
 | [`values-standalone.yaml`](values-standalone.yaml) | Runs all of Pulsar in a single standalone process. The distributed components (ZooKeeper, BookKeeper, broker, auto-recovery) are automatically suppressed. Smallest footprint; ideal for development and smoke tests. Includes a commented-out snippet for fronting standalone with the Pulsar proxy. |
 | [`values-minikube.yaml`](values-minikube.yaml) | Single-replica cluster tuned for [Minikube](https://minikube.sigs.k8s.io/): anti-affinity off, BookKeeper memory caches minimized, the Dekaf UI enabled. Persistence is kept enabled so data survives pod restarts. |
 | [`values-local-cluster.yaml`](values-local-cluster.yaml) | A Pulsar cluster (`metadataPrefix: /cluster1`) that attaches to a **separate** configuration store. Pair it with `values-cs.yaml`, which deploys that configuration store. Disables the bundled monitoring stack and the Dekaf UI is enabled. |
@@ -147,7 +147,8 @@ in examples that deploy a broker.
 | [`values-no-persistence.yaml`](values-no-persistence.yaml) | **Ephemeral.** Deploys stateful components with `emptyDir` instead of PVCs. All data is lost on pod restart / cluster shutdown. Sets `autoSkipNonRecoverableData` so BookKeeper tolerates the lost state. For throwaway testing/CI only. |
 | [`values-bookkeeper-aws.yaml`](values-bookkeeper-aws.yaml) | A 3-bookie cluster using AWS EBS (`gp2`) `PersistentVolumeClaims` for the BookKeeper journal and ledgers. Monitoring stack disabled. |
 | [`values-zookeeper-aws.yaml`](values-zookeeper-aws.yaml) | A configuration store running only ZooKeeper backed by AWS EBS (`gp2`) volumes, including the `externalZookeeperServerList` option for building a ZooKeeper cluster that spans namespaces/clusters. |
-| [`values-faster-disk-cleanup.yaml`](values-faster-disk-cleanup.yaml) | Tune BookKeeper and the broker to reclaim disk space faster: more frequent BookKeeper compaction/garbage collection with a smaller journal, and faster broker managed-ledger rollover so closed ledgers are trimmed sooner. Handy for space-constrained or test clusters. These are the same cleanup settings bundled into `values-testing.yaml`. |
+| [`values-faster-disk-cleanup.yaml`](values-faster-disk-cleanup.yaml) | Tune BookKeeper and the broker to reclaim disk space as fast as possible: frequent BookKeeper entry-log compaction and garbage collection, lower disk-utilization GC thresholds, a smaller rollover-heavy journal with no backups, and faster broker managed-ledger rollover so closed ledgers are trimmed sooner. For space-constrained test clusters; the values are not tuned for production. |
+| [`values-disable-fsync.yaml`](values-disable-fsync.yaml) | Disable fsync on the BookKeeper journal (`journalSyncData: false`) and ZooKeeper (`forceSync: false`) for faster writes in tests. Trades durability for speed — data written just before a crash or power loss can be lost — so it is **not for production**. |
 
 ### Security (TLS and authentication)
 
@@ -169,4 +170,3 @@ in examples that deploy a broker.
 | File | Description |
 | ---- | ----------- |
 | [`values-init-containers.yaml`](values-init-containers.yaml) | Demonstrates attaching custom `initContainers` to each component (ZooKeeper, BookKeeper, auto-recovery, broker, proxy, toolset). |
-| [`values-testing.yaml`](values-testing.yaml) | Settings handy for test environments: anti-affinity off, aggressive BookKeeper/broker disk cleanup, faster ledger rollover and inactive-topic deletion. Not for production. |
