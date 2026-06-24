@@ -136,7 +136,7 @@ in examples that deploy a broker.
 
 | File | Description |
 | ---- | ----------- |
-| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). |
+| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled (`components.functions: false`) because their BookKeeper package storage still requires ZooKeeper. |
 | [`values-cs.yaml`](values-cs.yaml) | Deploy **only** ZooKeeper as a shared configuration store (`metadataPrefix: /configuration-store`); all other components are disabled. Intended to be combined with `values-local-cluster.yaml`. |
 
 ### Storage
@@ -168,4 +168,4 @@ in examples that deploy a broker.
 | File | Description |
 | ---- | ----------- |
 | [`values-init-containers.yaml`](values-init-containers.yaml) | Demonstrates attaching custom `initContainers` to each component (ZooKeeper, BookKeeper, auto-recovery, broker, proxy, toolset). |
-| [`values-testing.yaml`](values-testing.yaml) | Settings handy for test environments: aggressive BookKeeper/broker disk cleanup, faster ledger rollover, inactive-topic deletion and a Grafana admin password. Not for production. |
+| [`values-testing.yaml`](values-testing.yaml) | Settings handy for test environments: anti-affinity off, aggressive BookKeeper/broker disk cleanup, faster ledger rollover and inactive-topic deletion. Not for production. |
