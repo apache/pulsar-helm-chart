@@ -17,10 +17,6 @@
 # under the License.
 #
 
-## deployed withh emptyDir
-volumes:
-  persistence: false
-
 # disabled AntiAffinity
 affinity:
   anti_affinity: false
@@ -28,7 +24,9 @@ affinity:
 # disable auto recovery
 components:
   autorecovery: false
-  pulsar_manager: true
+  # use the Dekaf UI instead of pulsar-manager
+  pulsar_manager: false
+  dekaf: true
 
 zookeeper:
   replicaCount: 1
@@ -46,10 +44,7 @@ bookkeeper:
 broker:
   replicaCount: 1
   configData:
-    ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
-    ## without persistence
-    autoSkipNonRecoverableData: "true"
-    # storage settings
+    # storage settings (single bookie, so all quorum sizes are 1)
     managedLedgerDefaultEnsembleSize: "1"
     managedLedgerDefaultWriteQuorum: "1"
     managedLedgerDefaultAckQuorum: "1"

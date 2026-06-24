@@ -17,7 +17,12 @@
 # under the License.
 #
 
-## deployed withh emptyDir
+# WARNING: This deploys all stateful components (ZooKeeper, BookKeeper) with
+# emptyDir volumes instead of PersistentVolumeClaims. ALL DATA IS LOST when a
+# pod is restarted, rescheduled, or the cluster is shut down. This is intended
+# only for ephemeral testing/CI. For development clusters that should retain
+# data, leave persistence enabled (the chart default) and see
+# examples/values-one-node.yaml or examples/values-minikube.yaml instead.
 volumes:
   persistence: false
 

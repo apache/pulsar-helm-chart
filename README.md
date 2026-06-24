@@ -263,14 +263,18 @@ For more information, please follow our detailed
 We provide a [detailed guideline](https://pulsar.apache.org/docs/helm-deploy/) for you to customize
 the Helm Chart for a production-ready deployment.
 
-You can also checkout out the example values file for different deployments.
+You can also check out the example values files for different deployments. See
+[`examples/README.md`](examples/README.md) for the full annotated list. A few
+common ones:
 
-- [Deploy ZooKeeper only](examples/values-cs.yaml)
-- [Deploy a Pulsar cluster with an external configuration store](examples/values-cs.yaml)
+- [Deploy a minimal single-node cluster](examples/values-one-node.yaml)
+- [Deploy ZooKeeper only as a configuration store](examples/values-cs.yaml)
+- [Deploy a Pulsar cluster with an external configuration store](examples/values-local-cluster.yaml)
 - [Deploy a Pulsar cluster with local persistent volume](examples/values-local-pv.yaml)
 - [Deploy a Pulsar cluster to Minikube](examples/values-minikube.yaml)
 - [Deploy a Pulsar cluster with no persistence](examples/values-no-persistence.yaml)
-- [Deploy a Pulsar cluster with TLS encryption](examples/values-tls.yaml)
+- [Deploy a Pulsar cluster with TLS encryption (self-signed)](examples/values-tls-selfsigned.yaml)
+- [Deploy a Pulsar cluster with TLS encryption (CA issuer)](examples/values-tls-ca.yaml)
 - [Deploy a Pulsar cluster with JWT authentication using symmetric key](examples/values-jwt-symmetric.yaml)
 - [Deploy a Pulsar cluster with JWT authentication using asymmetric key](examples/values-jwt-asymmetric.yaml)
 

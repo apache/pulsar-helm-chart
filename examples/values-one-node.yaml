@@ -34,9 +34,6 @@ bookkeeper:
 broker:
   replicaCount: 1
   configData:
-    ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
-    ## without persistence
-    autoSkipNonRecoverableData: "true"
     # storage settings
     managedLedgerDefaultEnsembleSize: "1"
     managedLedgerDefaultWriteQuorum: "1"
