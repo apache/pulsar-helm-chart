@@ -719,6 +719,12 @@ oxia:
     memoryLimit: 1Gi
     # Oxia database cache size in MB
     dbCacheSizeMb: 512
+    # Whether the Oxia server fsyncs write-ahead-log data to disk after each write.
+    # Defaults to "true" for durability. Set to "false" to disable WAL fsync for faster
+    # writes in testing scenarios (risks data loss on crash/power loss; not for production).
+    # When (and only when) this key is present and set to false, the chart passes
+    # "--wal-sync-data=false" to the oxia server; otherwise oxia keeps syncing (the default).
+    walSyncData: "true"
     # Storage size for the PVC of the server pod
     storageSize: 8Gi
     # Storage class name for the PVC of the server pod

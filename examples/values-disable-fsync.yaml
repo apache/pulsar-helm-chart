@@ -26,3 +26,9 @@ zookeeper:
   configData:
     # disable fsync for testing purposes (not recommended for production)
     forceSync: "false"
+
+oxia:
+  server:
+    # disable WAL fsync for testing purposes (not recommended for production)
+    # applies when Oxia is used as the metadata store (components.oxia: true)
+    walSyncData: "false"
