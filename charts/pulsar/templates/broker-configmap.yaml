@@ -146,11 +146,6 @@ data:
   {{- end }}
   {{- if .Values.components.functions }}
   functionsWorkerEnabled: "true"
-  {{- if .Values.broker.packageManagement.enabled }}
-  # store function packages via the broker's Packages Management Service (FileSystemPackagesStorage)
-  # instead of BookKeeper/DLog, so functions work without ZooKeeper (e.g. with Oxia)
-  PF_functionsWorkerEnablePackageManagement: "true"
-  {{- end }}
   {{- if .Values.functions.useBookieAsStateStore }}
   PF_stateStorageServiceUrl: "bk://{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}:{{ .Values.bookkeeper.ports.statestore }}"
   {{- end }}
@@ -199,6 +194,14 @@ data:
   # BookKeeperPackagesStorage provider.
   {{- if .Values.broker.packageManagement.enabled }}
   enablePackagesManagement: "true"
+  {{- if .Values.components.functions }}
+  # Route the broker-embedded function worker's package storage through the broker's Packages Management
+  # Service instead of BookKeeper/DLog, so Functions work without ZooKeeper (e.g. with Oxia). This is a
+  # broker.conf key (ServiceConfiguration): for the embedded worker, PulsarService overrides the worker's
+  # functionsWorkerEnablePackageManagement with the broker config value, so setting it via PF_
+  # (functions_worker.yml) has no effect.
+  functionsWorkerEnablePackageManagement: "true"
+  {{- end }}
   {{- if .Values.broker.packageManagement.fileSystemStorage.enabled }}
   packagesManagementStorageProvider: "org.apache.pulsar.packages.management.storage.filesystem.FileSystemPackagesStorageProvider"
   # STORAGE_PATH is not a broker.conf key, so add it to the properties map via PULSAR_PREFIX_
