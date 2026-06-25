@@ -416,10 +416,39 @@ function ci::wait_message_processed() {
     done
 }
 
+function ci::verify_package_storage_files() {
+    # When the broker hosts FileSystemPackagesStorage, the function package uploaded by `functions create`
+    # must land on the broker's shared package-storage volume (at STORAGE_PATH). Verify the files are
+    # actually there - this catches a broken STORAGE_PATH wiring (package written to the wrong directory,
+    # off the volume) or a volume the broker cannot write to (permissions / missing fsGroup).
+    if [[ "$(ci::helm_values_for_deployment | yq '.broker.packageManagement.fileSystemStorage.enabled')" != "true" ]]; then
+        return 0
+    fi
+    local storage_path
+    storage_path=$(ci::helm_values_for_deployment | yq '.broker.packageManagement.fileSystemStorage.storagePath')
+    if [[ -z "${storage_path}" || "${storage_path}" == "null" ]]; then
+        storage_path="/pulsar/packages-storage"
+    fi
+    echo "Verifying function package files exist under broker FileSystemPackagesStorage path: ${storage_path}"
+    ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-broker-0 -- bash -c "ls -laR '${storage_path}' || true"
+    local file_count
+    file_count=$(${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-broker-0 -- bash -c "find '${storage_path}' -type f 2>/dev/null | wc -l" | tr -d '[:space:]')
+    echo "FileSystemPackagesStorage file count under ${storage_path}: ${file_count}"
+    if [[ -z "${file_count}" || "${file_count}" -lt 1 ]]; then
+        echo >&2 "ERROR: no files found under FileSystemPackagesStorage path ${storage_path} on ${CLUSTER}-broker-0."
+        echo >&2 "The function package was not persisted to the package-storage volume (check STORAGE_PATH wiring, the PVC mount, and volume write permissions / fsGroup)."
+        return 1
+    fi
+    echo "OK: function package persisted to FileSystemPackagesStorage (${file_count} file(s) under ${storage_path})"
+}
+
 function ci::test_pulsar_function() {
     echo "Testing functions"
     echo "Creating function"
     ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bin/pulsar-admin functions create --tenant pulsar-ci --namespace test --name test-function --inputs "pulsar-ci/test/test_input" --output "pulsar-ci/test/test_output" --parallelism 1 --classname org.apache.pulsar.functions.api.examples.ExclamationFunction --jar /pulsar/examples/api-examples.jar
+    # The package upload happens at create time; verify it landed on the broker's FileSystemPackagesStorage
+    # volume (no-op unless fileSystemStorage is enabled).
+    ci::verify_package_storage_files
     echo "Creating subscription for output topic"
     ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bin/pulsar-admin topics create-subscription -s test pulsar-ci/test/test_output
     echo "Waiting for function to be ready"

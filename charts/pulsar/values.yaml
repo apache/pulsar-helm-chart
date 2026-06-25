@@ -1261,6 +1261,14 @@ broker:
   # so the metrics are correctly rendered in grafana dashboard
   component: broker
   replicaCount: 3
+  # Ensures the non-root docker image works correctly. With fsGroup: 0 a mounted volume is group-owned by
+  # GID 0 (the group the pulsar user, uid 10000, belongs to) and made group-writable, so the broker can
+  # read/write it. Required when packageManagement.fileSystemStorage is enabled (the broker mounts a
+  # PersistentVolumeClaim as the FileSystemPackagesStorage directory); harmless otherwise. Mirrors the
+  # bookkeeper/zookeeper securityContext.
+  securityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: "OnRootMismatch"
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -1416,6 +1424,59 @@ broker:
     annotations: {}
       ## You may use the following annotation in order to use EKS IAM Roles for Service Accounts (IRSA)
       # eks.amazonaws.com/role-arn: arn:aws:iam::66666:role/my-iam-role-with-s3-access
+  ## Pulsar Functions / Packages: Packages Management Service
+  ## templates/broker-package-storage.yaml
+  ##
+  ## The Pulsar Packages Management Service runs on the broker and stores uploaded function packages
+  ## (e.g. `pulsar-admin functions create --jar ...`). It is configured in two levels:
+  ##   - packageManagement.enabled                   enables the service on the broker (enablePackagesManagement).
+  ##   - packageManagement.fileSystemStorage.enabled uses FileSystemPackagesStorage as the storage provider
+  ##                                                  instead of the default BookKeeperPackagesStorage.
+  ##
+  ## FileSystemPackagesStorage works WITHOUT ZooKeeper, so it is required for Functions on Oxia (the default
+  ## BookKeeper provider needs ZooKeeper). The storage directory is mounted from a shared PersistentVolumeClaim
+  ## added under the broker pod spec, so every broker replica sees the same packages. For a single broker (or
+  ## single-node dev clusters like minikube) the default ReadWriteOnce PVC on the cluster's default StorageClass
+  ## is enough. For MORE THAN ONE broker replica the volume must be a shared ReadWriteMany filesystem; provision
+  ## one with a cloud CSI driver and reference it via `claimName` (set `persistentVolumeClaim: {}` so the chart
+  ## does not create one). See the README and examples/README.md "Functions" section for GKE / EKS / AKS references.
+  packageManagement:
+    # Enable the Packages Management Service on the broker (sets enablePackagesManagement).
+    enabled: false
+    # FileSystemPackagesStorage: use a filesystem directory (on a shared volume) as the package storage
+    # provider instead of the default BookKeeperPackagesStorage. Requires packageManagement.enabled.
+    # Mandatory for Functions on Oxia.
+    fileSystemStorage:
+      enabled: false
+      # FileSystemPackagesStorage directory inside the broker (mounted from the PVC below).
+      storagePath: /pulsar/packages-storage
+      # Name of the PVC mounted on the broker pods. When `persistentVolumeClaim` is created below this must
+      # match its metadata.name; for a pre-created (e.g. ReadWriteMany cloud) PVC, set this to that claim's name.
+      claimName: pulsar-broker-package-storage
+      # StorageClass to create. Only apiVersion (storage.k8s.io/v1) and kind (StorageClass) are fixed by the
+      # chart; provide everything else here. {} = do not create one (use the cluster default StorageClass).
+      storageClass: {}
+      # PersistentVolume to create (for static provisioning, e.g. a pre-existing NFS/CSI/hostPath volume).
+      # Only apiVersion (v1) and kind (PersistentVolume) are fixed by the chart; provide everything else here
+      # (capacity, accessModes, the volume source, etc.). {} = do not create one (the default; most setups use
+      # dynamic provisioning via a StorageClass or reference a pre-created PVC). When set, bind the PVC below
+      # to it (e.g. via spec.volumeName / matching storageClassName).
+      persistentVolume: {}
+      # PersistentVolumeClaim to create. Only apiVersion (v1) and kind (PersistentVolumeClaim) are fixed by
+      # the chart; provide everything else here. {} = do not create one (reference a pre-created PVC via
+      # `claimName` above — this is how the GKE / EKS / AKS shared-filesystem options are wired).
+      # The default below works on single-node dev clusters (minikube): a ReadWriteOnce claim on the default
+      # StorageClass. For multi-broker use a ReadWriteMany shared filesystem.
+      persistentVolumeClaim:
+        metadata:
+          name: pulsar-broker-package-storage
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+
   ## Tiered Storage
   ##
   storageOffload: {}

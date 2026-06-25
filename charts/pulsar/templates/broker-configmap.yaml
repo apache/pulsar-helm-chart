@@ -186,6 +186,29 @@ data:
   {{- end }}
   {{- end }}
 
+  # Package Management Service
+  # The broker hosts the Packages Management Service (packageManagement.enabled). With
+  # fileSystemStorage.enabled it uses FileSystemPackagesStorage, which lets Functions store packages without
+  # ZooKeeper (works with Oxia); the storage path is a shared volume mounted on every broker pod (see
+  # broker-statefulset.yaml / templates/broker-package-storage.yaml). Otherwise the broker keeps its default
+  # BookKeeperPackagesStorage provider.
+  {{- if .Values.broker.packageManagement.enabled }}
+  enablePackagesManagement: "true"
+  {{- if .Values.components.functions }}
+  # Route the broker-embedded function worker's package storage through the broker's Packages Management
+  # Service instead of BookKeeper/DLog, so Functions work without ZooKeeper (e.g. with Oxia). This is a
+  # broker.conf key (ServiceConfiguration): for the embedded worker, PulsarService overrides the worker's
+  # functionsWorkerEnablePackageManagement with the broker config value, so setting it via PF_
+  # (functions_worker.yml) has no effect.
+  functionsWorkerEnablePackageManagement: "true"
+  {{- end }}
+  {{- if .Values.broker.packageManagement.fileSystemStorage.enabled }}
+  packagesManagementStorageProvider: "org.apache.pulsar.packages.management.storage.filesystem.FileSystemPackagesStorageProvider"
+  # STORAGE_PATH is not a broker.conf key, so add it to the properties map via PULSAR_PREFIX_
+  PULSAR_PREFIX_STORAGE_PATH: "{{ .Values.broker.packageManagement.fileSystemStorage.storagePath }}"
+  {{- end }}
+  {{- end }}
+
   # prometheus needs to access /metrics endpoint
   webServicePort: "{{ .Values.broker.ports.http }}"
   {{- if or (not .Values.tls.enabled) (not .Values.tls.broker.enabled) }}

@@ -136,8 +136,29 @@ in examples that deploy a broker.
 
 | File | Description |
 | ---- | ----------- |
-| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled (`components.functions: false`) because their BookKeeper package storage still requires ZooKeeper. |
+| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled by default; to run Functions on Oxia, also merge [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) (broker-hosted [`FileSystemPackagesStorage`](#package-storage-filesystempackagesstorage), required because the default BookKeeper package storage needs ZooKeeper). |
 | [`values-cs.yaml`](values-cs.yaml) | Deploy **only** ZooKeeper as a shared configuration store (`metadataPrefix: /configuration-store`); all other components are disabled. Intended to be combined with `values-local-cluster.yaml`. |
+| [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) | Enable Pulsar Functions (`components.functions: true`) with broker-hosted [`FileSystemPackagesStorage`](#package-storage-filesystempackagesstorage) (`broker.packageManagement.enabled` + `fileSystemStorage.enabled`). Needs no ZooKeeper, so it is **suitable for Oxia** — merge it with [`values-oxia.yaml`](values-oxia.yaml). Also works with the default ZooKeeper metadata store. |
+
+### Functions
+
+Pulsar Functions run in a worker that is **embedded in the broker** (`components.functions: true`).
+See [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) for a ready-to-merge example
+(suitable for Oxia).
+
+#### Package storage (FileSystemPackagesStorage)
+
+The function worker stores uploaded packages (`pulsar-admin functions create --jar ...`) via the broker's
+Packages Management Service. Its default `BookKeeperPackagesStorage` requires ZooKeeper, so on Oxia you must
+enable broker-hosted **`FileSystemPackagesStorage`** (`broker.packageManagement.enabled: true` +
+`broker.packageManagement.fileSystemStorage.enabled: true`) — see
+[`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml).
+
+For the full configuration — choosing a volume (single broker vs. a `ReadWriteMany` shared filesystem with
+GKE / EKS / AKS CSI drivers) and creating the `StorageClass` / `PersistentVolume` / `PersistentVolumeClaim`
+from raw YAML — see the
+[Pulsar Functions package storage](../README.md#pulsar-functions-package-storage-required-for-oxia) section in
+the top-level README.
 
 ### Storage
 
