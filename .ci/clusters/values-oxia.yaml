@@ -35,6 +35,13 @@ broker:
     enabled: true
     fileSystemStorage:
       enabled: true
+      # Use a NON-default storage path so the test actually exercises PULSAR_PREFIX_STORAGE_PATH being
+      # applied to the broker. The FileSystemPackagesStorage default ("packages-storage") would resolve to
+      # /pulsar/packages-storage (the cwd), which happens to match the chart's default mount path, so a
+      # broken STORAGE_PATH wiring would still pass. With a custom path the PVC is mounted here AND
+      # STORAGE_PATH points here, so the function-package upload only lands on the volume if both are wired
+      # correctly. ci::verify_package_storage_files asserts the uploaded package files exist under this path.
+      storagePath: /pulsar/test-packages-storage
 
 oxia:
   initialShardCount: 3

@@ -74,6 +74,10 @@ spec:
 {{- end }}
     spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-acct"
+      {{- if .Values.broker.securityContext }}
+      securityContext:
+{{ toYaml .Values.broker.securityContext | indent 8 }}
+      {{- end }}
     {{- if .Values.broker.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.broker.nodeSelector | indent 8 }}

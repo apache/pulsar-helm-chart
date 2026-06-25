@@ -1255,6 +1255,14 @@ broker:
   # so the metrics are correctly rendered in grafana dashboard
   component: broker
   replicaCount: 3
+  # Ensures the non-root docker image works correctly. With fsGroup: 0 a mounted volume is group-owned by
+  # GID 0 (the group the pulsar user, uid 10000, belongs to) and made group-writable, so the broker can
+  # read/write it. Required when packageManagement.fileSystemStorage is enabled (the broker mounts a
+  # PersistentVolumeClaim as the FileSystemPackagesStorage directory); harmless otherwise. Mirrors the
+  # bookkeeper/zookeeper securityContext.
+  securityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: "OnRootMismatch"
   autoscaling:
     enabled: false
     minReplicas: 1
