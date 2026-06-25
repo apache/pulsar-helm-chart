@@ -287,6 +287,9 @@ jobs:
           - name: Oxia + FileSystemPackagesStorage
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
+          - name: Separate Function Worker
+            values_file: .ci/clusters/values-function-worker.yaml
+            shortname: function-worker
           - name: OpenID
             values_file: .ci/clusters/values-openid.yaml
             shortname: openid

@@ -33,6 +33,13 @@
 #
 # The worker is "broker-attached" (it connects to the broker and keeps function metadata in system topics).
 # Function instances run with the Kubernetes runtime (one pod per instance).
+#
+# IMPORTANT: once the embedded worker is disabled, the broker no longer serves the Functions admin REST API
+# (it returns HTTP 409 "Pulsar Function Worker is not enabled"), and Pulsar has no broker-side redirect to a
+# standalone worker. So `pulsar-admin functions ...` clients must reach the worker either through the proxy
+# (which the chart configures with functionWorkerWebServiceURL when function_worker is enabled) or directly
+# via the worker's web service (--admin-url http://<release>-function-worker:6750). The default toolset uses
+# the proxy (toolset.useProxy: true), so it works out of the box.
 components:
   function_worker: true
 
@@ -42,5 +49,6 @@ components:
 # function_worker:
 #   replicaCount: 1
 #   rbac:
-#     # set true to scope the function instance RBAC to the release namespace instead of cluster-wide
+#     # true (the default) scopes the function-instance RBAC to the release namespace (Role/RoleBinding);
+#     # set false for a cluster-wide ClusterRole/ClusterRoleBinding
 #     limit_to_namespace: true

@@ -1659,8 +1659,9 @@ function_worker:
   ## Function instances run with the Kubernetes runtime (one pod per instance).
   ## templates/function-worker-rbac.yaml grants the worker permission to manage those pods.
   rbac:
-    # Default false deploys a ClusterRole and ClusterRoleBinding at the cluster level.
-    # Set to true to deploy a Role and RoleBinding scoped to the release namespace.
+    # When true (the default), deploy a Role and RoleBinding scoped to the release namespace.
+    # Set to false to deploy a ClusterRole and ClusterRoleBinding at the cluster level (needed only when
+    # function instances run in a different namespace than the worker).
     limit_to_namespace: true
   ## Timeout (seconds) for waiting for the broker DNS to resolve before starting the worker.
   ## Set to 0 to disable the wait init container.
