@@ -290,6 +290,9 @@ jobs:
           - name: Separate Function Worker
             values_file: .ci/clusters/values-function-worker.yaml
             shortname: function-worker
+          - name: Pulsar v5 with Oxia and Pulsar Functions
+            values_file: .ci/clusters/values-pulsar-v5-functions.yaml
+            shortname: pulsar-v5-functions
           - name: OpenID
             values_file: .ci/clusters/values-openid.yaml
             shortname: openid
