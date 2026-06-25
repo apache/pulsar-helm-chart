@@ -419,15 +419,17 @@ replicas can use it (all keys below are under `broker.packageManagement.fileSyst
 
 - **Single broker / single-node dev clusters (e.g. minikube):** the default `persistentVolumeClaim` is a
   `ReadWriteOnce` claim on the cluster's default `StorageClass` — no extra configuration is required.
-- **Multiple broker replicas:** the package directory must be on a **`ReadWriteMany` shared filesystem**.
-  Provision one with a cloud CSI driver, set `persistentVolumeClaim: {}` so the chart does not create a
-  claim, and point `claimName` at the pre-created PVC:
+- **Multiple broker replicas:** the package directory must be on a **`ReadWriteMany` shared filesystem** — a
+  managed file service, **not** block storage (Persistent Disk / EBS / Azure Disk are `ReadWriteOnce` and
+  cannot be shared across replicas). Provision one with the matching cloud CSI driver, set
+  `persistentVolumeClaim: {}` so the chart does not create a claim, and point `claimName` at the pre-created
+  PVC:
 
-  | Cloud | CSI driver | Reference |
-  | ----- | ---------- | --------- |
-  | GCP / GKE | Filestore CSI (`filestore.csi.storage.gke.io`) | <https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver> |
-  | AWS / EKS | Amazon EFS CSI (`efs.csi.aws.com`) | <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html> |
-  | Azure / AKS | Azure Files CSI (`file.csi.azure.com`) | <https://learn.microsoft.com/azure/aks/azure-files-csi> |
+  | Cloud | Shared file service to use | CSI driver | Reference |
+  | ----- | -------------------------- | ---------- | --------- |
+  | GCP / GKE | Filestore (managed NFS) | `filestore.csi.storage.gke.io` | <https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver> |
+  | AWS / EKS | Amazon EFS (managed NFS) | `efs.csi.aws.com` | <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html> |
+  | Azure / AKS | Azure Files | `file.csi.azure.com` | <https://learn.microsoft.com/azure/aks/create-volume-azure-files> |
 
 `broker.packageManagement.fileSystemStorage` can also create the `StorageClass`, `PersistentVolume`, and
 `PersistentVolumeClaim` directly from raw YAML — only `apiVersion`/`kind` are fixed by the chart, and a
