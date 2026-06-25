@@ -392,8 +392,7 @@ The Pulsar **Packages Management Service** — which stores uploaded function pa
 when [Oxia](https://github.com/streamnative/oxia) is used as the metadata store (`components.oxia: true`).
 
 To run Pulsar Functions on Oxia you must enable `FileSystemPackagesStorage` on the broker. The Packages
-Management Service is configured in two levels (like `auth.authentication` / `auth.authentication.jwt`):
-`broker.packageManagement.enabled` turns the service on, and
+Management Service is configured in two levels: `broker.packageManagement.enabled` turns the service on, and
 `broker.packageManagement.fileSystemStorage.enabled` selects the FileSystem provider:
 
 ```yaml
@@ -410,8 +409,8 @@ broker:
 This configures the broker with `enablePackagesManagement=true` and
 `packagesManagementStorageProvider=FileSystemPackagesStorageProvider`, and mounts a **shared
 `PersistentVolumeClaim`** on every broker pod as the package storage directory. If `components.functions`
-is enabled with Oxia but FileSystemPackagesStorage is not enabled, the chart **fails the Helm install** with
-an explanatory error (the default BookKeeper provider would not work without ZooKeeper).
+is enabled without ZooKeeper (using Oxia) but FileSystemPackagesStorage is not enabled, the chart **fails the
+Helm install** with an explanatory error (the default BookKeeper provider would not work without ZooKeeper).
 
 ### Choosing a volume
 
@@ -433,7 +432,8 @@ replicas can use it (all keys below are under `broker.packageManagement.fileSyst
 `broker.packageManagement.fileSystemStorage` can also create the `StorageClass`, `PersistentVolume`, and
 `PersistentVolumeClaim` directly from raw YAML — only `apiVersion`/`kind` are fixed by the chart, and a
 value of `{}` creates nothing. See the `broker.packageManagement` section in
-[`values.yaml`](charts/pulsar/values.yaml) and [`examples/values-oxia.yaml`](examples/values-oxia.yaml).
+[`values.yaml`](charts/pulsar/values.yaml) and the
+[`examples/values-functions-fs-storage.yaml`](examples/values-functions-fs-storage.yaml) example.
 
 ## Grafana Dashboards
 

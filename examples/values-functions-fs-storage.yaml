@@ -1,0 +1,49 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Enable Pulsar Functions with broker-hosted FileSystemPackagesStorage.
+#
+# The Pulsar Packages Management Service — which stores uploaded function packages
+# (`pulsar-admin functions create --jar ...`) — runs on the broker. Its default BookKeeperPackagesStorage
+# provider stores packages in DistributedLog metadata in ZooKeeper, so it does NOT work without ZooKeeper.
+# Enabling FileSystemPackagesStorage hosts the packages on a filesystem volume instead, with no ZooKeeper
+# dependency.
+#
+# This example is therefore suitable for Oxia: merge it with values-oxia.yaml to run Functions on an
+# Oxia-backed cluster (without ZooKeeper), for example:
+#   ./merge-values.sh values-functions-fs-storage.yaml values-oxia.yaml values-one-node.yaml > merged-values.yaml
+# It also works with the default ZooKeeper metadata store.
+#
+# The default persistentVolumeClaim (in the chart values) is a ReadWriteOnce claim on the cluster's default
+# StorageClass, which is fine for a single broker / single-node dev clusters (minikube). For multiple broker
+# replicas the package directory must be a ReadWriteMany shared filesystem — see the "Pulsar Functions
+# package storage" section in the top-level README.md and the "Functions" section in examples/README.md.
+
+components:
+  # Run the Pulsar Functions worker embedded in the broker.
+  functions: true
+
+broker:
+  packageManagement:
+    # Host the Packages Management Service on the broker (sets enablePackagesManagement).
+    enabled: true
+    fileSystemStorage:
+      # Use FileSystemPackagesStorage instead of the default BookKeeperPackagesStorage. It needs no
+      # ZooKeeper, so uploaded function packages work without it (using Oxia).
+      enabled: true

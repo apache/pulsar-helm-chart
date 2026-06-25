@@ -1422,8 +1422,7 @@ broker:
   ## templates/broker-package-storage.yaml
   ##
   ## The Pulsar Packages Management Service runs on the broker and stores uploaded function packages
-  ## (e.g. `pulsar-admin functions create --jar ...`). It is configured in two levels, following the same
-  ## pattern as auth.authentication / auth.authentication.jwt:
+  ## (e.g. `pulsar-admin functions create --jar ...`). It is configured in two levels:
   ##   - packageManagement.enabled                   enables the service on the broker (enablePackagesManagement).
   ##   - packageManagement.fileSystemStorage.enabled uses FileSystemPackagesStorage as the storage provider
   ##                                                  instead of the default BookKeeperPackagesStorage.

@@ -20,19 +20,8 @@
 components:
   zookeeper: false
   oxia: true
-  # Pulsar Functions work with Oxia as long as the broker hosts FileSystemPackagesStorage (see the
-  # broker.packageManagement block below). The default BookKeeper package storage requires ZooKeeper, so
-  # enabling functions on Oxia WITHOUT broker.packageManagement.enabled fails chart rendering.
-  functions: true
-
-broker:
-  packageManagement:
-    # Host the Packages Management Service on the broker (enabled) with FileSystemPackagesStorage
-    # (fileSystemStorage.enabled) — no ZooKeeper, so uploaded packages (e.g.
-    # `pulsar-admin functions create --jar ...`) work with Oxia. This uses the default single-node PVC
-    # (ReadWriteOnce on the default StorageClass) defined in the chart values, which is fine for a single
-    # broker / minikube. For multiple broker replicas use a ReadWriteMany shared filesystem — see the README
-    # and examples/README.md Functions section.
-    enabled: true
-    fileSystemStorage:
-      enabled: true
+  # Pulsar Functions are disabled by default. To run Functions on Oxia, also enable broker-hosted
+  # FileSystemPackagesStorage: the default BookKeeper package storage requires ZooKeeper and does not work
+  # without it (using Oxia). See values-functions-fs-storage.yaml for an example of enabling Functions for
+  # Oxia (merge it with this file), and the "Functions" section in examples/README.md plus the "Pulsar
+  # Functions package storage" section in the top-level README.md for details.
