@@ -19,7 +19,9 @@
 
 {{- if and .Values.components.function_worker (not .Values.standalone.enabled) }}
 {{- $brokerHost := printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component }}
+{{- $workerHost := printf "%s-%s" (include "pulsar.fullname" .) .Values.function_worker.component }}
 {{- $brokerTls := and .Values.tls.enabled .Values.tls.broker.enabled }}
+{{- $workerTls := and .Values.tls.enabled .Values.tls.function_worker.enabled }}
 {{- $instanceTls := and .Values.tls.enabled .Values.tls.broker.enabled .Values.tls.function_instance.enabled }}
 apiVersion: v1
 kind: ConfigMap
@@ -66,11 +68,18 @@ data:
   PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
   PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
   PF_functionRuntimeFactoryConfigs_expectedMetricsCollectionInterval: "30"
+  # The function instance downloads its package over pulsarAdminUrl. The broker's embedded worker is
+  # disabled here, so it returns HTTP 409 for functions admin; point the instance at the standalone worker,
+  # which serves the Functions REST API (including download). pulsarServiceUrl stays on the broker for the
+  # instance's input/output/state topics.
+  {{- if $workerTls }}
+  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ $workerHost }}:{{ .Values.function_worker.ports.https }}/"
+  {{- else }}
+  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ $workerHost }}:{{ .Values.function_worker.ports.http }}/"
+  {{- end }}
   {{- if not $instanceTls }}
-  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ $brokerHost }}:{{ .Values.broker.ports.http }}/"
   PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar://{{ $brokerHost }}:{{ .Values.broker.ports.pulsar }}/"
   {{- else }}
-  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ $brokerHost }}:{{ .Values.broker.ports.https }}/"
   PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ $brokerHost }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
   # support version < 2.5.0
@@ -80,11 +89,14 @@ data:
   PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
   PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}
   PF_kubernetesContainerFactory_expectedMetricsCollectionInterval: "30"
+  {{- if $workerTls }}
+  PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ $workerHost }}:{{ .Values.function_worker.ports.https }}/"
+  {{- else }}
+  PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ $workerHost }}:{{ .Values.function_worker.ports.http }}/"
+  {{- end }}
   {{- if not $instanceTls }}
-  PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ $brokerHost }}:{{ .Values.broker.ports.http }}/"
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar://{{ $brokerHost }}:{{ .Values.broker.ports.pulsar }}/"
   {{- else }}
-  PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ $brokerHost }}:{{ .Values.broker.ports.https }}/"
   PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ $brokerHost }}:{{ .Values.broker.ports.pulsarssl }}/"
   {{- end }}
 
