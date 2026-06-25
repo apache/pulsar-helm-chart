@@ -431,6 +431,17 @@ replicas can use it (all keys below are under `broker.packageManagement.fileSyst
   | AWS / EKS | Amazon EFS (managed NFS) | `efs.csi.aws.com` | <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html> |
   | Azure / AKS | Azure Files | `file.csi.azure.com` | <https://learn.microsoft.com/azure/aks/create-volume-azure-files> |
 
+**Volume permissions.** Pulsar container images run as **uid `10000`, gid `0`** by default, so package files
+are written by that user/group. The chart sets `broker.securityContext.fsGroup: 0`
+(`fsGroupChangePolicy: OnRootMismatch`), which tells Kubernetes to set the volume's group to `0` and make it
+group-writable — enough for the broker to read/write the package directory, and this works on most volume
+types (block-storage CSI drivers, `hostPath`). Some shared filesystems — notably the NFS/SMB-backed
+`ReadWriteMany` volumes above (EFS, Filestore, Azure Files) — **ignore `fsGroup`**. If package writes then
+fail with permission errors, grant `uid 10000` / `gid 0` read-write-execute on the share itself: make the
+directory group-`0`-owned and group-writable (e.g. `chown :0 <dir> && chmod 2770 <dir>` — `rwxrwx---` plus the
+setgid bit so new entries inherit gid `0`), or set it via the CSI driver's mount options (for Azure Files SMB,
+for example, `mountOptions: [uid=10000, gid=0, file_mode=0770, dir_mode=0770]`).
+
 `broker.packageManagement.fileSystemStorage` can also create the `StorageClass`, `PersistentVolume`, and
 `PersistentVolumeClaim` directly from raw YAML — only `apiVersion`/`kind` are fixed by the chart, and a
 value of `{}` creates nothing. See the `broker.packageManagement` section in
