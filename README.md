@@ -427,7 +427,7 @@ replicas can use it (all keys below are under `broker.packageManagement.fileSyst
 
   | Cloud | Shared file service to use | CSI driver | Reference |
   | ----- | -------------------------- | ---------- | --------- |
-  | GCP / GKE | Filestore (managed NFS) | `filestore.csi.storage.gke.io` | [Filestore CSI](https://docs.cloud.google.com/filestore/docs/csi-driver) ([example](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/stateful-workload#configure_the_managed_file_storage_with_using_csi)) |
+  | GCP / GKE | Filestore (managed NFS) | `filestore.csi.storage.gke.io` | [Filestore CSI](https://docs.cloud.google.com/filestore/docs/csi-driver) |
   | AWS / EKS | Amazon EFS (managed NFS) | `efs.csi.aws.com` | [EFS CSI on EKS](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html) |
   | Azure / AKS | Azure Files | `file.csi.azure.com` | [Azure Files on AKS](https://learn.microsoft.com/azure/aks/create-volume-azure-files) |
 
