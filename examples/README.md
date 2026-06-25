@@ -148,31 +148,17 @@ See [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) for a
 
 #### Package storage (FileSystemPackagesStorage)
 
-The Pulsar Packages Management Service — used to store uploaded function packages
-(`pulsar-admin functions create --jar ...`) — runs on the **broker**. Its default `BookKeeperPackagesStorage`
-requires ZooKeeper, so it does **not** work with Oxia. To support uploaded packages without ZooKeeper, enable
-the service and the FileSystem provider: `broker.packageManagement.enabled: true` and
-`broker.packageManagement.fileSystemStorage.enabled: true`. This configures the broker to use
-**`FileSystemPackagesStorage`** on a shared volume mounted on every broker pod. (Enabling functions without
-ZooKeeper (using Oxia) but **without** FileSystemPackagesStorage fails chart rendering with a clear error.)
+The function worker stores uploaded packages (`pulsar-admin functions create --jar ...`) via the broker's
+Packages Management Service. Its default `BookKeeperPackagesStorage` requires ZooKeeper, so on Oxia you must
+enable broker-hosted **`FileSystemPackagesStorage`** (`broker.packageManagement.enabled: true` +
+`broker.packageManagement.fileSystemStorage.enabled: true`) — see
+[`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml).
 
-All keys below are under `broker.packageManagement.fileSystemStorage`:
-
-- **Single broker / dev (minikube):** the default `persistentVolumeClaim` creates a `ReadWriteOnce` PVC on the
-  cluster's default `StorageClass` — no extra setup.
-- **Multiple broker replicas:** the volume must be a **`ReadWriteMany` shared filesystem**. Provision one with
-  a cloud CSI driver, set `persistentVolumeClaim: {}` (so the chart creates no claim), and reference the
-  pre-created PVC via `claimName`:
-  - **GCP / GKE** — Filestore CSI (`filestore.csi.storage.gke.io`):
-    <https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver>
-  - **AWS / EKS** — Amazon EFS CSI (`efs.csi.aws.com`):
-    <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html>
-  - **Azure / AKS** — Azure Files CSI (`file.csi.azure.com`):
-    <https://learn.microsoft.com/azure/aks/azure-files-csi>
-
-`broker.packageManagement.fileSystemStorage` can also create the `StorageClass`, `PersistentVolume`, and
-`PersistentVolumeClaim` directly from raw YAML — only `apiVersion`/`kind` are fixed by the chart, and a value
-of `{}` creates nothing.
+For the full configuration — choosing a volume (single broker vs. a `ReadWriteMany` shared filesystem with
+GKE / EKS / AKS CSI drivers) and creating the `StorageClass` / `PersistentVolume` / `PersistentVolumeClaim`
+from raw YAML — see the
+[Pulsar Functions package storage](../README.md#pulsar-functions-package-storage-required-for-oxia) section in
+the top-level README.
 
 ### Storage
 
