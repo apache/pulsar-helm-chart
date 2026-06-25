@@ -1,0 +1,64 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Test Pulsar v5 together with Oxia and Pulsar Functions.
+#
+# This combines the examples/values-oxia.yaml and examples/values-functions-fs-storage.yaml scenarios on the
+# Pulsar 5.0.0-M1 image: it runs Functions on an Oxia-backed cluster (no ZooKeeper). Functions require the
+# broker-hosted Packages Management Service; its default BookKeeper package storage needs ZooKeeper, so
+# FileSystemPackagesStorage is enabled instead (no ZooKeeper dependency). The function smoke test
+# (ci::test_pulsar_function) creates a function from a JAR, which uploads the package via the broker's
+# FileSystem-backed Packages Management Service.
+
+# Use the slim apachepulsar/pulsar image (not the default apachepulsar/pulsar-all) at the v5 milestone tag.
+defaultPulsarImageRepository: apachepulsar/pulsar
+defaultPulsarImageTag: 5.0.0-M1
+
+# From examples/values-oxia.yaml and examples/values-functions-fs-storage.yaml.
+components:
+  zookeeper: false
+  oxia: true
+  functions: true
+
+# Host the Packages Management Service on the broker with FileSystemPackagesStorage so functions work on
+# Oxia. broker.replicaCount is 1 in CI (.ci/values-common.yaml), so the default ReadWriteOnce PVC on the
+# kind default StorageClass is sufficient (no shared filesystem needed).
+broker:
+  packageManagement:
+    enabled: true
+    fileSystemStorage:
+      enabled: true
+      # Use a NON-default storage path so the test actually exercises PULSAR_PREFIX_STORAGE_PATH being
+      # applied to the broker. The FileSystemPackagesStorage default ("packages-storage") would resolve to
+      # /pulsar/packages-storage (the cwd), which happens to match the chart's default mount path, so a
+      # broken STORAGE_PATH wiring would still pass. With a custom path the PVC is mounted here AND
+      # STORAGE_PATH points here, so the function-package upload only lands on the volume if both are wired
+      # correctly. ci::verify_package_storage_files asserts the uploaded package files exist under this path.
+      storagePath: /pulsar/test-packages-storage
+
+# Size Oxia down for the resource-constrained kind cluster used in CI.
+oxia:
+  initialShardCount: 3
+  replicationFactor: 3
+  server:
+    replicas: 3
+    cpuLimit: 333m
+    memoryLimit: 200Mi
+    dbCacheSizeMb: 100
+    storageSize: 1Gi
