@@ -20,9 +20,28 @@
 components:
   zookeeper: false
   oxia: true
-  # disable functions for oxia tests since there's no support for Oxia in 
-  # BookKeeperPackagesStorage which requires Zookeeper
-  functions: false
+  # Functions are enabled on Oxia together with broker.packageManagement (FileSystemPackagesStorage).
+  # The default BookKeeper package storage requires ZooKeeper, but FileSystemPackagesStorage does not, so
+  # this validates Oxia + FileSystemPackagesStorage end to end: the function smoke test
+  # (ci::test_pulsar_function) creates a function from a JAR, which uploads the package via the broker's
+  # FileSystem-backed Packages Management Service.
+  functions: true
+
+# Host the Packages Management Service on the broker with FileSystemPackagesStorage so functions work on
+# Oxia. broker.replicaCount is 1 in CI (.ci/values-common.yaml), so the default ReadWriteOnce PVC on the
+# kind default StorageClass is sufficient (no shared filesystem needed).
+broker:
+  packageManagement:
+    enabled: true
+    fileSystemStorage:
+      enabled: true
+      # Use a NON-default storage path so the test actually exercises PULSAR_PREFIX_STORAGE_PATH being
+      # applied to the broker. The FileSystemPackagesStorage default ("packages-storage") would resolve to
+      # /pulsar/packages-storage (the cwd), which happens to match the chart's default mount path, so a
+      # broken STORAGE_PATH wiring would still pass. With a custom path the PVC is mounted here AND
+      # STORAGE_PATH points here, so the function-package upload only lands on the volume if both are wired
+      # correctly. ci::verify_package_storage_files asserts the uploaded package files exist under this path.
+      storagePath: /pulsar/test-packages-storage
 
 oxia:
   initialShardCount: 3

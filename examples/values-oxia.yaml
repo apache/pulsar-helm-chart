@@ -20,6 +20,8 @@
 components:
   zookeeper: false
   oxia: true
-  # disable functions for oxia tests since there's no support for Oxia in 
-  # BookKeeperPackagesStorage which requires Zookeeper
-  functions: false  
+  # Pulsar Functions are disabled by default. To run Functions on Oxia, also enable broker-hosted
+  # FileSystemPackagesStorage: the default BookKeeper package storage requires ZooKeeper and does not work
+  # without it (using Oxia). See values-functions-fs-storage.yaml for an example of enabling Functions for
+  # Oxia (merge it with this file), and the "Functions" section in examples/README.md plus the "Pulsar
+  # Functions package storage" section in the top-level README.md for details.

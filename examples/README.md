@@ -136,8 +136,29 @@ in examples that deploy a broker.
 
 | File | Description |
 | ---- | ----------- |
-| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled (`components.functions: false`) because their BookKeeper package storage still requires ZooKeeper. |
+| [`values-oxia.yaml`](values-oxia.yaml) | Use [Oxia](https://github.com/streamnative/oxia) as the metadata store instead of ZooKeeper (`components.zookeeper: false`, `components.oxia: true`). Pulsar Functions are disabled by default; to run Functions on Oxia, also merge [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) (broker-hosted [`FileSystemPackagesStorage`](#package-storage-filesystempackagesstorage), required because the default BookKeeper package storage needs ZooKeeper). |
 | [`values-cs.yaml`](values-cs.yaml) | Deploy **only** ZooKeeper as a shared configuration store (`metadataPrefix: /configuration-store`); all other components are disabled. Intended to be combined with `values-local-cluster.yaml`. |
+| [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) | Enable Pulsar Functions (`components.functions: true`) with broker-hosted [`FileSystemPackagesStorage`](#package-storage-filesystempackagesstorage) (`broker.packageManagement.enabled` + `fileSystemStorage.enabled`). Needs no ZooKeeper, so it is **suitable for Oxia** — merge it with [`values-oxia.yaml`](values-oxia.yaml). Also works with the default ZooKeeper metadata store. |
+
+### Functions
+
+Pulsar Functions run in a worker that is **embedded in the broker** (`components.functions: true`).
+See [`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml) for a ready-to-merge example
+(suitable for Oxia).
+
+#### Package storage (FileSystemPackagesStorage)
+
+The function worker stores uploaded packages (`pulsar-admin functions create --jar ...`) via the broker's
+Packages Management Service. Its default `BookKeeperPackagesStorage` requires ZooKeeper, so on Oxia you must
+enable broker-hosted **`FileSystemPackagesStorage`** (`broker.packageManagement.enabled: true` +
+`broker.packageManagement.fileSystemStorage.enabled: true`) — see
+[`values-functions-fs-storage.yaml`](values-functions-fs-storage.yaml).
+
+For the full configuration — choosing a volume (single broker vs. a `ReadWriteMany` shared filesystem with
+GKE / EKS / AKS CSI drivers) and creating the `StorageClass` / `PersistentVolume` / `PersistentVolumeClaim`
+from raw YAML — see the
+[Pulsar Functions package storage](../README.md#pulsar-functions-package-storage-required-for-oxia) section in
+the top-level README.
 
 ### Functions
 
@@ -167,7 +188,7 @@ topics). Function instances run with the Kubernetes runtime (one pod per instanc
 | [`values-bookkeeper-aws.yaml`](values-bookkeeper-aws.yaml) | A 3-bookie cluster using AWS EBS (`gp2`) `PersistentVolumeClaims` for the BookKeeper journal and ledgers. Monitoring stack disabled. |
 | [`values-zookeeper-aws.yaml`](values-zookeeper-aws.yaml) | A configuration store running only ZooKeeper backed by AWS EBS (`gp2`) volumes, including the `externalZookeeperServerList` option for building a ZooKeeper cluster that spans namespaces/clusters. |
 | [`values-faster-disk-cleanup.yaml`](values-faster-disk-cleanup.yaml) | Tune BookKeeper and the broker to reclaim disk space as fast as possible: frequent BookKeeper entry-log compaction and garbage collection, lower disk-utilization GC thresholds, a smaller rollover-heavy journal with no backups, and faster broker managed-ledger rollover so closed ledgers are trimmed sooner. For space-constrained test clusters; the values are not tuned for production. |
-| [`values-disable-fsync.yaml`](values-disable-fsync.yaml) | Disable fsync on the BookKeeper journal (`journalSyncData: false`) and ZooKeeper (`forceSync: false`) for faster writes in tests. Trades durability for speed — data written just before a crash or power loss can be lost — so it is **not for production**. |
+| [`values-disable-fsync.yaml`](values-disable-fsync.yaml) | Disable fsync on the BookKeeper journal (`journalSyncData: false`), ZooKeeper (`forceSync: false`) and the Oxia WAL (`walSyncData: false`, when Oxia is the metadata store) for faster writes in tests. Trades durability for speed — data written just before a crash or power loss can be lost — so it is **not for production**. |
 
 ### Security (TLS and authentication)
 

@@ -1,0 +1,31 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- /*
+Functions on Oxia require FileSystemPackagesStorage.
+The function worker stores function packages in BookKeeper/DLog by default, which requires ZooKeeper and
+therefore does not work with Oxia. The fix is to host the Packages Management Service with
+FileSystemPackagesStorage on the broker (broker.packageManagement.enabled AND
+broker.packageManagement.fileSystemStorage.enabled). Fail fast when functions run on Oxia without it.
+
+This check lives in a rendered template (not a `_`-prefixed partial) so that the `fail` is executed.
+*/ -}}
+{{- if (and .Values.components.functions .Values.components.oxia (not (and .Values.broker.packageManagement.enabled .Values.broker.packageManagement.fileSystemStorage.enabled))) }}
+{{- fail "ERROR: Pulsar Functions on Oxia require FileSystemPackagesStorage. The default BookKeeper package storage requires ZooKeeper and does not work with Oxia (components.oxia=true). Set broker.packageManagement.enabled=true and broker.packageManagement.fileSystemStorage.enabled=true to host FileSystemPackagesStorage on the broker, or use ZooKeeper as the metadata store. See the README and examples/README.md Functions section." }}
+{{- end }}

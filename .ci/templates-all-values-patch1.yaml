@@ -136,12 +136,47 @@ bookkeeper:
       storageClass:
 
 # -----------------------------------------------------------------------------
-# Broker: flip statefulsetUpgrade off
-# Exercises: the path where broker-statefulset-upgrade.yaml renders nothing.
+# Broker:
+#   - flip statefulsetUpgrade off (exercises the path where
+#     broker-statefulset-upgrade.yaml renders nothing).
+#   - enable FileSystemPackagesStorage with a created StorageClass + PersistentVolume + PVC
+#     (exercises all three branches of broker-package-storage.yaml plus the
+#     broker.packageManagement volume mount in broker-statefulset.yaml and the
+#     enablePackagesManagement keys in broker-configmap.yaml).
 # -----------------------------------------------------------------------------
 broker:
   statefulsetUpgrade:
     enabled: false
+  packageManagement:
+    enabled: true
+    fileSystemStorage:
+      enabled: true
+      storageClass:
+        metadata:
+          name: pulsar-pkg-sc
+        provisioner: kubernetes.io/no-provisioner
+        volumeBindingMode: WaitForFirstConsumer
+      persistentVolume:
+        metadata:
+          name: pulsar-pkg-pv
+        spec:
+          capacity:
+            storage: 10Gi
+          accessModes:
+            - ReadWriteMany
+          storageClassName: pulsar-pkg-sc
+          hostPath:
+            path: /tmp/pulsar-packages
+      persistentVolumeClaim:
+        metadata:
+          name: pulsar-broker-package-storage
+        spec:
+          accessModes:
+            - ReadWriteMany
+          storageClassName: pulsar-pkg-sc
+          resources:
+            requests:
+              storage: 10Gi
 
 # -----------------------------------------------------------------------------
 # Cert-manager internal issuer: selfsigning -> ca
