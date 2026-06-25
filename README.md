@@ -427,9 +427,9 @@ replicas can use it (all keys below are under `broker.packageManagement.fileSyst
 
   | Cloud | Shared file service to use | CSI driver | Reference |
   | ----- | -------------------------- | ---------- | --------- |
-  | GCP / GKE | Filestore (managed NFS) | `filestore.csi.storage.gke.io` | <https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver> |
-  | AWS / EKS | Amazon EFS (managed NFS) | `efs.csi.aws.com` | <https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html> |
-  | Azure / AKS | Azure Files | `file.csi.azure.com` | <https://learn.microsoft.com/azure/aks/create-volume-azure-files> |
+  | GCP / GKE | Filestore (managed NFS) | `filestore.csi.storage.gke.io` | [Filestore on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/stateful-workload#configure_the_managed_file_storage_with_using_csi) |
+  | AWS / EKS | Amazon EFS (managed NFS) | `efs.csi.aws.com` | [EFS CSI on EKS](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html) |
+  | Azure / AKS | Azure Files | `file.csi.azure.com` | [Azure Files on AKS](https://learn.microsoft.com/azure/aks/create-volume-azure-files) |
 
 **Volume permissions.** Pulsar container images run as **uid `10000`, gid `0`** by default, so package files
 are written by that user/group. The chart sets `broker.securityContext.fsGroup: 0`
