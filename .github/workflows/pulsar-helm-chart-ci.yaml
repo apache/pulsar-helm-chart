@@ -287,6 +287,9 @@ jobs:
           - name: Oxia + FileSystemPackagesStorage
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
+          - name: Pulsar v5 with Oxia and Pulsar Functions
+            values_file: .ci/clusters/values-pulsar-v5-functions.yaml
+            shortname: pulsar-v5-functions
           - name: OpenID
             values_file: .ci/clusters/values-openid.yaml
             shortname: openid
