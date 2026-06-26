@@ -160,6 +160,25 @@ from raw YAML — see the
 [Pulsar Functions package storage](../README.md#pulsar-functions-package-storage-required-for-oxia) section in
 the top-level README.
 
+### Functions
+
+By default the Pulsar Functions worker runs **embedded in the broker** (`components.functions: true`).
+Alternatively it can run as its own **standalone component** (`components.function_worker: true`), which
+disables the embedded worker.
+
+Running the function worker separately separates its workload from the brokers, which is useful for:
+
+- **Operational** reasons — scale, schedule and manage the function worker independently of the brokers.
+- **Security** reasons — a reduced attack surface. Functions run user code, so isolating the worker means a
+  compromise of the function worker (for example a remote code execution) does not directly impact the brokers.
+
+The standalone worker is "broker-attached" (it connects to the broker and keeps function metadata in system
+topics). Function instances run with the Kubernetes runtime (one pod per instance).
+
+| File | Description |
+| ---- | ----------- |
+| [`values-function-worker.yaml`](values-function-worker.yaml) | Run the Functions worker as a separate `function-worker` component (`components.function_worker: true`) instead of embedded in the broker. Deploys a single-replica function-worker StatefulSet, disables the broker's embedded worker, and points the proxy's Functions routing at the new service. **Functions run user code — enable only for trusted users.** |
+
 ### Storage
 
 | File | Description |

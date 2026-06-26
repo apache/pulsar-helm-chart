@@ -110,6 +110,12 @@ proxy:
   podMonitor:
     enabled: false
 
+# Standalone function worker (components.function_worker), exercised by .ci/clusters/values-function-worker.yaml
+function_worker:
+  # Disable pod monitor since we're disabling CRD installation
+  podMonitor:
+    enabled: false
+
 toolset:
   useProxy: false
 

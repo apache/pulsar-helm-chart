@@ -141,10 +141,13 @@ data:
 
   # Function Worker Settings
   # function worker configuration
-  {{- if not .Values.components.functions }}
+  # The embedded function worker runs in the broker only when functions are enabled AND the standalone
+  # function-worker component is NOT enabled. When components.function_worker is true the embedded worker
+  # is disabled completely and a dedicated function-worker StatefulSet handles functions instead.
+  {{- if or (not .Values.components.functions) .Values.components.function_worker }}
   functionsWorkerEnabled: "false"
   {{- end }}
-  {{- if .Values.components.functions }}
+  {{- if and .Values.components.functions (not .Values.components.function_worker) }}
   functionsWorkerEnabled: "true"
   {{- if .Values.functions.useBookieAsStateStore }}
   PF_stateStorageServiceUrl: "bk://{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}:{{ .Values.bookkeeper.ports.statestore }}"

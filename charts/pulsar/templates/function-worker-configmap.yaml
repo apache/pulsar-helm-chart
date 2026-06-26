@@ -1,0 +1,135 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- if and .Values.components.function_worker (not .Values.standalone.enabled) }}
+{{- $brokerHost := printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component }}
+{{- $workerHost := printf "%s-%s" (include "pulsar.fullname" .) .Values.function_worker.component }}
+{{- $brokerTls := and .Values.tls.enabled .Values.tls.broker.enabled }}
+{{- $workerTls := and .Values.tls.enabled .Values.tls.function_worker.enabled }}
+{{- $instanceTls := and .Values.tls.enabled .Values.tls.broker.enabled .Values.tls.function_instance.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.function_worker.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.function_worker.component }}
+data:
+  # The keys below are written into conf/functions_worker.yml at startup by
+  # bin/gen-yml-from-env.py: each PF_-prefixed env var becomes a functions_worker.yml key,
+  # with `_` as the nesting separator. workerId/workerHostname are exported per-pod in the
+  # statefulset command.
+
+  # Worker identity and web service
+  PF_pulsarFunctionsCluster: {{ template "pulsar.cluster.name" . }}
+  PF_workerPort: "{{ .Values.function_worker.ports.http }}"
+  PF_numFunctionPackageReplicas: "{{ .Values.broker.configData.managedLedgerDefaultEnsembleSize }}"
+  PF_connectorsDirectory: ./connectors
+
+  # Broker connection. The worker is "broker-attached": it talks to the broker over these URLs and
+  # keeps function metadata in system topics, so it needs no direct connection to the metadata store.
+  {{- if $brokerTls }}
+  PF_pulsarServiceUrl: "pulsar+ssl://{{ $brokerHost }}:{{ .Values.broker.ports.pulsarssl }}/"
+  PF_pulsarWebServiceUrl: "https://{{ $brokerHost }}:{{ .Values.broker.ports.https }}/"
+  PF_useTls: "true"
+  PF_tlsTrustCertsFilePath: {{ include "pulsar.function_worker.tlsTrustCertsFilePath" . | quote }}
+  PF_brokerClientTrustCertsFilePath: {{ include "pulsar.function_worker.tlsTrustCertsFilePath" . | quote }}
+  {{- else }}
+  PF_pulsarServiceUrl: "pulsar://{{ $brokerHost }}:{{ .Values.broker.ports.pulsar }}/"
+  PF_pulsarWebServiceUrl: "http://{{ $brokerHost }}:{{ .Values.broker.ports.http }}/"
+  {{- end }}
+
+  # Kubernetes runtime: each function instance runs as its own pod, using the images.functions image.
+  PF_functionRuntimeFactoryClassName: "org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactory"
+  PF_containerFactory: k8s
+  # support version >= 2.5.0
+  PF_functionRuntimeFactoryConfigs_pulsarRootDir: {{ template "pulsar.home" . }}
+  PF_kubernetesContainerFactory_pulsarRootDir: {{ template "pulsar.home" . }}
+  PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+  PF_functionRuntimeFactoryConfigs_imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.functions "root" .) }}"
+  PF_functionRuntimeFactoryConfigs_submittingInsidePod: "true"
+  PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
+  PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
+  PF_functionRuntimeFactoryConfigs_expectedMetricsCollectionInterval: "30"
+  # The function instance downloads its package over pulsarAdminUrl. The broker's embedded worker is
+  # disabled here, so it returns HTTP 409 for functions admin; point the instance at the standalone worker,
+  # which serves the Functions REST API (including download). pulsarServiceUrl stays on the broker for the
+  # instance's input/output/state topics.
+  {{- if $workerTls }}
+  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ $workerHost }}:{{ .Values.function_worker.ports.https }}/"
+  {{- else }}
+  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ $workerHost }}:{{ .Values.function_worker.ports.http }}/"
+  {{- end }}
+  {{- if not $instanceTls }}
+  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar://{{ $brokerHost }}:{{ .Values.broker.ports.pulsar }}/"
+  {{- else }}
+  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ $brokerHost }}:{{ .Values.broker.ports.pulsarssl }}/"
+  {{- end }}
+  # support version < 2.5.0
+  PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.functions "root" .) }}"
+  PF_kubernetesContainerFactory_imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.functions "root" .) }}"
+  PF_kubernetesContainerFactory_submittingInsidePod: "true"
+  PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
+  PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}
+  PF_kubernetesContainerFactory_expectedMetricsCollectionInterval: "30"
+  {{- if $workerTls }}
+  PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ $workerHost }}:{{ .Values.function_worker.ports.https }}/"
+  {{- else }}
+  PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ $workerHost }}:{{ .Values.function_worker.ports.http }}/"
+  {{- end }}
+  {{- if not $instanceTls }}
+  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar://{{ $brokerHost }}:{{ .Values.broker.ports.pulsar }}/"
+  {{- else }}
+  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ $brokerHost }}:{{ .Values.broker.ports.pulsarssl }}/"
+  {{- end }}
+
+  # Function worker web service TLS
+  {{- if and .Values.tls.enabled .Values.tls.function_worker.enabled }}
+  PF_workerPortTls: "{{ .Values.function_worker.ports.https }}"
+  PF_tlsEnabled: "true"
+  PF_tlsCertificateFilePath: "/pulsar/certs/function-worker/tls.crt"
+  PF_tlsKeyFilePath: "/pulsar/certs/function-worker/tls.key"
+  {{- end }}
+
+  # Authentication
+  {{- if .Values.auth.authentication.enabled }}
+  PF_authenticationEnabled: "true"
+  {{- if .Values.auth.authorization.enabled }}
+  PF_authorizationEnabled: "true"
+  PF_superUserRoles: {{ .Values.auth.superUsers | values | compact | sortAlpha | join "," }}
+  {{- end }}
+  {{- if .Values.auth.authentication.jwt.enabled }}
+  # token authentication configuration
+  PF_authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken"
+  # the worker authenticates to the broker using the broker superuser token
+  PF_brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
+  PF_brokerClientAuthenticationParameters: "file:///pulsar/tokens/function-worker/token"
+  PF_clientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
+  PF_clientAuthenticationParameters: "file:///pulsar/tokens/function-worker/token"
+  # key used to validate tokens presented to the worker's own web service
+  {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+  PF_properties_tokenSecretKey: "file:///pulsar/keys/token/secret.key"
+  {{- else }}
+  PF_properties_tokenPublicKey: "file:///pulsar/keys/token/public.key"
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{ toYaml .Values.function_worker.configData | indent 2 }}
+{{- end }}

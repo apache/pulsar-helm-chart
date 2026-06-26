@@ -40,10 +40,26 @@
 #            broker-configmap.yaml, broker-statefulset.yaml,
 #            proxy-configmap.yaml, autorecovery-configmap.yaml,
 #            bookkeeper-cluster-initialize.yaml, pulsar-cluster-initialize.yaml.
+#
+# Functions: embedded broker worker -> standalone function-worker component.
+# Exercises function-worker-*.yaml, the broker-configmap.yaml functionsWorkerEnabled=false branch, the
+# broker-statefulset.yaml Parallel podManagementPolicy branch, and the proxy functionWorkerWebServiceURL
+# routing. (The function worker is metadata-store-agnostic; the Oxia flip above is unrelated.)
 # -----------------------------------------------------------------------------
 components:
   zookeeper: false
   oxia: true
+  function_worker: true
+
+# -----------------------------------------------------------------------------
+# TLS: enable the standalone function-worker server cert (exercises the function-worker Certificate block
+# in tls-certs-internal.yaml, the https port in function-worker-service[-headless].yaml/statefulset, the
+# PF_tls* keys in function-worker-configmap.yaml, and the functionWorkerWebServiceURLTLS proxy routing).
+# The base file already enables tls.enabled and the broker cert.
+# -----------------------------------------------------------------------------
+tls:
+  function_worker:
+    enabled: true
 
 # -----------------------------------------------------------------------------
 # Anti-affinity: hard -> soft

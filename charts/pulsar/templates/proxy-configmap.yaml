@@ -65,6 +65,19 @@ data:
   {{- end }}
   {{- end }}
 
+  # Function worker routing
+  # When the standalone function-worker component is enabled, route Functions REST API calls to the
+  # function-worker service instead of the broker. Without this the proxy forwards function calls to the
+  # broker (the embedded-worker behavior).
+  {{- if .Values.components.function_worker }}
+  {{- $fwHost := printf "%s-%s" (include "pulsar.fullname" .) .Values.function_worker.component }}
+  {{- if and .Values.tls.enabled .Values.tls.function_worker.enabled }}
+  functionWorkerWebServiceURLTLS: https://{{ $fwHost }}:{{ .Values.function_worker.ports.https }}
+  {{- else }}
+  functionWorkerWebServiceURL: http://{{ $fwHost }}:{{ .Values.function_worker.ports.http }}
+  {{- end }}
+  {{- end }}
+
   # Authentication Settings
   {{- if .Values.auth.authentication.enabled }}
   authenticationEnabled: "true"

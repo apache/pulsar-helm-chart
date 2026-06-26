@@ -40,8 +40,9 @@ spec:
       component: {{ .Values.broker.component }}
   updateStrategy: {{ .Values.broker.updateStrategy | toYaml | nindent 4 }}
   {{- /*
-  When functions are enabled, podManagementPolicy must be OrderedReady to ensure that other started brokers are available via DNS
-  for the function worker to connect to.
+  When the embedded function worker is enabled (functions enabled and the standalone function-worker
+  component disabled), podManagementPolicy must be OrderedReady to ensure that other started brokers are
+  available via DNS for the function worker to connect to.
   Since podManagementPolicy is immutable, this rule is only applied when the broker is first installed.
   */}}
   {{- $stsObj := lookup "apps/v1" "StatefulSet" $namespace $stsName }}
@@ -50,10 +51,10 @@ spec:
   {{- else }}
   {{- if .Values.broker.podManagementPolicy }}
   podManagementPolicy: {{ .Values.broker.podManagementPolicy }}
-  {{- else if not .Values.components.functions }}
-  podManagementPolicy: Parallel
-  {{- else }}
+  {{- else if and .Values.components.functions (not .Values.components.function_worker) }}
   podManagementPolicy: OrderedReady
+  {{- else }}
+  podManagementPolicy: Parallel
   {{- end }}
   {{- end }}
   template:

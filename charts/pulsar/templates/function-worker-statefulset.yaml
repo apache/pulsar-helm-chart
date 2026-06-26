@@ -1,0 +1,256 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- if and .Values.components.function_worker (not .Values.standalone.enabled) }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.function_worker.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  annotations: {{ .Values.function_worker.appAnnotations | toYaml | nindent 4 }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.function_worker.component }}
+spec:
+  serviceName: "{{ template "pulsar.function_worker.service.headless" . }}"
+  replicas: {{ .Values.function_worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.function_worker.component }}
+  {{- if .Values.function_worker.podManagementPolicy }}
+  podManagementPolicy: {{ .Values.function_worker.podManagementPolicy }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.function_worker.component }}
+      annotations:
+        {{- if not .Values.function_worker.podMonitor.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.function_worker.ports.http }}"
+        {{- end }}
+        {{- if .Values.function_worker.restartPodsOnConfigMapChange }}
+        checksum/config: {{ include (print $.Template.BasePath "/function-worker-configmap.yaml") . | sha256sum }}
+        {{- end }}
+{{- with .Values.function_worker.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+      serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.function_worker.component }}-acct"
+    {{- if .Values.function_worker.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.function_worker.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.function_worker.priorityClassName }}
+      priorityClassName: {{ .Values.function_worker.priorityClassName }}
+    {{- end }}
+    {{- if .Values.function_worker.tolerations }}
+      tolerations:
+{{ toYaml .Values.function_worker.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.function_worker.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.function_worker.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
+      affinity:
+        {{- if and .Values.affinity.anti_affinity .Values.function_worker.affinity.anti_affinity }}
+        podAntiAffinity:
+          {{- if eq .Values.function_worker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution" }}
+          {{ .Values.function_worker.affinity.type }}:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.function_worker.component }}
+            topologyKey: {{ .Values.function_worker.affinity.anti_affinity_topology_key }}
+          {{- else }}
+          {{ .Values.function_worker.affinity.type }}:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.function_worker.component }}
+                topologyKey: {{ .Values.function_worker.affinity.anti_affinity_topology_key }}
+          {{- end }}
+        {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.function_worker.gracePeriod }}
+      initContainers:
+      {{- if .Values.tls.function_worker.cacerts.enabled }}
+      - name: cacerts
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.function_worker "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.function_worker "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.function_worker.cacerts.certs) }}
+        volumeMounts:
+        {{- include "pulsar.function_worker.certs.volumeMounts" . | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.components.broker .Values.function_worker.waitBrokerTimeout (gt (.Values.function_worker.waitBrokerTimeout | int) 0) }}
+      # Wait for the broker to be resolvable before starting the worker (the worker is broker-attached).
+      - name: wait-broker-ready
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.function_worker "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.function_worker "root" .) }}"
+        resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        command: ["timeout", "{{ .Values.function_worker.waitBrokerTimeout }}", "sh", "-c"]
+        args:
+          - |
+            until nslookup {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}; do
+              echo "waiting for broker {{ template "pulsar.fullname" . }}-{{ .Values.broker.component }} ... check in 3 seconds ...";
+              sleep 3;
+            done;
+      {{- end }}
+      {{- if .Values.function_worker.initContainers }}
+        {{- toYaml .Values.function_worker.initContainers | nindent 6 }}
+      {{- end }}
+      containers:
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.function_worker.component }}"
+        image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.function_worker "root" .) }}"
+        imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.function_worker "root" .) }}"
+        {{- if .Values.function_worker.probe.liveness.enabled }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.function_worker.ports.http }}
+          initialDelaySeconds: {{ .Values.function_worker.probe.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.function_worker.probe.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.function_worker.probe.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.function_worker.probe.liveness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.function_worker.probe.readiness.enabled }}
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.function_worker.ports.http }}
+          initialDelaySeconds: {{ .Values.function_worker.probe.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.function_worker.probe.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.function_worker.probe.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.function_worker.probe.readiness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.function_worker.probe.startup.enabled }}
+        startupProbe:
+          tcpSocket:
+            port: {{ .Values.function_worker.ports.http }}
+          initialDelaySeconds: {{ .Values.function_worker.probe.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.function_worker.probe.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.function_worker.probe.startup.timeoutSeconds }}
+          failureThreshold: {{ .Values.function_worker.probe.startup.failureThreshold }}
+        {{- end }}
+      {{- if .Values.function_worker.resources }}
+        resources:
+{{ toYaml .Values.function_worker.resources | indent 10 }}
+      {{- end }}
+        command: ["sh", "-c"]
+        args:
+        - |
+          {{- if .Values.tls.function_worker.cacerts.enabled }}
+          cd /pulsar/certs/cacerts;
+          nohup /pulsar/bin/certs-combine-pem-infinity.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.function_worker.cacerts.certs) }} > /pulsar/certs/cacerts/certs-combine-pem-infinity.log 2>&1 &
+          cd /pulsar;
+          {{- end }}
+          export PF_workerId="$(hostname)";
+          export PF_workerHostname="$(hostname -f)";
+          bin/gen-yml-from-env.py conf/functions_worker.yml;
+          cat conf/pulsar_env.sh;
+          OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar functions-worker;
+        ports:
+        # prometheus needs to access /metrics endpoint
+        - name: http
+          containerPort: {{ .Values.function_worker.ports.http }}
+        {{- if and .Values.tls.enabled .Values.tls.function_worker.enabled }}
+        - name: https
+          containerPort: {{ .Values.function_worker.ports.https }}
+        {{- end }}
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.function_worker.component }}"
+        {{- $jwtAuth := and .Values.auth.authentication.enabled .Values.auth.authentication.jwt.enabled }}
+        {{- if or $jwtAuth .Values.function_worker.extraVolumeMounts .Values.tls.enabled }}
+        volumeMounts:
+          {{- if $jwtAuth }}
+          - mountPath: "/pulsar/keys"
+            name: token-keys
+            readOnly: true
+          - mountPath: "/pulsar/tokens"
+            name: function-worker-token
+            readOnly: true
+          {{- end }}
+          {{- if .Values.function_worker.extraVolumeMounts }}
+{{ toYaml .Values.function_worker.extraVolumeMounts | indent 10 }}
+          {{- end }}
+          {{- include "pulsar.function_worker.certs.volumeMounts" . | nindent 10 }}
+        {{- end }}
+        {{- if .Values.function_worker.extraEnvs }}
+        env:
+{{- toYaml .Values.function_worker.extraEnvs | nindent 10 }}
+        {{- end }}
+      {{- if or $jwtAuth .Values.function_worker.extraVolumes .Values.tls.enabled }}
+      volumes:
+      {{- if .Values.function_worker.extraVolumes }}
+{{ toYaml .Values.function_worker.extraVolumes | indent 6 }}
+      {{- end }}
+      {{- if $jwtAuth }}
+      - name: token-keys
+        secret:
+          {{- if not .Values.auth.authentication.jwt.usingSecretKey }}
+          secretName: "{{ .Release.Name }}-token-asymmetric-key"
+          {{- end }}
+          {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+          secretName: "{{ .Release.Name }}-token-symmetric-key"
+          {{- end }}
+          items:
+            {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            - key: SECRETKEY
+              path: token/secret.key
+            {{- else }}
+            - key: PUBLICKEY
+              path: token/public.key
+            {{- end }}
+      - name: function-worker-token
+        secret:
+          secretName: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.broker }}"
+          items:
+            - key: TOKEN
+              path: function-worker/token
+      {{- end }}
+      {{- include "pulsar.function_worker.certs.volumes" . | nindent 6 }}
+      {{- end }}
+      {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
+{{- end }}

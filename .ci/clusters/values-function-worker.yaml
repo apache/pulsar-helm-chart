@@ -1,0 +1,49 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# CI scenario: run the Pulsar Functions worker as a SEPARATE component (components.function_worker)
+# instead of embedded in the broker, and exercise it with the function smoke test.
+components:
+  # Enabling function_worker deploys a dedicated function-worker StatefulSet and disables the broker's
+  # embedded function worker (broker-configmap sets functionsWorkerEnabled:"false").
+  function_worker: true
+  # functions:true is what makes the CI harness run the function smoke test (ci::test_pulsar_function in
+  # .ci/chart_test.sh gates on components.functions). The standalone worker — not the broker — serves it.
+  functions: true
+
+# Route Functions admin calls through the proxy.
+# Once the broker's embedded worker is disabled, the broker can no longer serve the Functions admin REST
+# API (it returns HTTP 409 "Pulsar Function Worker is not enabled"); there is no broker-side redirect in
+# Pulsar. Only the proxy routes function admin calls to the standalone worker (proxy-configmap sets
+# functionWorkerWebServiceURL). The CI default is toolset.useProxy:false (toolset's pulsar-admin talks
+# straight to the broker), so override it here to send admin calls through the proxy -> function-worker.
+toolset:
+  useProxy: true
+
+# This scenario keeps the default metadata store (ZooKeeper) and BookKeeper, so the standalone worker
+# stores function packages in BookKeeper via DistributedLog (it fetches the bookkeeper/metadata service
+# URIs from the broker's brokers/internal-configuration endpoint). No FileSystemPackagesStorage needed.
+function_worker:
+  configData:
+    # Keep the spawned function-instance pods (Kubernetes runtime, one pod per instance) small enough to
+    # schedule on the single kind CI node. Mirrors broker.configData.PF_functionInstanceMinResources_*
+    # used for the embedded-worker scenarios in .ci/values-common.yaml.
+    PF_functionInstanceMinResources_cpu: "0.2"
+    PF_functionInstanceMinResources_ram: "268435456"
+    PF_functionInstanceMinResources_disk: "268435456"

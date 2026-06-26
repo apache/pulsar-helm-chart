@@ -1,0 +1,54 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Run the Pulsar Functions worker as a SEPARATE component instead of embedded in the broker.
+#
+# Why run it separately? It separates the function worker workload from the brokers, which is useful for:
+#   - Operational reasons: scale, schedule and manage the function worker independently of the brokers.
+#   - Security reasons: a reduced attack surface. Functions run user code, so isolating the worker means a
+#     compromise of the function worker (for example a remote code execution) does not directly impact the
+#     brokers.
+#
+# WARNING! Functions run user code; enable this only when all of your users are trusted.
+#
+# Enabling components.function_worker:
+#   - deploys a dedicated function-worker StatefulSet (single replica by default), and
+#   - disables the broker's embedded function worker completely.
+#
+# The worker is "broker-attached" (it connects to the broker and keeps function metadata in system topics).
+# Function instances run with the Kubernetes runtime (one pod per instance).
+#
+# IMPORTANT: once the embedded worker is disabled, the broker no longer serves the Functions admin REST API
+# (it returns HTTP 409 "Pulsar Function Worker is not enabled"), and Pulsar has no broker-side redirect to a
+# standalone worker. So `pulsar-admin functions ...` clients must reach the worker either through the proxy
+# (which the chart configures with functionWorkerWebServiceURL when function_worker is enabled) or directly
+# via the worker's web service (--admin-url http://<release>-function-worker:6750). The default toolset uses
+# the proxy (toolset.useProxy: true), so it works out of the box.
+components:
+  function_worker: true
+
+# The standalone function worker defaults to a single replica. Other settings (resources, probes,
+# affinity, RBAC scope, TLS, podMonitor, image) are under the top-level `function_worker:` and
+# `tls.function_worker:` sections of the chart values.yaml.
+# function_worker:
+#   replicaCount: 1
+#   rbac:
+#     # true (the default) scopes the function-instance RBAC to the release namespace (Role/RoleBinding);
+#     # set false for a cluster-wide ClusterRole/ClusterRoleBinding
+#     limit_to_namespace: true
