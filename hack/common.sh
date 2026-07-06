@@ -35,6 +35,7 @@ CR_BIN=$OUTPUT_BIN/cr
 : "${CR_VERSION:=1.7.0}"
 KUBECONFORM_BIN=$OUTPUT_BIN/kubeconform
 : "${KUBECONFORM_VERSION:=0.6.7}"
+: "${KUBECONFORM_CACHE_DIR:=$OUTPUT/kubeconform-cache}"
 export PATH="$OUTPUT_BIN:$PATH"
 
 test -d "$OUTPUT_BIN" || mkdir -p "$OUTPUT_BIN"
@@ -145,4 +146,26 @@ function hack::ensure_kubeconform() {
     echo "Installing kubeconform v$KUBECONFORM_VERSION..."
     curl -s --retry 10 -L https://github.com/yannh/kubeconform/releases/download/v"${KUBECONFORM_VERSION}"/kubeconform-"${OS}"-"${ARCH}".tar.gz | tar -xzO kubeconform > "$KUBECONFORM_BIN"
     chmod +x "$KUBECONFORM_BIN"
+}
+
+# Runs kubeconform with a persistent schema cache, retrying only when the
+# failure is a schema download error (raw.githubusercontent.com throttles
+# GitHub Actions runners intermittently). Schemas already in the cache are
+# not re-downloaded on retry, so each retry only fetches the missing ones.
+function hack::kubeconform_with_retries() {
+    test -d "$KUBECONFORM_CACHE_DIR" || mkdir -p "$KUBECONFORM_CACHE_DIR"
+    local max_attempts=5 attempt exit_code output
+    for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+        exit_code=0
+        output=$(kubeconform -cache "$KUBECONFORM_CACHE_DIR" "$@" 2>&1) || exit_code=$?
+        echo "$output"
+        if [ $exit_code -eq 0 ] || ! grep -q "failed downloading schema" <<< "$output"; then
+            return $exit_code
+        fi
+        if [ $attempt -lt $max_attempts ]; then
+            echo "kubeconform failed to download schemas (attempt $attempt/$max_attempts), retrying in 5 seconds..."
+            sleep 5
+        fi
+    done
+    return $exit_code
 }

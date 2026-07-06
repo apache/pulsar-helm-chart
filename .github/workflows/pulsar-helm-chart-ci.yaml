@@ -132,6 +132,16 @@ jobs:
             --validate-maintainers=false \
             --target-branch ${{ github.event.repository.default_branch }}
 
+      - name: Restore kubeconform schema cache
+        id: kubeconform-schema-cache
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: output/kubeconform-cache
+          key: kubeconform-schema-cache-${{ hashFiles('.github/workflows/pulsar-helm-chart-ci.yaml') }}
+          restore-keys: |
+            kubeconform-schema-cache-
+
       - name: Run kubeconform check for helm template with every major k8s version 1.25.0-1.34.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
@@ -152,8 +162,10 @@ jobs:
             else
               echo ""
             fi
-            helm template charts/pulsar --set victoria-metrics-k8s-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" | \
-              kubeconform -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary
+            # render to a file so that validation can be retried without re-running helm
+            local rendered_manifests="$RUNNER_TEMP/kubeconform-input.yaml"
+            helm template charts/pulsar --set victoria-metrics-k8s-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" > "$rendered_manifests"
+            hack::kubeconform_with_retries -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary "$rendered_manifests"
           }
           set -o pipefail
           for k8s_version_part in {25..34}; do
@@ -200,7 +212,7 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::kubeconform validate (base)"
-          kubeconform -schema-location default -schema-location "$schema_crd_url" \
+          hack::kubeconform_with_retries -schema-location default -schema-location "$schema_crd_url" \
             -strict -kubernetes-version $kube_version -summary "$render_dir"
           echo "::endgroup::"
 
@@ -213,9 +225,18 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::kubeconform validate (patch1)"
-          kubeconform -schema-location default -schema-location "$schema_crd_url" \
+          hack::kubeconform_with_retries -schema-location default -schema-location "$schema_crd_url" \
             -strict -kubernetes-version $kube_version -summary "$render_dir_patch1"
           echo "::endgroup::"
+
+      - name: Save kubeconform schema cache
+        # save the cache even when validation failed so that already downloaded
+        # schemas don't get re-downloaded on the next attempt
+        if: ${{ always() && steps.check_changes.outputs.docs_only != 'true' && steps.kubeconform-schema-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: output/kubeconform-cache
+          key: kubeconform-schema-cache-${{ hashFiles('.github/workflows/pulsar-helm-chart-ci.yaml') }}
 
       - name: Validate kustomize yaml for extra new lines in pulsar-init commands
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
