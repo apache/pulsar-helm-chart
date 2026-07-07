@@ -46,7 +46,9 @@ spec:
   - name: "{{ .Values.tlsPrefix }}pulsarssl"
     port: {{ .Values.broker.ports.pulsarssl }}
   {{- end }}
+  {{- if .Values.broker.service.clusterIP }}
   clusterIP: "{{ .Values.broker.service.clusterIP }}"
+  {{- end }}
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.broker.component }}
