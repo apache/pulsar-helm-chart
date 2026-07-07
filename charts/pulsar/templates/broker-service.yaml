@@ -46,7 +46,7 @@ spec:
   - name: "{{ .Values.tlsPrefix }}pulsarssl"
     port: {{ .Values.broker.ports.pulsarssl }}
   {{- end }}
-  {{- if ne .Values.broker.service.clusterIP "" }}
+  {{- if .Values.broker.service.clusterIP }}
   clusterIP: "{{ .Values.broker.service.clusterIP }}"
   {{- end }}
   selector:
