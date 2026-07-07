@@ -19,12 +19,7 @@
 
 {{- if and .Values.components.function_worker (not .Values.standalone.enabled) }}
 {{- if .Values.function_worker.pdb.usePolicy }}
-# pdb version detection
-{{- if semverCompare "<1.21-0" .Capabilities.KubeVersion.Version }}
-apiVersion: policy/v1beta1
-{{- else }}
 apiVersion: policy/v1
-{{- end }}
 kind: PodDisruptionBudget
 metadata:
   name: "{{ template "pulsar.fullname" . }}-{{ .Values.function_worker.component }}"
