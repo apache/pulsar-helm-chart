@@ -114,7 +114,7 @@ spec:
                 echo "bookkeeper cluster already initialized";
             else
                 {{- if and .Values.components.zookeeper (not (eq .Values.metadataPrefix "")) }}
-                bin/pulsar zookeeper-shell -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} && echo 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' &&
+                bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} create {{ .Values.metadataPrefix }} && echo 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' &&
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;
             fi
