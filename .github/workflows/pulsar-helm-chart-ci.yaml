@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Detect changed files
         id:   changes
@@ -74,7 +74,7 @@ jobs:
           java-version: '21'
 
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check license headers with Apache RAT
         run: |
@@ -89,7 +89,7 @@ jobs:
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -135,7 +135,7 @@ jobs:
       - name: Restore kubeconform schema cache
         id: kubeconform-schema-cache
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: output/kubeconform-cache
           key: kubeconform-schema-cache-${{ hashFiles('.github/workflows/pulsar-helm-chart-ci.yaml') }}
@@ -233,7 +233,7 @@ jobs:
         # save the cache even when validation failed so that already downloaded
         # schemas don't get re-downloaded on the next attempt
         if: ${{ always() && steps.check_changes.outputs.docs_only != 'true' && steps.kubeconform-schema-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: output/kubeconform-cache
           key: kubeconform-schema-cache-${{ hashFiles('.github/workflows/pulsar-helm-chart-ci.yaml') }}
@@ -358,7 +358,7 @@ jobs:
       CERTMANAGER_VERSION: ${{ matrix.certmanager_version || '' }}
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Tune Runner VM
         uses: ./.github/actions/tune-runner-vm
