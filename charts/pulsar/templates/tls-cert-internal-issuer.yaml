@@ -45,6 +45,10 @@ spec:
     - server auth
     - client auth
   isCA: true
+{{- if .Values.certs.internal_issuer.privateKey }}
+  privateKey:
+    {{- toYaml .Values.certs.internal_issuer.privateKey | nindent 4 }}
+{{- end }}
   issuerRef:
     name: "{{ template "pulsar.fullname" . }}-{{ .Values.certs.internal_issuer.component }}"
     # We can reference ClusterIssuers by changing the kind here.
