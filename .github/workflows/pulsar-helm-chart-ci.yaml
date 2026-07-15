@@ -266,7 +266,8 @@ jobs:
           - version: "1.25.16"
             kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
           - version: "1.36.1"
-            kind_image_tag: v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5 
+            kind_image_tag: v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
+            certmanager_version: v1.21.0
         testScenario:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
@@ -354,6 +355,7 @@ jobs:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
       HELM_VERSION: ${{ matrix.helmVersion || '3.14.4' }}
+      CERTMANAGER_VERSION: ${{ matrix.certmanager_version || '' }}
     steps:
       - name: checkout
         uses: actions/checkout@v6
