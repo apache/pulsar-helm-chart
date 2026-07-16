@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Detect changed files
         id:   changes
@@ -74,7 +74,7 @@ jobs:
           java-version: '21'
 
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check license headers with Apache RAT
         run: |
@@ -89,7 +89,7 @@ jobs:
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -135,14 +135,14 @@ jobs:
       - name: Restore kubeconform schema cache
         id: kubeconform-schema-cache
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: output/kubeconform-cache
           key: kubeconform-schema-cache-${{ hashFiles('.github/workflows/pulsar-helm-chart-ci.yaml') }}
           restore-keys: |
             kubeconform-schema-cache-
 
-      - name: Run kubeconform check for helm template with every major k8s version 1.25.0-1.34.0
+      - name: Run kubeconform check for helm template with every major k8s version 1.25.0-1.36.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
           PULSAR_CHART_HOME=$(pwd)
@@ -168,7 +168,7 @@ jobs:
             hack::kubeconform_with_retries -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary "$rendered_manifests"
           }
           set -o pipefail
-          for k8s_version_part in {25..34}; do
+          for k8s_version_part in {25..36}; do
             k8s_version="1.${k8s_version_part}.0"
             echo "Validating default values with k8s version $k8s_version"
             validate_helm_template_with_k8s_version $k8s_version
@@ -197,7 +197,7 @@ jobs:
           ci::helm_repo_add
           helm dependency build charts/pulsar
           set -o pipefail
-          kube_version=1.34.0
+          kube_version=1.36.0
           schema_crd_url='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
           render_dir="$RUNNER_TEMP/templates-all-values"
           render_dir_patch1="$RUNNER_TEMP/templates-all-values-patch1"
@@ -233,7 +233,7 @@ jobs:
         # save the cache even when validation failed so that already downloaded
         # schemas don't get re-downloaded on the next attempt
         if: ${{ always() && steps.check_changes.outputs.docs_only != 'true' && steps.kubeconform-schema-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: output/kubeconform-cache
           key: kubeconform-schema-cache-${{ hashFiles('.github/workflows/pulsar-helm-chart-ci.yaml') }}
@@ -265,8 +265,9 @@ jobs:
         k8sVersion:
           - version: "1.25.16"
             kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
-          - version: "1.34.0"
-            kind_image_tag: v1.34.0@sha256:ede5bb6984830375d264e41b7169d03643f586d3e35316bf5229eaeb12bb18e0
+          - version: "1.36.1"
+            kind_image_tag: v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
+            certmanager_version: v1.21.0
         testScenario:
           - name: Upgrade latest released version
             values_file: .ci/clusters/values-upgrade.yaml
@@ -354,9 +355,10 @@ jobs:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
       HELM_VERSION: ${{ matrix.helmVersion || '3.14.4' }}
+      CERTMANAGER_VERSION: ${{ matrix.certmanager_version || '' }}
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Tune Runner VM
         uses: ./.github/actions/tune-runner-vm
