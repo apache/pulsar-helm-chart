@@ -101,6 +101,19 @@ spec:
       tolerations:
 {{ toYaml .Values.standalone.tolerations | indent 8 }}
     {{- end }}
+    {{- if .Values.standalone.affinity.node_affinity }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.standalone.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.standalone.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.standalone.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.standalone.gracePeriod }}
       {{- if .Values.standalone.initContainers }}
       initContainers:
