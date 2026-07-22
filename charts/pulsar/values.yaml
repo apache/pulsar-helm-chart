@@ -809,6 +809,13 @@ oxia:
       # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
       # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
       type: requiredDuringSchedulingIgnoredDuringExecution
+      # Pin this component's pods to nodes whose labels match. Unset by default (no node affinity is applied).
+      # node_affinity:
+      #   matchExpression:
+      #     key: <node-label-key>
+      #     operator: In
+      #     values:
+      #       - <label-value>
     # set topologySpreadConstraint to deploy pods across different zones
     topologySpreadConstraints: []
     tolerations: []
@@ -1740,6 +1747,13 @@ function_worker:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard)
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guarantee
     type: preferredDuringSchedulingIgnoredDuringExecution
+    # Pin this component's pods to nodes whose labels match. Unset by default (no node affinity is applied).
+    # node_affinity:
+    #   matchExpression:
+    #     key: <node-label-key>
+    #     operator: In
+    #     values:
+    #       - <label-value>
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # priorityClassName: high-priority-nonpreempting

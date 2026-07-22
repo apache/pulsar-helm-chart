@@ -71,6 +71,18 @@ spec:
         {{- toYaml .Values.function_worker.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
+        {{- if .Values.function_worker.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.function_worker.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.function_worker.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.function_worker.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.function_worker.affinity.anti_affinity }}
         podAntiAffinity:
           {{- if eq .Values.function_worker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution" }}
