@@ -65,6 +65,19 @@ spec:
       topologySpreadConstraints:
         {{- toYaml .Values.toolset.topologySpreadConstraints | nindent 8 }}
     {{- end }}
+    {{- if and .Values.toolset.affinity .Values.toolset.affinity.node_affinity }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.toolset.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.toolset.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.toolset.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
       initContainers:

@@ -2040,6 +2040,15 @@ toolset:
   # priorityClassName: high-priority-nonpreempting
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  # Pin this component's pods to nodes whose labels match. Unset by default (no node affinity is applied).
+  # This component runs a single replica, so pod anti-affinity is not applicable; only node_affinity is supported.
+  # affinity:
+  #   node_affinity:
+  #     matchExpression:
+  #       key: <node-label-key>
+  #       operator: In
+  #       values:
+  #         - <label-value>
   # annotations for the app (statefulset/deployment)
   appAnnotations: {}
   annotations: {}
