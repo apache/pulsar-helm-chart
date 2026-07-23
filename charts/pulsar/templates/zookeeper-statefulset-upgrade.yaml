@@ -90,9 +90,79 @@ spec:
     spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
       restartPolicy: Never
+      {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
+    {{- if .Values.zookeeper.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.zookeeper.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.zookeeper.priorityClassName }}
+      priorityClassName: {{ .Values.zookeeper.priorityClassName }}
+    {{- end }}
+    {{- if .Values.zookeeper.tolerations }}
+      tolerations:
+{{ toYaml .Values.zookeeper.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.zookeeper.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.zookeeper.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
+      affinity:
+        {{- if .Values.zookeeper.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.zookeeper.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.zookeeper.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.zookeeper.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
+        {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
+        podAntiAffinity:
+          {{ if eq .Values.zookeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{ .Values.zookeeper.affinity.type }}:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.zookeeper.component }}
+            topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
+        {{ else }}
+          {{ .Values.zookeeper.affinity.type }}:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.zookeeper.component }}
+                topologyKey: {{ .Values.zookeeper.affinity.anti_affinity_topology_key }}
+        {{ end }}
+        {{- end }}
       containers:
         - name: sts-cleanup
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.kubectl "root" .) }}"
           command:
             - sh
             - -c

@@ -90,9 +90,79 @@ spec:
     spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
       restartPolicy: Never
+      {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
+    {{- if .Values.broker.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.broker.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.broker.priorityClassName }}
+      priorityClassName: {{ .Values.broker.priorityClassName }}
+    {{- end }}
+    {{- if .Values.broker.tolerations }}
+      tolerations:
+{{ toYaml .Values.broker.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.broker.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.broker.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
+      affinity:
+        {{- if .Values.broker.affinity.node_affinity}}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.broker.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.broker.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.broker.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+        {{- end }}
+        {{- if and .Values.affinity.anti_affinity .Values.broker.affinity.anti_affinity}}
+        podAntiAffinity:
+          {{- if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}
+          {{ .Values.broker.affinity.type }}:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "{{ template "pulsar.name" . }}"
+              - key: "release"
+                operator: In
+                values:
+                - {{ .Release.Name }}
+              - key: "component"
+                operator: In
+                values:
+                - {{ .Values.broker.component }}
+            topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
+          {{- else }}
+          {{ .Values.broker.affinity.type }}:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - "{{ template "pulsar.name" . }}"
+                    - key: "release"
+                      operator: In
+                      values:
+                      - {{ .Release.Name }}
+                    - key: "component"
+                      operator: In
+                      values:
+                      - {{ .Values.broker.component }}
+                topologyKey: {{ .Values.broker.affinity.anti_affinity_topology_key }}
+          {{- end }}
+        {{- end }}
       containers:
         - name: sts-cleanup
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.kubectl "root" .) }}"
           command:
             - sh
             - -c
