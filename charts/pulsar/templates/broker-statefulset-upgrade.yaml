@@ -90,6 +90,19 @@ spec:
     spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
       restartPolicy: Never
+      {{- if .Values.broker.affinity.node_affinity }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.broker.affinity.node_affinity.matchExpression.key }}
+                operator: {{ .Values.broker.affinity.node_affinity.matchExpression.operator }}
+                values:
+                {{- range .Values.broker.affinity.node_affinity.matchExpression.values }}
+                - {{ . }}
+                {{- end }}
+      {{- end }}
       containers:
         - name: sts-cleanup
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
