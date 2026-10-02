@@ -146,8 +146,6 @@ components:
   proxy: true
   # toolset
   toolset: true
-  # pulsar manager
-  pulsar_manager: false
   # dekaf UI
   dekaf: false
 
@@ -226,12 +224,6 @@ images:
     tag:
     # uses defaultPullPolicy when unspecified
     pullPolicy:
-  pulsar_manager:
-    repository: apachepulsar/pulsar-manager
-    tag: v0.4.0
-    # uses defaultPullPolicy when unspecified
-    pullPolicy:
-    hasCommand: false
   dekaf:
     repository: visortelle/dekaf
     tag: 1.1.0
@@ -435,7 +427,7 @@ auth:
         # Annotations added to the signing key secret (asymmetric-key or symmetric-key)
         key: {}
         # Per-role annotations for token secrets. Map of auth.superUsers role key to annotation map
-        # (for example: broker, proxy, client, manager).
+        # (for example: broker, proxy, client).
         # Example:
         #   client:
         #     reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
@@ -467,8 +459,6 @@ auth:
     proxy: "proxy-admin"
     # pulsar-admin client to broker/proxy communication
     client: "admin"
-    # pulsar-manager to broker communication. If left empty, no jwt setup will be performed in the manager
-    manager: ""
   # omits the above proxy role from superusers on the proxy
   # and configures it as a proxy role on the broker in addition to the superusers
   useProxyRoles: true
@@ -2249,112 +2239,6 @@ victoria-metrics-k8s-stack:
               caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
               insecureSkipVerify: true  # For development environments like minikube
 
-## Pulsar Manager has been poorly maintained for a long time. Consider the Dekaf UI instead.
-## Components Stack: pulsar_manager
-## templates/pulsar-manager.yaml
-##
-pulsar_manager:
-  component: pulsar-manager
-  replicaCount: 1
-  initContainers: []
-  # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
-  restartPodsOnConfigMapChange: false
-  # nodeSelector:
-  # cloud.google.com/gke-nodepool: default-pool
-  # priorityClassName: high-priority-nonpreempting
-  # set topologySpreadConstraint to deploy pods across different zones
-  topologySpreadConstraints: []
-  # annotations for the app (statefulset/deployment)
-  appAnnotations: {}
-  annotations: {}
-  tolerations: []
-  extraVolumes: []
-  extraVolumeMounts: []
-  gracePeriod: 30
-  resources:
-    requests:
-      memory: 250Mi
-      cpu: 0.1
-  configData:
-    REDIRECT_HOST: "http://127.0.0.1"
-    REDIRECT_PORT: "9527"
-    LOG_LEVEL: "INFO"
-    # DB
-    URL: "jdbc:postgresql://127.0.0.1:5432/pulsar_manager"
-    DRIVER_CLASS_NAME: "org.postgresql.Driver"
-    # enables the "message peeking" feature
-    PULSAR_PEEK_MESSAGE: "true"
-  volumes:
-    # use a persistent volume or emptyDir
-    persistence: true
-    data:
-      name: data
-      size: 128Mi
-      local_storage: true
-      ## If you already have an existent storage class and want to reuse it, you can specify its name with the option below
-      ##
-      # storageClassName: existent-storage-class,
-      ## If you want to bind static persistent volumes via selectors, e.g.:
-      # selector:
-        # matchLabels:
-        # app: pulsar-bookkeeper-journal
-      selector: {}
-  ## Pulsar manager service
-  ## templates/pulsar-manager-service.yaml
-  ##
-  service:
-    type: ClusterIP
-    port: 9527
-    targetPort: 9527
-    annotations: {}
-    ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
-    ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
-    # externalTrafficPolicy: Local
-    ## Restrict traffic through the load balancer to specified IPs on providers supporting it.
-    # loadBalancerSourceRanges:
-    #   - 10.0.0.0/8
-    # Set a loadBalancerClass for loadbalancer service. (example: loadBalancerClass is needed by metallb)
-    # loadBalancerClass: ""
-  adminService:
-    type: ClusterIP
-    port: 7750
-    targetPort: 7750
-    annotations: {}
-  ## Pulsar manager ingress
-  ## templates/pulsar-manager-ingress.yaml
-  ##
-  ingress:
-    enabled: false
-    annotations: {}
-    ingressClassName: ""
-    tls:
-      enabled: false
-
-      ## Optional. Leave it blank if your Ingress Controller can provide a default certificate.
-      secretName: ""
-
-    hostname: ""
-    path: "/"
-    pathType: ImplementationSpecific
-
-  ## On first install, the helm chart tries to reuse an existing secret with matching name by default
-  ## if this should fail it uses the given username and password to create a new secret
-  ## if either are missing the default value of "pulsar" is used for the username or a random password is generated
-  ## And decode any key by using:
-  ## kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
-  admin:
-    ## Setting a value at existingSecret disables automatic creation of the secret for pulsar_manager admin credentials and instead uses an existing secret to initialize pulsar-manager
-    ## The existing secret should have the following keys:
-    ## DB_PASSWORD: <database password>
-    ## DB_USERNAME: <database username>
-    ## UI_PASSWORD: <UI password>
-    ## UI_USERNAME: <UI username>
-    existingSecret: ""
-    ui_username: "pulsar"
-    ui_password: ""  # leave empty for random password
-    db_username: "pulsar"
-    db_password: ""  # leave empty for random password
-
 # Dekaf is an open-source web-based UI for Apache Pulsar https://pulsar.apache.org/docs/next/administration-dekaf-ui/
 dekaf:
   component: dekaf
@@ -2404,7 +2288,6 @@ dekaf:
 # These are jobs where job ttl configuration is used / annotations are applied
 # pulsar-helm-chart/charts/pulsar/templates/pulsar-cluster-initialize.yaml
 # pulsar-helm-chart/charts/pulsar/templates/bookkeeper-cluster-initialize.yaml
-# pulsar-helm-chart/charts/pulsar/templates/pulsar-manager-cluster-initialize.yaml
 job:
   annotations: {}
   ttl:

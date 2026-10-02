@@ -33,8 +33,6 @@ components:
   proxy: true
   # toolset
   toolset: false
-  # pulsar manager
-  pulsar_manager: false
 
 ## disable monitoring stack
 victoria-metrics-k8s-stack:

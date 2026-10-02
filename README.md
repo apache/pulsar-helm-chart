@@ -135,8 +135,7 @@ This Helm Chart includes all the components of Apache Pulsar for a complete expe
     - [x] Functions
     - [x] Proxies
 - [x] Management & monitoring components:
-    - [x] Dekaf UI
-    - [x] Pulsar Manager
+    - [x] Dekaf UI (the supported web UI; Pulsar Manager support was removed in 4.8.0)
     - [x] Optional PodMonitors for each component (enabled by default)
     - [x] [victoria-metrics-k8s-stack](hhttps://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-k8s-stack) (as of 4.0.0)
 
@@ -340,7 +339,10 @@ This is shown in some [examples/values-disable-monitoring.yaml](examples/values-
 
 ## Dekaf UI
 
-[Dekaf](https://github.com/visortelle/dekaf) is a new open-source UI for Apache Pulsar.
+[Dekaf](https://github.com/visortelle/dekaf) is an open-source UI for Apache Pulsar and the
+**supported web UI in this chart**. It is the recommended alternative for users migrating away
+from Pulsar Manager, whose support was
+[removed in chart version 4.8.0](#pulsar-manager-support-has-been-removed).
 
 > :warning: At this moment Dekaf doesn't have built-in authentication. In order to prevent unwanted access, it relies on authentication on the Pulsar broker side.
 > If your Pulsar instance stores sensitive data, make sure that:
@@ -361,28 +363,6 @@ kubectl port-forward svc/$(kubectl get svc -l component=dekaf -o jsonpath='{.ite
 ```
 
 - Open <http://localhost:8090> in browser.
-
-## Pulsar Manager
-
-> :warning: Pulsar Manager has been poorly maintained for a long time. Consider the Dekaf UI instead.
-
-The Pulsar Manager can be deployed alongside the pulsar cluster instance.
-Depending on the given settings it uses an existing Secret within the given namespace or creates a new one, with random
-passwords for both, the UI and the internal database.
-
-To forward the UI use (assumes you did not change the namespace):
-
-```
-kubectl port-forward $(kubectl get pods -l component=pulsar-manager -o jsonpath='{.items[0].metadata.name}') 9527:9527
-```
-
-And then opening the browser to http://localhost:9527
-
-The default user is `pulsar` and you can find out the password with this command
-
-```
-kubectl get secret -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode
-```
 
 ## Pulsar Functions package storage (required for Oxia)
 
@@ -494,6 +474,57 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 ```
 
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
+
+## Upgrading to Helm chart version 4.8.0
+
+### Pulsar Manager support has been removed
+
+**Pulsar Manager support has been removed from this Helm chart.** The upstream
+[Apache Pulsar Manager](https://github.com/apache/pulsar-manager) project has been poorly maintained for a
+long time, so all of its chart resources (StatefulSet, Services, ConfigMap, Ingress, admin Secret and the
+`pulsar-manager-init` Job) are gone, together with the `pulsar_manager` values section, the
+`images.pulsar_manager` entry and the `auth.superUsers.manager` role.
+
+#### What you must change before upgrading
+
+The chart **fails fast** when the component is still enabled, so a `helm upgrade` with a leftover
+`components.pulsar_manager: true` aborts with:
+
+```
+ERROR: Pulsar Manager support has been removed from the Apache Pulsar Helm chart. ...
+```
+
+To allow the upgrade to proceed, remove the `components.pulsar_manager` key from your `values.yaml`
+(or set it to `false`):
+
+```yaml
+components:
+  # remove this key entirely, or set it to false
+  pulsar_manager: false
+```
+
+While you are at it, also drop these now-unused keys if you set them:
+
+- the whole `pulsar_manager:` section
+- `images.pulsar_manager`
+- `auth.superUsers.manager`
+
+The Pulsar Manager workloads and its `data` PersistentVolumeClaim are removed by the upgrade. If you want to
+keep the Pulsar Manager database contents, back up the PVC before upgrading.
+
+#### Migrating to Dekaf
+
+[Dekaf](https://github.com/visortelle/dekaf) is the supported web UI in this chart and the recommended
+replacement. Enable it with:
+
+```yaml
+components:
+  dekaf: true
+```
+
+See the [Dekaf UI](#dekaf-ui) section for details, including the security caveats. Pulsar's own
+[`pulsar-admin` CLI](https://pulsar.apache.org/docs/admin-api-overview/) — available from the `toolset`
+component — remains available for administration tasks as well.
 
 ## Upgrading to Helm chart version 4.6.0
 

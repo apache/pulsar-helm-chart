@@ -33,8 +33,6 @@ components:
   proxy: true
   # toolset
   toolset: true
-  # pulsar manager (replaced by the Dekaf UI)
-  pulsar_manager: false
   # dekaf UI
   dekaf: true
 

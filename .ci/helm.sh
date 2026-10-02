@@ -462,65 +462,6 @@ function ci::test_pulsar_function() {
     ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-toolset-0 -- bin/pulsar-client consume -s test pulsar-ci/test/test_output
 }
 
-function ci::test_pulsar_manager() {
-  echo "Testing pulsar manager"
-
-  until ${KUBECTL} get jobs -n "${NAMESPACE}" "${CLUSTER}"-pulsar-manager-init -o json | jq -r '.status.conditions[] | select (.type | test("Complete")).status' | grep True; do sleep 3; done
-  ${KUBECTL} describe job -n "${NAMESPACE}" "${CLUSTER}"-pulsar-manager-init
-  ${KUBECTL} logs -n "${NAMESPACE}" job.batch/"${CLUSTER}"-pulsar-manager-init
-  ${KUBECTL} exec -n "${NAMESPACE}" "${CLUSTER}"-pulsar-manager-0 -- cat /pulsar-manager/pulsar-manager.log
-  echo "Checking Podname"
-  podname=$(${KUBECTL} get pods -n "${NAMESPACE}" -l component=pulsar-manager --no-headers -o custom-columns=":metadata.name")
-  echo "Getting pulsar manager UI password"
-  PASSWORD=$(${KUBECTL} get secret -n "${NAMESPACE}" -l component=pulsar-manager -o=jsonpath="{.items[0].data.UI_PASSWORD}" | base64 --decode)
-
-  echo "Getting CSRF_TOKEN"
-  CSRF_TOKEN=$(${KUBECTL} exec -n "${NAMESPACE}" "${podname}" -- curl http://127.0.0.1:7750/pulsar-manager/csrf-token)
-
-  echo "Performing login"
-  ${KUBECTL} exec -n "${NAMESPACE}" "${podname}" -- curl -X POST http://127.0.0.1:9527/pulsar-manager/login \
-                                                 -H 'Accept: application/json, text/plain, */*' \
-                                                 -H 'Content-Type: application/json' \
-                                                 -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
-                                                 -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN" \
-                                                 -sS -D headers.txt \
-                                                 -d '{"username": "pulsar", "password": "'"${PASSWORD}"'"}'
-  LOGIN_TOKEN=$(${KUBECTL} exec -n "${NAMESPACE}" "${podname}" -- grep "token:" headers.txt | sed 's/^.*: //')
-  LOGIN_JSESSIONID=$(${KUBECTL} exec -n "${NAMESPACE}" "${podname}" -- grep -o "JSESSIONID=[a-zA-Z0-9_]*" headers.txt | sed 's/^.*=//')
-
-  echo "Checking environment"
-  envs=$(${KUBECTL} exec -n "${NAMESPACE}" "${podname}" -- curl -X GET http://127.0.0.1:9527/pulsar-manager/environments \
-                  -H 'Content-Type: application/json' \
-                  -H "token: $LOGIN_TOKEN" \
-                  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
-                  -H "username: pulsar" \
-                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSIONID;")
-  echo "$envs"
-  number_of_envs=$(echo "$envs" | jq '.total')
-  if [ "$number_of_envs" -ne 1 ]; then
-    echo "Error: Did not find expected environment"
-    exit 1
-  fi
-
-  # Force manager to query broker for tenant info. This will require use of the manager's JWT, if JWT authentication is enabled.
-  echo "Checking tenants"
-  pulsar_env=$(echo "$envs" | jq -r '.data[0].name')
-  tenants=$(${KUBECTL} exec -n "${NAMESPACE}" "${podname}" -- curl -X GET http://127.0.0.1:9527/pulsar-manager/admin/v2/tenants \
-                  -H 'Content-Type: application/json' \
-                  -H "token: $LOGIN_TOKEN" \
-                  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
-                  -H "username: pulsar" \
-                  -H "tenant: pulsar" \
-                  -H "environment: ${pulsar_env}" \
-                  -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN; JSESSIONID=$LOGIN_JSESSIONID;")
-  echo "$tenants"
-  number_of_tenants=$(echo "$tenants" | jq '.total')
-  if [ "$number_of_tenants" -lt 1 ]; then
-    echo "Error: Found no tenants!"
-    exit 1
-  fi
-}
-
 function ci::check_loadbalancers() {
   (
   set +e

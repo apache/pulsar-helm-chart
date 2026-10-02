@@ -164,7 +164,7 @@ jobs:
             fi
             # render to a file so that validation can be retried without re-running helm
             local rendered_manifests="$RUNNER_TEMP/kubeconform-input.yaml"
-            helm template charts/pulsar --set victoria-metrics-k8s-stack.enabled=false --set components.pulsar_manager=true --kube-version $kube_version "$@" > "$rendered_manifests"
+            helm template charts/pulsar --set victoria-metrics-k8s-stack.enabled=false --kube-version $kube_version "$@" > "$rendered_manifests"
             hack::kubeconform_with_retries -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' -strict -kubernetes-version $kube_version -summary "$rendered_manifests"
           }
           set -o pipefail
@@ -303,9 +303,6 @@ jobs:
           - name: Dekaf
             values_file: .ci/clusters/values-dekaf.yaml
             shortname: dekaf
-          - name: Pulsar Manager
-            values_file: .ci/clusters/values-pulsar-manager.yaml
-            shortname: pulsar-manager
           - name: Oxia + FileSystemPackagesStorage
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
