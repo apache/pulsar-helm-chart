@@ -19,7 +19,7 @@
 
 -->
 
-# Apache Pulsar Helm Chart [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/pulsar-helm-chart)
+# Apache Pulsar Helm Chart [![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/apache/pulsar-helm-chart)
 
 This project provides Helm Charts for installing Apache Pulsar on Kubernetes.
 
@@ -137,7 +137,7 @@ This Helm Chart includes all the components of Apache Pulsar for a complete expe
 - [x] Management & monitoring components:
     - [x] Dekaf UI (the supported web UI; Pulsar Manager support was removed in 4.8.0)
     - [x] Optional PodMonitors for each component (enabled by default)
-    - [x] [victoria-metrics-k8s-stack](hhttps://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-k8s-stack) (as of 4.0.0)
+    - [x] [victoria-metrics-k8s-stack](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-k8s-stack) (as of 4.0.0)
 
 It includes support for:
 
@@ -154,7 +154,7 @@ It includes support for:
     - [x] Authentication
         - [x] JWT
         - [x] OpenID
-        - [ ] Mutal TLS
+        - [ ] Mutual TLS
         - [ ] Kerberos
     - [x] Authorization
     - [x] Non-root broker, bookkeeper, proxy, and zookeeper containers (version 2.10.0 and above)
@@ -702,36 +702,22 @@ For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs
 
 ## Upgrading to Helm chart version 4.8.0
 
-### X.509 certificate subject
+Helm chart 4.8.0 deploys Apache Pulsar 5.0.0 by default, using the `apachepulsar/pulsar` image, since there is
+no `apachepulsar/pulsar-all` image for Pulsar 5.0.0. It also removes Pulsar Manager support. Before upgrading,
+review these changes, which can require changes to your `values.yaml`:
 
-In order to define the various parameters of the X.509 certificate subject, you need to update `tls.common` values :
+1. [Default Apache Pulsar version is now 5.0.0](#default-apache-pulsar-version-is-now-500)
+2. [Pulsar Manager support has been removed](#pulsar-manager-support-has-been-removed)
+3. [X.509 certificate subject configuration has changed](#x509-certificate-subject-configuration-has-changed)
 
-```
-# before
-tls:
-  common:
-    organization:
-      - pulsar
-# after
-tls:
-  common:
-    subject:
-      organizations:
-        - pulsar
-      # countries: []
-      # organizationalUnits: []
-      # localities: []
-      # provinces: []
-      # streetAddresses: []
-      # postalCodes: []
-      # serialNumber: ""
-```
-
-The upgrade will fail if you still use the old value `tls.common.organization`.
+Then check the [other changes in behavior](#other-changes-in-behavior) and the
+[new configuration options](#new-configuration-options).
 
 ### Default Apache Pulsar version is now 5.0.0
 
-The chart now deploys Apache Pulsar 5.0.0 by default, using the `apachepulsar/pulsar:5.0.0` image. Before
+The chart now deploys Apache Pulsar 5.0.0 by default, using the `apachepulsar/pulsar:5.0.0` image. There is
+no `apachepulsar/pulsar-all` image for Pulsar 5.0.0 (see
+[`apachepulsar/pulsar-all` is no longer used](#apachepulsarpulsar-all-is-no-longer-used)). Before
 upgrading, read the [Upgrading to Pulsar 5.0.x](https://pulsar.apache.org/docs/administration-upgrade-to-5.0.x/)
 guide. It recommends first upgrading to the latest Pulsar 4.0.x or 4.2.x release and running it as a stable
 baseline that you can roll back to.
@@ -742,9 +728,18 @@ To keep running Pulsar 4.x with this chart version, pin the image tag in your `v
 defaultPulsarImageTag: 4.0.14
 ```
 
+The chart now uses the `apachepulsar/pulsar` image by default for Pulsar 4.x too. Unlike `apachepulsar/pulsar-all`,
+the Pulsar 4.x `apachepulsar/pulsar` image doesn't include the tiered-storage offloaders or the Pulsar IO
+connectors. If you need them with Pulsar 4.x, also set the repository back:
+
+```yaml
+defaultPulsarImageRepository: apachepulsar/pulsar-all
+defaultPulsarImageTag: 4.0.14
+```
+
 #### `apachepulsar/pulsar-all` is no longer used
 
-Pulsar 5.0.0 no longer publishes the `apachepulsar/pulsar-all` image, so `defaultPulsarImageRepository` now
+There is no `apachepulsar/pulsar-all` image for Pulsar 5.0.0, so `defaultPulsarImageRepository` now
 defaults to `apachepulsar/pulsar`. If your `values.yaml` sets `defaultPulsarImageRepository`,
 `images.<component>.repository` or `pulsar_metadata.image.repository` to `apachepulsar/pulsar-all`, change it
 to `apachepulsar/pulsar` or remove the key.
@@ -767,10 +762,10 @@ listed above to your value if you want to keep them.
 
 `-XX:+UseTransparentHugePages` only lets the JVM request Transparent Huge Pages (THP). Pulsar benefits from
 them only when the Linux kernel on the Kubernetes nodes that run the Pulsar pods is configured in a specific
-way. Pod settings can't change the node's kernel settings. For example, ZGC keeps its heap in shared memory,
-so the node's `/sys/kernel/mm/transparent_hugepage/shmem_enabled` must allow huge pages (`advise`). With `never`, which is the
-Linux kernel default, the heap doesn't use huge pages even though the flag is set. Configure the nodes as
-described in
+way, and pod settings can't change the node's kernel settings. For example, ZGC keeps its heap in shared
+memory, so the node's `/sys/kernel/mm/transparent_hugepage/shmem_enabled` must allow huge pages (`advise`).
+With `never`, which is the Linux kernel default, the heap doesn't use huge pages even though the flag is set.
+Configure the nodes as described in
 [Configure Linux hosts and Kubernetes nodes](https://pulsar.apache.org/docs/performance-broker/#configure-linux-hosts-and-kubernetes-nodes),
 and make the settings part of the node image or provisioning so that replaced and autoscaled nodes get them
 too.
@@ -780,8 +775,8 @@ too.
 - **Metadata store:** Oxia is recommended for new production clusters. Existing installations stay on
   ZooKeeper. See [Choosing the metadata store](#choosing-the-metadata-store-use-oxia-for-new-clusters).
 - **Package management rollback:** if you set `broker.packageManagement.enabled: true` and may need to roll
-  back to Pulsar 4.x, keep package metadata in the format that 4.x can read. Set these values before the first
-  Pulsar 5.0 broker starts:
+  back to Pulsar 4.x, keep the package metadata in a format that Pulsar 4.x can read. Set these values before
+  the first Pulsar 5.0 broker starts:
 
   ```yaml
   broker:
@@ -795,17 +790,17 @@ too.
   If you provide your own certificates, check that they include matching subject alternative names.
 - **BookKeeper metrics provider:** if you set `statsProviderClass` in `bookkeeper.configData`, replace
   `org.apache.pulsar.metrics.prometheus.bookkeeper.PrometheusMetricsProvider` with
-  `org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider`. Otherwise bookies fail to start.
-- Review your `configData` overrides against the
+  `org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider`. Otherwise, bookies fail to start.
+- **Configuration defaults:** review your `configData` overrides against the
   [configuration default changes](https://pulsar.apache.org/docs/administration-upgrade-to-5.0.x-configuration/).
-  Some settings have been removed, and explicit values keep their old behavior.
+  Some settings have been removed, and explicitly set values keep their old behavior.
 
 ### Pulsar Manager support has been removed
 
 **Pulsar Manager support has been removed from this Helm chart.** The upstream
 [Apache Pulsar Manager](https://github.com/apache/pulsar-manager) project has been poorly maintained for a
 long time, so all of its chart resources (StatefulSet, Services, ConfigMap, Ingress, admin Secret and the
-`pulsar-manager-init` Job) are gone, together with the `pulsar_manager` values section, the
+`pulsar-manager-init` Job) have been removed, together with the `pulsar_manager` values section, the
 `images.pulsar_manager` entry and the `auth.superUsers.manager` role.
 
 #### What you must change before upgrading
@@ -818,7 +813,7 @@ ERROR: Pulsar Manager support has been removed from the Apache Pulsar Helm chart
 ```
 
 To allow the upgrade to proceed, remove the `components.pulsar_manager` key from your `values.yaml`
-(or set it to `false`):
+or set it to `false`:
 
 ```yaml
 components:
@@ -826,14 +821,14 @@ components:
   pulsar_manager: false
 ```
 
-While you are at it, also drop these now-unused keys if you set them:
+Also remove these keys if you set them, since they are no longer used:
 
 - the whole `pulsar_manager:` section
 - `images.pulsar_manager`
 - `auth.superUsers.manager`
 
-The Pulsar Manager workloads and its `data` PersistentVolumeClaim are removed by the upgrade. If you want to
-keep the Pulsar Manager database contents, back up the PVC before upgrading.
+The upgrade removes the Pulsar Manager workloads and its `data` PersistentVolumeClaim. If you want to keep
+the Pulsar Manager database contents, back up the PVC before upgrading.
 
 #### Migrating to Dekaf
 
@@ -846,8 +841,75 @@ components:
 ```
 
 See the [Dekaf UI](#dekaf-ui) section for details, including the security caveats. Pulsar's own
-[`pulsar-admin` CLI](https://pulsar.apache.org/docs/admin-api-overview/) — available from the `toolset`
-component — remains available for administration tasks as well.
+[`pulsar-admin` CLI](https://pulsar.apache.org/docs/admin-api-overview/), available in the `toolset`
+component, also remains available for administration tasks.
+
+### X.509 certificate subject configuration has changed
+
+The subject of the certificates that the chart creates is now configured with `tls.common.subject`, which
+supports all the X.509 subject fields. `tls.common.organization` is no longer supported, and the upgrade
+fails if your `values.yaml` still sets it. Move the value under `tls.common.subject.organizations`:
+
+```yaml
+# before
+tls:
+  common:
+    organization:
+      - pulsar
+# after
+tls:
+  common:
+    subject:
+      organizations:
+        - pulsar
+      # countries: []
+      # organizationalUnits: []
+      # localities: []
+      # provinces: []
+      # streetAddresses: []
+      # postalCodes: []
+      # serialNumber: ""
+```
+
+### Other changes in behavior
+
+These changes don't require changes to your `values.yaml`, but they change what the chart deploys:
+
+- **Internal CA private key is kept across renewals:** since cert-manager 1.18, cert-manager generates a new
+  private key for a certificate on every renewal by default. For the self-signed CA created by the internal
+  issuer (`certs.internal_issuer`), that invalidates all the certificates it issued until each of them is
+  reissued. The chart now sets `certs.internal_issuer.privateKey.rotationPolicy: Never`, which keeps the CA
+  key across renewals as with earlier cert-manager versions. Set `certs.internal_issuer.privateKey: null` to
+  restore the previous rendering.
+- **PodMonitor and HPA resources for disabled components:** the PodMonitor (or VMPodScrape) for the proxy,
+  broker, bookkeeper and autorecovery components, and the proxy and broker HorizontalPodAutoscalers, are no
+  longer rendered when the component is disabled with `components.<component>: false`.
+- **Autorecovery probes:** the autorecovery StatefulSet now has liveness and readiness probes. They check the
+  Prometheus metrics endpoint on `autorecovery.ports.http` and can be configured with `autorecovery.probe`.
+- **ZooKeeper and broker upgrade cleanup Jobs:** the pods of the `sts-cleanup` pre-upgrade hook Jobs now get the
+  chart's pod labels, and they use the component's `nodeSelector`, `tolerations`, `priorityClassName`,
+  `topologySpreadConstraints`, `affinity.nodeAffinity` and the chart's `imagePullSecrets`, so they can be
+  scheduled on clusters that reserve nodes for Pulsar.
+- **Oxia** has been upgraded to 0.16.10.
+- **BookKeeper cluster initialization with ZooKeeper TLS:** the `bookie-init` Job now uses the same ZooKeeper
+  connection string as the other components, including the TLS port when ZooKeeper TLS is enabled.
+
+### New configuration options
+
+- **Pod and container security contexts:** the global `podSecurityContext` and `containerSecurityContext`
+  values, and the per-component `<component>.securityContext` and `<component>.containerSecurityContext`
+  overrides, apply to every pod and container that the chart renders. Setting `readOnlyRootFilesystem: true`
+  is also supported. See [Pod and container security contexts](#pod-and-container-security-contexts) and
+  [`examples/values-psa-restricted.yaml`](examples/values-psa-restricted.yaml).
+- **Node affinity:** each component accepts `<component>.affinity.nodeAffinity` to pin its pods to specific
+  nodes. See [Deploy Pulsar to Kubernetes](#deploy-pulsar-to-kubernetes).
+- **Job pod annotations:** `job.podAnnotations` adds annotations to the pods created by the chart's Jobs, for
+  example `sidecar.istio.io/inject: "false"`. The existing `job.annotations` only applies to the Job objects.
+- **Certificate SAN mode:** `tls.common.sanMode` selects the subject alternative names (SANs) of the
+  certificates that the chart creates. `wildcard` (the default) keeps the previous wildcard SANs. `fqdn` adds an
+  explicit FQDN for each pod instead of the wildcard. `none` adds only the service names, so you can add your own
+  with `tls.<component>.dnsNames` and `tls.<component>.ipAddresses`. Restart the component pods after
+  changing it so that they pick up the reissued certificates.
 
 ## Upgrading to Helm chart version 4.6.0
 
