@@ -315,10 +315,73 @@ images:
     pullPolicy:
 
 ## TLS
-## templates/tls-certs.yaml
+## templates/tls-certs-internal.yaml
 ##
-## The chart is using cert-manager for provisioning TLS certs for
-## brokers and proxies.
+## The chart uses cert-manager to create the TLS certificates of the components. Each component reads its
+## certificate and private key from the Secret "<release name>-<tls.<component>.cert_name>" (for example
+## "pulsar-tls-broker"), and verifies the certificates of the other components with the CA certificates in the
+## "ca.crt" key of the CA Secret (see `certs.internal_issuer` and `certs.issuers.ca` below).
+##
+## Certificates issued by a public CA (for example with an ACME issuer such as Let's Encrypt):
+##   Publicly trusted certificates can't be used for the connections between the components, for two reasons:
+##   - A public CA can't issue certificates for cluster-internal names such as
+##     "<release>-pulsar-broker.<namespace>.svc.cluster.local". The components connect to each other using these
+##     Kubernetes service and pod names and verify that the server certificate matches the name, so the
+##     certificates used between the components must include them. The chart therefore always adds the
+##     Kubernetes service names to the certificates it creates (see `tls.common.sanMode`).
+##   - The components also present their certificate as a TLS client certificate: the brokers to the bookies,
+##     and all ZooKeeper clients to ZooKeeper when `tls.zookeeper.enabled` is true. Public CAs are removing the
+##     clientAuth extended key usage from the TLS certificates they issue (Let's Encrypt removed it from its
+##     default profile in February 2026), so a renewed public certificate can only be used as a server
+##     certificate. See https://news.apache.org/foundation/entry/the-public-ca-clientauth-eku-sunset-what-apache-software-deployers-need-to-know
+##   Use a private CA for the certificates of the components: `certs.internal_issuer`, or for production, a
+##   cert-manager issuer backed by a private CA such as OpenBao, HashiCorp Vault or step-ca, configured with
+##   `certs.internal_issuer.enabled: false` and `certs.issuers.ca` (name, kind, group and secretName).
+##   The recommended setup is to use a publicly trusted certificate only where clients connect from outside the
+##   cluster, which is the proxy. It only needs the server auth usage:
+##     tls:
+##       enabled: true
+##       proxy:
+##         enabled: true
+##         # the chart doesn't create the proxy certificate; create the Secret "<release>-tls-proxy" yourself,
+##         # for example with a cert-manager Certificate that uses your public ClusterIssuer and has
+##         # `secretName: <release>-tls-proxy` and the public DNS names of the proxy in `dnsNames`
+##         createCert: false
+##       broker:
+##         enabled: true
+##     certs:
+##       internal_issuer:
+##         enabled: true
+##   The proxy uses only the "tls.crt" and "tls.key" keys of its Secret, and it verifies the broker certificates
+##   with the internal CA. Clients can verify the publicly trusted proxy certificate with their default trust
+##   store. Clients that authenticate with TLS client certificates (mTLS) need certificates from a private CA
+##   for the same reason, since a public certificate without the clientAuth usage can't be used as a client
+##   certificate.
+##   When clients connect to the brokers directly instead of through the proxy, the brokers must advertise
+##   addresses that the clients can reach by configuring `advertisedListeners` for an external listener. The
+##   chart doesn't support this yet. See
+##   https://pulsar.apache.org/docs/next/concepts-multiple-advertised-listeners/#kubernetes-deployment-suggestions
+##
+## Certificates that you manage yourself (`createCert: false`):
+##   Set `tls.<component>.createCert: false` for each component whose certificate you provide, and create the
+##   Secret "<release>-<tls.<component>.cert_name>" before installing the chart. The Secret must contain:
+##   - "tls.crt": the certificate chain, starting with the component's certificate.
+##   - "tls.key": the private key in PKCS#8 PEM format ("-----BEGIN PRIVATE KEY-----").
+##   - "tls-combined.pem" (only when `tls.zookeeper.enabled` is true, for the broker, bookie, autorecovery,
+##     toolset and zookeeper certificates): the private key followed by the certificate chain in a single PEM
+##     file. ZooKeeper reads this file as its PEM key store. It can only read PKCS#8 keys, so a PKCS#1 key
+##     ("-----BEGIN RSA PRIVATE KEY-----") fails with
+##     "InvalidKeySpecException: Inappropriate key specification: Unable to decode key".
+##   With cert-manager, these keys are created by a Certificate that has `privateKey.encoding: PKCS8` and
+##   `additionalOutputFormats: [{type: CombinedPEM}]`. CombinedPEM requires cert-manager 1.15 or later, or the
+##   `AdditionalCertificateOutputFormats=true` feature gate in earlier versions.
+##   The certificates must include the Kubernetes names that the other components use to connect to the
+##   component, as listed for `tls.common.sanMode`. Except for the proxy certificate, they must allow both the
+##   server auth and client auth usages, so they must be issued by a private CA (see above).
+##   When `certs.internal_issuer.enabled` is false, set `certs.issuers.ca.secretName` to a Secret with a
+##   "ca.crt" key that contains the CA certificates that issued the component certificates. The components
+##   use it as their trust store, so it's required even when the chart doesn't create any certificates.
+##   `certs.issuers.ca.name` is only needed when the chart creates certificates.
 tls:
   enabled: false
   ca_suffix: ca-tls
@@ -348,13 +411,20 @@ tls:
     # - none: no wildcard or per-pod SANs; only the service FQDN and short name are added
     #         (plus the headless name for broker/zookeeper). Use tls.<component>.dnsNames
     #         and/or ipAddresses to add your own.
+    # In every mode, the certificates include the Kubernetes names that the other components use to connect
+    # to the component, because the connections verify that the certificate matches the name:
+    # - "<release>-pulsar-<component>" and "<release>-pulsar-<component>.<namespace>.svc.<clusterDomain>"
+    # - for broker and zookeeper, also "<release>-pulsar-<component>-headless.<namespace>.svc.<clusterDomain>"
+    # These names can't be removed. Certificates from a public CA can't include them, so use a publicly
+    # trusted certificate only for the proxy, as described in the TLS comments above.
     # /!\ Any modification will require a restart of the component pods to pick up the new certs.
     sanMode: wildcard
   # settings for generating certs for proxy
   proxy:
     enabled: false
     cert_name: tls-proxy
-    # set to false if you want to use an existing certificate
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
     createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
@@ -377,6 +447,9 @@ tls:
   broker:
     enabled: false
     cert_name: tls-broker
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
+    createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
     dnsNames:
@@ -398,6 +471,9 @@ tls:
   bookie:
     enabled: false
     cert_name: tls-bookie
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
+    createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
     dnsNames:
@@ -415,6 +491,9 @@ tls:
   zookeeper:
     enabled: false
     cert_name: tls-zookeeper
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
+    createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
     dnsNames:
@@ -431,6 +510,9 @@ tls:
   # settings for generating certs for recovery
   autorecovery:
     cert_name: tls-recovery
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
+    createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
     dnsNames:
@@ -447,6 +529,9 @@ tls:
   # settings for generating certs for toolset
   toolset:
     cert_name: tls-toolset
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
+    createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
     dnsNames:
@@ -463,6 +548,9 @@ tls:
   # settings for standalone TLS cert (used when tls.enabled is true and standalone.enabled is true)
   standalone:
     cert_name: tls-standalone
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
+    createCert: true
     # Annotations to apply to the secrets generated by the cert-manager certificate
     # secretAnnotations: {}
   # TLS setting for function runtime instance
@@ -473,7 +561,8 @@ tls:
   function_worker:
     enabled: false
     cert_name: tls-function-worker
-    # set to false if you want to use an existing certificate
+    # Set to false to provide the certificate Secret "<release>-<cert_name>" yourself instead of having the
+    # chart create it with cert-manager. See the TLS comments above for the required Secret keys.
     createCert: true
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
@@ -619,11 +708,13 @@ certs:
       secretName:
     # used for certs.internal_issuer.type as ca or when internal_issuer is disabled
     ca:
-      # The name of the issuer, it is mandatory to specify this value if TLS is enabled
-      # and selfsigning is not used
+      # The name of the cert-manager issuer that issues the component certificates. Required when TLS is enabled,
+      # selfsigning is not used and the chart creates at least one certificate (createCert is not false).
       name:
-      # The secret name of the CA certificate, it is mandatory to specify this value if TLS is enabled
-      # and selfsigning is not used
+      # The name of the Secret with the CA certificate in its "ca.crt" key. Required when TLS is enabled and
+      # selfsigning is not used. The components mount it as the trust store that they use to verify each other's
+      # certificates, so it's required even when you provide all the certificates yourself (createCert: false).
+      # With certs.internal_issuer.type ca, the Secret must also contain the CA private key ("tls.key").
       secretName:
       # The k8s kind of the ca issuer: Issuer or ClusterIssuer
       kind: Issuer
