@@ -511,9 +511,17 @@ default `PULSAR_MEM` values.
 
 If your `values.yaml` sets `PULSAR_GC` for any component, remove it, and also remove garbage collector
 selection options from `PULSAR_MEM` and `PULSAR_EXTRA_OPTS`. If you override `PULSAR_MEM`, add the flags
-listed above to your value if you want to keep them. For Transparent Huge Pages, the Kubernetes nodes must
-also be configured for it; see
-[JVM and Linux host tuning](https://pulsar.apache.org/docs/performance-broker/#jvm-and-linux-host-tuning).
+listed above to your value if you want to keep them.
+
+`-XX:+UseTransparentHugePages` only lets the JVM request Transparent Huge Pages (THP). Pulsar benefits from
+them only when the Linux kernel on the Kubernetes nodes that run the Pulsar pods is configured in a specific
+way. Pod settings can't change the node's kernel settings. For example, ZGC keeps its heap in shared memory,
+so the node's `/sys/kernel/mm/transparent_hugepage/shmem_enabled` must allow huge pages (`advise`). With `never`, which is the
+Linux kernel default, the heap doesn't use huge pages even though the flag is set. Configure the nodes as
+described in
+[Configure Linux hosts and Kubernetes nodes](https://pulsar.apache.org/docs/performance-broker/#configure-linux-hosts-and-kubernetes-nodes),
+and make the settings part of the node image or provisioning so that replaced and autoscaled nodes get them
+too.
 
 #### Other Pulsar 5.0 changes to review
 
