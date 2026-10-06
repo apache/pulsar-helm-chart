@@ -108,10 +108,5 @@ if [[ "$(ci::helm_values_for_deployment | yq .components.functions)" == "true" ]
     ci::test_pulsar_function
 fi
 
-if [[ "$(ci::helm_values_for_deployment | yq .components.pulsar_manager)" == "true" ]]; then
-    # test manager
-    ci::test_pulsar_manager
-fi
-
 # delete the cluster
 ci::delete_cluster

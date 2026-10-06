@@ -24,8 +24,7 @@ affinity:
 # disable auto recovery
 components:
   autorecovery: false
-  # use the Dekaf UI instead of pulsar-manager
-  pulsar_manager: false
+  # Dekaf UI
   dekaf: true
 
 zookeeper:
