@@ -69,10 +69,6 @@ Define proxy tls certs volumes
         path: tls.crt
       - key: tls.key
         path: tls.key
-      {{- if .Values.tls.zookeeper.enabled }}
-      - key: tls-combined.pem
-        path: tls-combined.pem
-      {{- end }}
 {{- end }}
 - name: ca
   secret:

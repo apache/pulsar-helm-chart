@@ -54,8 +54,20 @@ Define the pulsar certs ca issuer secret name
 {{- if .Values.certs.issuers.ca.secretName -}}
 {{- .Values.certs.issuers.ca.secretName -}}
 {{- else -}}
-{{- fail "certs.issuers.ca.secretName is required when TLS is enabled and certs.internal_issuer.enabled is false" -}}
+{{- fail "certs.issuers.ca.secretName is required when TLS is enabled and certs.internal_issuer.enabled is false. Set it to the name of a Secret with a ca.crt key that contains the CA certificates the components use to verify each other's TLS certificates." -}}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return "true" when the chart should create the cert-manager Certificate for a component.
+Only an explicit `createCert: false` disables it, so that values without the key
+(for example from `helm upgrade --reuse-values`) keep creating the certificate.
+Usage: {{ include "pulsar.tls.createCert" .Values.tls.broker }}
+*/}}
+{{- define "pulsar.tls.createCert" -}}
+{{- if not (and (hasKey . "createCert") (eq (toString .createCert) "false")) -}}
+true
 {{- end -}}
 {{- end -}}
 

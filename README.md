@@ -910,6 +910,11 @@ These changes don't require changes to your `values.yaml`, but they change what 
   explicit FQDN for each pod instead of the wildcard. `none` adds only the service names, so you can add your own
   with `tls.<component>.dnsNames` and `tls.<component>.ipAddresses`. Restart the component pods after
   changing it so that they pick up the reissued certificates.
+- **Externally managed certificates:** every component now supports `tls.<component>.createCert: false`, not
+  only the proxy and the function worker, so you can provide all the certificate Secrets yourself. The proxy
+  Secret no longer needs the `tls-combined.pem` key, so a publicly trusted certificate can be used for the
+  proxy while the other components use certificates from a private CA. The `## TLS` comments in `values.yaml`
+  describe the supported setups and the required Secret keys.
 
 ## Upgrading to Helm chart version 4.6.0
 
