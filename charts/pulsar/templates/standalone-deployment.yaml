@@ -101,6 +101,11 @@ spec:
       tolerations:
 {{ toYaml .Values.standalone.tolerations | indent 8 }}
     {{- end }}
+    {{- with .Values.standalone.affinity.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.standalone.gracePeriod }}
       {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.standalone "root" .)) }}
       {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.standalone.securityContext "root" . "indent" 6) }}

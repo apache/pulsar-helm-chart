@@ -18,6 +18,24 @@
 #
 standalone:
   enabled: true
+  # Exercises standalone-deployment.yaml's nodeAffinity passthrough, which the
+  # all-values runs can't reach (standalone is disabled there). This file is
+  # also installed on kind, so every term must be satisfiable by any node.
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/os
+            operator: In
+            values:
+            - linux
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: kubernetes.io/arch
+            operator: Exists
 
 auth:
   authentication:

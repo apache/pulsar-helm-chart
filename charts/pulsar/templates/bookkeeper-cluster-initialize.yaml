@@ -41,6 +41,10 @@ spec:
       labels:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.bookkeeper.component }}-init
+      {{- with .Values.job.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
@@ -53,6 +57,11 @@ spec:
       tolerations:
       {{- if .Values.pulsar_metadata.tolerations }}
 {{ toYaml .Values.pulsar_metadata.tolerations | indent 8 }}
+      {{- end }}
+      {{- with (.Values.pulsar_metadata.affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
       {{- end }}
       initContainers:
       {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}

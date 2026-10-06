@@ -73,6 +73,10 @@ spec:
         {{- toYaml .Values.function_worker.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
+        {{- with .Values.function_worker.affinity.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.function_worker.affinity.anti_affinity }}
         podAntiAffinity:
           {{- if eq .Values.function_worker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution" }}

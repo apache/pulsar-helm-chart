@@ -71,6 +71,10 @@ spec:
         {{- toYaml .Values.zookeeper.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
+        {{- with .Values.zookeeper.affinity.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.zookeeper.affinity.anti_affinity}}
         podAntiAffinity:
           {{ if eq .Values.zookeeper.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}

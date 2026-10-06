@@ -233,6 +233,10 @@ jobs:
             -strict -kubernetes-version $kube_version -summary "$render_dir_patch1"
           echo "::endgroup::"
 
+      - name: Validate certificate SAN modes
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: bash .ci/test-certificate-san-modes.sh
+
       - name: Save kubeconform schema cache
         # save the cache even when validation failed so that already downloaded
         # schemas don't get re-downloaded on the next attempt

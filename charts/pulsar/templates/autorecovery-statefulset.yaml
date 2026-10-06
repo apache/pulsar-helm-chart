@@ -73,6 +73,10 @@ spec:
         {{- toYaml .Values.autorecovery.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
+        {{- with .Values.autorecovery.affinity.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.autorecovery.affinity.anti_affinity}}
         podAntiAffinity:
           {{ if eq .Values.autorecovery.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}

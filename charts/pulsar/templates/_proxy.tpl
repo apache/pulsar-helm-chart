@@ -18,6 +18,13 @@ under the License.
 */}}
 
 {{/*
+Define the proxy service (ordinary ClusterIP, targeted by clients)
+*/}}
+{{- define "pulsar.proxy.service" -}}
+{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}
+{{- end }}
+
+{{/*
 Define proxy tls certs mounts
 */}}
 {{- define "pulsar.proxy.certs.volumeMounts" -}}

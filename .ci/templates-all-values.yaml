@@ -212,6 +212,18 @@ auth:
         affinity:
           anti_affinity: true
           type: requiredDuringSchedulingIgnoredDuringExecution
+          # Single required term -- the anchored multi-term value used by the
+          # component blocks is defined later in the file, so this one is
+          # spelled out in full.
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-pool
+                      operator: In
+                      values:
+                        - pool-a
+                        - pool-b
       # Two annotation keys on the signing-key secret -- exercises the
       # `range $k, $v := ...secretAnnotations.key` loop in jwt-secret-init.yaml
       secretAnnotations:
@@ -237,9 +249,12 @@ auth:
     client: "admin"
 
 # -----------------------------------------------------------------------------
-# Job TTL -- exercises `if and .Values.job.ttl.enabled` in *-cluster-initialize
+# Jobs -- exercises `if and .Values.job.ttl.enabled` in *-cluster-initialize
+# and `with .Values.job.podAnnotations` in the Job pod templates
 # -----------------------------------------------------------------------------
 job:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
   ttl:
     enabled: true
     secondsAfterFinished: 300
@@ -269,6 +284,37 @@ extraDeploy:
 #            / annotations indent.
 # -----------------------------------------------------------------------------
 zookeeper:
+  affinity:
+    # Two nodeSelectorTerms (OR), several matchExpressions per term (AND),
+    # matchFields, and required + preferred together -- exercises the
+    # `toYaml | nindent` passthrough with a deeply nested multi-element value.
+    nodeAffinity: &nodeAffinity
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-pool
+                operator: In
+                values:
+                  - pool-a
+                  - pool-b
+              - key: dedicated
+                operator: Exists
+          - matchExpressions:
+              - key: gpu-count
+                operator: Gt
+                values:
+                  - "2"
+            matchFields:
+              - key: metadata.name
+                operator: In
+                values:
+                  - node-1
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          preference:
+            matchExpressions:
+              - key: spot
+                operator: DoesNotExist
   replicaCount: 3
   podMonitor:
     enabled: true
@@ -343,6 +389,8 @@ zookeeper:
 #            bookkeeper-configmap.yaml multi-volume directory list rendering.
 # -----------------------------------------------------------------------------
 bookkeeper:
+  affinity:
+    nodeAffinity: *nodeAffinity
   replicaCount: 4
   podMonitor:
     enabled: true
@@ -449,6 +497,8 @@ bookkeeper:
 # Autorecovery -- multi-element lists/maps + custom timeout
 # -----------------------------------------------------------------------------
 autorecovery:
+  affinity:
+    nodeAffinity: *nodeAffinity
   podMonitor:
     enabled: true
     interval: 30s
@@ -507,6 +557,8 @@ autorecovery:
 # pulsar_metadata -- exercise PIP-45 metadata driver toggles + extra init cmd
 # -----------------------------------------------------------------------------
 pulsar_metadata:
+  affinity:
+    nodeAffinity: *nodeAffinity
   bookkeeper:
     usePulsarMetadataClientDriver: true
     usePulsarMetadataBookieDriver: true
@@ -516,6 +568,8 @@ extraInitCommand: "echo 'extra init command'"
 # Standalone -- left disabled (mutually exclusive with the distributed setup)
 # -----------------------------------------------------------------------------
 standalone:
+  affinity:
+    nodeAffinity: *nodeAffinity
   enabled: false
 
 # -----------------------------------------------------------------------------
@@ -526,6 +580,8 @@ standalone:
 #            block.
 # -----------------------------------------------------------------------------
 broker:
+  affinity:
+    nodeAffinity: *nodeAffinity
   replicaCount: 3
   autoscaling:
     enabled: true
@@ -632,6 +688,8 @@ functions:
 #            and is covered indirectly by other scenarios).
 # -----------------------------------------------------------------------------
 proxy:
+  affinity:
+    nodeAffinity: *nodeAffinity
   replicaCount: 3
   podMonitor:
     enabled: true
@@ -720,6 +778,8 @@ proxy:
 # Toolset -- multi-element lists/maps
 # -----------------------------------------------------------------------------
 toolset:
+  affinity:
+    nodeAffinity: *nodeAffinity
   useProxy: true
   priorityClassName: high-priority-nonpreempting
   appAnnotations:
@@ -769,6 +829,8 @@ oxia:
   initialShardCount: 3
   replicationFactor: 3
   coordinator:
+    affinity:
+      nodeAffinity: *nodeAffinity
     priorityClassName: high-priority-nonpreempting
     appAnnotations:
       deploy/owner: pulsar-team
@@ -814,6 +876,8 @@ oxia:
       - oxia-internal.example.com:6648
       - oxia-external.example.com:6648
   server:
+    affinity:
+      nodeAffinity: *nodeAffinity
     priorityClassName: high-priority-nonpreempting
     appAnnotations:
       deploy/owner: pulsar-team
@@ -850,6 +914,8 @@ oxia:
 # -----------------------------------------------------------------------------
 dekaf:
   deployment:
+    affinity:
+      nodeAffinity: *nodeAffinity
     priorityClassName: high-priority-nonpreempting
     annotations:
       deploy/owner: pulsar-team

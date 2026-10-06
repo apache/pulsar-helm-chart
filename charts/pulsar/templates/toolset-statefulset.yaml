@@ -65,6 +65,11 @@ spec:
       topologySpreadConstraints:
         {{- toYaml .Values.toolset.topologySpreadConstraints | nindent 8 }}
     {{- end }}
+    {{- with (.Values.toolset.affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.toolset.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.toolset.component }}"
       {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.toolset "root" .)) }}

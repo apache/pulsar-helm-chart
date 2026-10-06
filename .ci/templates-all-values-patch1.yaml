@@ -89,6 +89,26 @@ volumes:
 #     the storageClassName: "local-storage" branch
 # -----------------------------------------------------------------------------
 zookeeper:
+  affinity:
+    # nodeAffinity: replace the base file's single-entry preferred list with a
+    # two-entry weighted one. Helm deep-merges maps, so the base file's
+    # requiredDuringScheduling... term survives alongside it.
+    nodeAffinity: &nodeAffinity
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-pool
+                operator: In
+                values:
+                  - pool-a
+        - weight: 10
+          preference:
+            matchExpressions:
+              - key: node-pool
+                operator: In
+                values:
+                  - fallback-pool
   statefulsetUpgrade:
     enabled: false
   volumes:
@@ -111,6 +131,8 @@ zookeeper:
 #            bookkeeper-storageclass.yaml common-volume branch.
 # -----------------------------------------------------------------------------
 bookkeeper:
+  affinity:
+    nodeAffinity: *nodeAffinity
   volumes:
     useSingleCommonVolume: true
     journal:
@@ -145,6 +167,8 @@ bookkeeper:
 #     enablePackagesManagement keys in broker-configmap.yaml).
 # -----------------------------------------------------------------------------
 broker:
+  affinity:
+    nodeAffinity: *nodeAffinity
   statefulsetUpgrade:
     enabled: false
   packageManagement:
@@ -216,3 +240,12 @@ auth:
         - pulsar
       openIDRoleClaim: sub
       openIDRequireIssuersUseHttps: "true"
+
+# -----------------------------------------------------------------------------
+# Function worker nodeAffinity -- the separate function-worker StatefulSet only
+# renders under this overlay (components.function_worker), so the base file has
+# no function_worker block to carry it.
+# -----------------------------------------------------------------------------
+function_worker:
+  affinity:
+    nodeAffinity: *nodeAffinity

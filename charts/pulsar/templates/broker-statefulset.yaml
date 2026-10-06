@@ -93,6 +93,10 @@ spec:
         {{- toYaml .Values.broker.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
+        {{- with .Values.broker.affinity.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.broker.affinity.anti_affinity}}
         podAntiAffinity:
           {{- if eq .Values.broker.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}

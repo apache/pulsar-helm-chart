@@ -60,12 +60,71 @@ Define the pulsar certs ca issuer secret name
 {{- end -}}
 
 {{/*
+Return the service name for a component.
+Usage: {{ include "pulsar.certs.component.service" (dict "root" . "componentKey" "broker") }}
+*/}}
+{{- define "pulsar.certs.component.service" -}}
+{{- $templateName := printf "pulsar.%s.service" .componentKey -}}
+{{- include $templateName .root -}}
+{{- end -}}
+
+{{/*
+Return the headless service name for a component.
+Usage: {{ include "pulsar.certs.component.service.headless" (dict "root" . "componentKey" "broker") }}
+*/}}
+{{- define "pulsar.certs.component.service.headless" -}}
+{{- $templateName := printf "pulsar.%s.service.headless" .componentKey -}}
+{{- include $templateName .root -}}
+{{- end -}}
+
+{{/*
+Return the component replica count.
+When autoscaling is enabled, uses maxReplicas; otherwise uses replicaCount.
+Usage: {{ include "pulsar.certs.component.replicaCount" (dict "componentKey" "broker" "componentConfig" .Values.broker) }}
+*/}}
+{{- define "pulsar.certs.component.replicaCount" -}}
+{{- $componentKey := .componentKey -}}
+{{- $componentConfig := .componentConfig -}}
+{{- if and $componentConfig.autoscaling $componentConfig.autoscaling.enabled -}}
+{{- if not $componentConfig.autoscaling.maxReplicas -}}
+{{- fail (printf "%s.autoscaling.maxReplicas must be defined when %s.autoscaling.enabled is true" $componentKey $componentKey) -}}
+{{- end -}}
+{{- $componentConfig.autoscaling.maxReplicas -}}
+{{- else -}}
+{{- $componentConfig.replicaCount -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Common certificate template
-Usage: {{- include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.proxy "tlsConfig" .Values.tls.proxy) -}}
+Usage: {{- include "pulsar.cert.template" (dict "root" . "componentKey" "proxy" "componentConfig" .Values.proxy "tlsConfig" .Values.tls.proxy) -}}
 */}}
 {{- define "pulsar.cert.template" -}}
 {{- if eq .root.Values.certs.internal_issuer.apiVersion "cert-manager.io/v1beta1" -}}
 {{- fail "cert-manager.io/v1beta1 is no longer supported. Please set certs.internal_issuer.apiVersion to cert-manager.io/v1" -}}
+{{- end -}}
+{{- $root := .root -}}
+{{- $fullname := include "pulsar.fullname" .root -}}
+{{- $component := .componentConfig.component -}}
+{{- $namespace := include "pulsar.namespace" .root -}}
+{{- $clusterDomain := .root.Values.clusterDomain -}}
+{{- $service := include "pulsar.certs.component.service" (dict "root" .root "componentKey" .componentKey "component" $component) -}}
+{{- $serviceHeadless := "" -}}
+{{- $serviceDns := $service -}}
+{{- if or (eq .componentKey "broker") (eq .componentKey "zookeeper") }}
+{{- $serviceHeadless = include "pulsar.certs.component.service.headless" (dict "root" .root "componentKey" .componentKey "component" $component) -}}
+{{- $serviceDns = $serviceHeadless -}}
+{{- end -}}
+{{- /* Per-pod FQDNs are under the service the pod's DNS records are published in: the StatefulSet's
+serviceName, or the standalone Deployment's subdomain. These are headless services for broker, zookeeper,
+function_worker and standalone. */ -}}
+{{- $podServiceDns := $serviceDns -}}
+{{- if or (eq .componentKey "function_worker") (eq .componentKey "standalone") }}
+{{- $podServiceDns = include "pulsar.certs.component.service.headless" (dict "root" .root "componentKey" .componentKey "component" $component) -}}
+{{- end -}}
+{{- $sanMode := .root.Values.tls.common.sanMode -}}
+{{- if not (has $sanMode (list "wildcard" "fqdn" "none")) -}}
+{{- fail (printf "tls.common.sanMode must be one of: wildcard, fqdn, none (got %q)" $sanMode) -}}
 {{- end -}}
 apiVersion: "{{ .root.Values.certs.internal_issuer.apiVersion }}"
 kind: Certificate
@@ -92,7 +151,7 @@ spec:
 {{ toYaml .root.Values.tls.common.organization | indent 4 }}
   # The use of the common name field has been deprecated since 2000 and is
   # discouraged from being used.
-  commonName: "{{ template "pulsar.fullname" .root }}-{{ .componentConfig.component }}"
+  commonName: "{{ template "pulsar.fullname" .root }}-{{ $component }}"
   isCA: false
   privateKey:
     size: {{ .root.Values.tls.common.keySize }}
@@ -103,17 +162,30 @@ spec:
     - client auth
   # At least one of a DNS Name, USI SAN, or IP address is required.
   dnsNames:
-{{- if .tlsConfig.dnsNames }}
+{{ if .tlsConfig.dnsNames }}
 {{ toYaml .tlsConfig.dnsNames | indent 4 }}
+{{ end }}
+{{ if eq $sanMode "wildcard" }}
+    - {{ printf "*.%s.%s.svc.%s" $serviceDns $namespace $clusterDomain | quote }}
+{{ end }}
+{{/* The proxy uses a regular ClusterIP service, so it does not need per-pod FQDN SANs. */}}
+{{ if and (eq $sanMode "fqdn") (not (eq .componentKey "proxy")) }}
+      {{- $replicaCount := (include "pulsar.certs.component.replicaCount" (dict "componentKey" .componentKey "componentConfig" .componentConfig) | int) -}}
+      {{- if gt $replicaCount 0 }}
+        {{- range $i := until $replicaCount }}
+    - {{ printf "%s-%s-%d.%s.%s.svc.%s" $fullname $component $i $podServiceDns $namespace $clusterDomain | quote }}
+        {{- end }}
+      {{- end }}
+{{ end }}
+{{- /* The standalone pod uses its component name as hostname in the headless service subdomain. */}}
+{{- if and (eq $sanMode "fqdn") (eq .componentKey "standalone") }}
+    - {{ printf "%s.%s.%s.svc.%s" $component $podServiceDns $namespace $clusterDomain | quote }}
 {{- end }}
-    {{- if or (eq .componentConfig.component "broker") (eq .componentConfig.component "zookeeper") }}
-    - {{ printf "*.%s-%s-headless.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
-    - {{ printf "%s-%s-headless.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
-    {{- else }}
-    - {{ printf "*.%s-%s.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
-    {{- end }}
-    - {{ printf "%s-%s.%s.svc.%s" (include "pulsar.fullname" .root) .componentConfig.component (include "pulsar.namespace" .root) .root.Values.clusterDomain | quote }}
-    - {{ printf "%s-%s" (include "pulsar.fullname" .root) .componentConfig.component | quote }}
+{{ if or (eq .componentKey "broker") (eq .componentKey "zookeeper") }}
+    - {{ printf "%s.%s.svc.%s" $serviceHeadless $namespace $clusterDomain | quote }}
+{{ end }}
+    - {{ printf "%s.%s.svc.%s" $service $namespace $clusterDomain | quote }}
+    - {{ printf "%s" $service | quote }}
 {{- if .tlsConfig.ipAddresses }}
   ipAddresses:
 {{ toYaml .tlsConfig.ipAddresses | indent 4 }}

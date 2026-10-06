@@ -42,6 +42,10 @@ spec:
       labels:
         {{- include "pulsar.template.labels" . | nindent 8 }}
         component: {{ .Values.pulsar_metadata.component }}
+      {{- with .Values.job.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
     {{- if .Values.pulsar_metadata.nodeSelector }}
@@ -50,6 +54,11 @@ spec:
     {{- end }}
       {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.pulsar_metadata "root" .)) }}
       {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.pulsar_metadata.securityContext "root" . "indent" 6) }}
+    {{- with (.Values.pulsar_metadata.affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       initContainers:
       {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
       {{- include "pulsar.emptyDirVolumes.seedContainer" (dict "volumes" $edv "image" .Values.pulsar_metadata.image "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" .) | nindent 6 }}

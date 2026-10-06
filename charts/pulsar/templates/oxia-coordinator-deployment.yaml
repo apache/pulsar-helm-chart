@@ -60,6 +60,11 @@ spec:
     {{- if .Values.oxia.coordinator.priorityClassName }}
       priorityClassName: {{ .Values.oxia.coordinator.priorityClassName }}
     {{- end }}
+    {{- with (.Values.oxia.coordinator.affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.oxia.coordinator "default" (list (dict "path" "/tmp" "sizeLimit" "1Gi")) "root" .)) }}
       {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.oxia.coordinator.securityContext "root" . "indent" 6) }}
