@@ -48,6 +48,8 @@ spec:
     spec:
     {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.bookkeeper "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.bookkeeper.securityContext "root" . "indent" 6) }}
       nodeSelector:
       {{- if .Values.pulsar_metadata.nodeSelector }}
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
@@ -62,10 +64,14 @@ spec:
           {{- toYaml . | nindent 10 }}
       {{- end }}
       initContainers:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.seedContainer" (dict "volumes" $edv "image" .Values.images.bookie "securityContext" .Values.bookkeeper.containerSecurityContext "root" .) | nindent 6 }}
+      {{- end }}
       {{- if .Values.tls.bookie.cacerts.enabled }}
       - name: cacerts
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -73,11 +79,15 @@ spec:
             bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.bookie.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if and .Values.components.zookeeper .Values.bookkeeper.metadata.waitZookeeperTimeout (gt (.Values.bookkeeper.metadata.waitZookeeperTimeout | int) 0) }}
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.bookkeeper.metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
@@ -92,11 +102,16 @@ spec:
               sleep 3;
             done;
             {{- end}}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end}}
       {{- if and .Values.components.oxia .Values.bookkeeper.metadata.waitOxiaTimeout (gt (.Values.bookkeeper.metadata.waitOxiaTimeout | int) 0) }}
       - name: wait-oxia-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.bookkeeper.metadata.waitOxiaTimeout }}", "sh", "-c"]
         args:
@@ -104,11 +119,16 @@ spec:
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
       {{- if .Values.bookkeeper.metadata.resources }}
         resources:
 {{ toYaml .Values.bookkeeper.metadata.resources | indent 10 }}
@@ -135,8 +155,14 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 6 }}
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 6 }}
+      {{- end }}
       restartPolicy: OnFailure
 {{- end }}
 {{- end }}

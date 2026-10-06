@@ -116,30 +116,46 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
-      {{- if .Values.bookkeeper.securityContext }}
-      securityContext:
-{{ toYaml .Values.bookkeeper.securityContext | indent 8 }}
-      {{- end }}
-      {{- if and .Values.bookkeeper.waitMetadataTimeout (gt (.Values.bookkeeper.waitMetadataTimeout | int) 0) }}
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.bookkeeper "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.bookkeeper.securityContext "root" . "indent" 6) }}
+      {{- /*
+      `initContainers:` is emitted whenever anything needs it, not only when
+      waitMetadataTimeout is set. The conf-seeding container has to run regardless, or a
+      read-only root filesystem gets an empty emptyDir over /pulsar/conf and the bookie
+      cannot start. This also keeps user-supplied bookkeeper.initContainers from being
+      emitted without their parent key when waitMetadataTimeout is 0.
+      */}}
+      {{- $bkWaitMetadata := and .Values.bookkeeper.waitMetadataTimeout (gt (.Values.bookkeeper.waitMetadataTimeout | int) 0) }}
+      {{- $bkRootfs := include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- if or $bkWaitMetadata $bkRootfs .Values.tls.bookie.cacerts.enabled .Values.bookkeeper.initContainers }}
       initContainers:
+      {{- if $bkRootfs }}
+      {{- include "pulsar.emptyDirVolumes.seedContainer" (dict "volumes" $edv "image" .Values.images.bookie "securityContext" .Values.bookkeeper.containerSecurityContext "root" .) | nindent 6 }}
+      {{- end }}
       {{- if .Values.tls.bookie.cacerts.enabled }}
       - name: cacerts
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
         command: ["sh", "-c"]
         args:
         - |
           bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.bookie.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
+      {{- if $bkWaitMetadata }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
       # before deploying the bookies
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
         command: ["timeout", "{{ .Values.bookkeeper.waitMetadataTimeout }}", "sh", "-c"]
         args:
         # only reformat bookie if bookkeeper is running without persistence
@@ -150,14 +166,19 @@ spec:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         volumeMounts:
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if .Values.bookkeeper.initContainers }}
         {{- toYaml .Values.bookkeeper.initContainers | nindent 6 }}
+      {{- end }}
       {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.bookie "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "root" . "indent" 8) }}
         {{- if .Values.bookkeeper.probe.liveness.enabled }}
         livenessProbe:
           httpGet:
@@ -282,7 +303,13 @@ spec:
 {{ toYaml .Values.bookkeeper.extraVolumeMounts | indent 8 }}
         {{- end }}
         {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       volumes:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.bookkeeper.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 6 }}
+      {{- end }}
       {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence) }}
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
         emptyDir: {}

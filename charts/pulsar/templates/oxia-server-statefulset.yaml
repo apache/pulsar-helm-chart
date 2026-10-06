@@ -110,9 +110,11 @@ spec:
         {{ end }}
         {{- end }}    
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
-      {{- if .Values.oxia.server.securityContext }}
-      securityContext:
-{{ toYaml .Values.oxia.server.securityContext | indent 8 }}
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.oxia.server "default" (list (dict "path" "/tmp" "sizeLimit" "1Gi")) "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.oxia.server.securityContext "root" . "indent" 6) }}
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.server.containerSecurityContext "volumes" $edv "root" .) }}
+      volumes:
+      {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 6 }}
       {{- end }}
       containers:
         - command:
@@ -130,6 +132,7 @@ spec:
             {{- end}}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
           imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
+          {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.oxia.server.containerSecurityContext "root" . "indent" 10) }}
           name: server
           ports:
             {{- range $key, $value := .Values.oxia.server.ports }}
@@ -141,6 +144,9 @@ spec:
               cpu: {{ .Values.oxia.server.cpuLimit }}
               memory: {{ .Values.oxia.server.memoryLimit }}
           volumeMounts:
+            {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.server.containerSecurityContext "volumes" $edv "root" .) }}
+            {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 12 }}
+            {{- end }}
             - name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data
               mountPath: /data
           livenessProbe:

@@ -52,16 +52,22 @@ spec:
       nodeSelector:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.pulsar_metadata "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.pulsar_metadata.securityContext "root" . "indent" 6) }}
     {{- with (.Values.pulsar_metadata.affinity).nodeAffinity }}
       affinity:
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
     {{- end }}
       initContainers:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.seedContainer" (dict "volumes" $edv "image" .Values.pulsar_metadata.image "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" .) | nindent 6 }}
+      {{- end }}
       {{- if .Values.tls.toolset.cacerts.enabled }}
       - name: cacerts
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -69,12 +75,16 @@ spec:
             bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.toolset.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if and .Values.components.zookeeper .Values.pulsar_metadata.waitZookeeperTimeout (gt (.Values.pulsar_metadata.waitZookeeperTimeout | int) 0) }}
       {{- if .Values.pulsar_metadata.configurationStore }}
       - name: wait-zk-cs-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
@@ -86,10 +96,14 @@ spec:
             done;
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       - name: wait-zk-metastore-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitZookeeperTimeout }}", "sh", "-c"]
         args:
@@ -104,11 +118,16 @@ spec:
               sleep 3;
             done;
             {{- end }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if and .Values.components.oxia .Values.pulsar_metadata.waitOxiaTimeout (gt (.Values.pulsar_metadata.waitOxiaTimeout | int) 0) }}
       - name: wait-oxia-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitOxiaTimeout }}", "sh", "-c"]
         args:
@@ -116,6 +135,10 @@ spec:
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if and .Values.pulsar_metadata.waitBookkeeperTimeout (gt (.Values.pulsar_metadata.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
@@ -123,6 +146,7 @@ spec:
       - name: pulsar-bookkeeper-verify-clusterid
         image: {{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}
         imagePullPolicy: {{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.pulsar_metadata.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
@@ -140,11 +164,15 @@ spec:
             name: {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       containers:
       - name: {{ template "pulsar.fullname" . }}-{{ .Values.pulsar_metadata.component }}
         image: {{ template "pulsar.imageFullName" (dict "image" .Values.pulsar_metadata.image "root" .) }}
         imagePullPolicy: {{ template "pulsar.imagePullPolicy" (dict "image" .Values.pulsar_metadata.image "root" .) }}
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "root" . "indent" 8) }}
       {{- if .Values.pulsar_metadata.resources }}
         resources:
 {{ toYaml .Values.pulsar_metadata.resources | indent 10 }}
@@ -188,8 +216,14 @@ spec:
         {{- end }}
         volumeMounts:
         {{- include "pulsar.toolset.certs.volumeMounts" . | nindent 10 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 10 }}
+        {{- end }}
       volumes:
       {{- include "pulsar.toolset.certs.volumes" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.pulsar_metadata.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 8 }}
+        {{- end }}
       restartPolicy: OnFailure
       {{- if .Values.pulsar_metadata.nodeSelector }}
       nodeSelector:

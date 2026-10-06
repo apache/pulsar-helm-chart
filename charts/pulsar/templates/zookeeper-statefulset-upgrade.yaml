@@ -87,14 +87,18 @@ metadata:
 spec:
   backoffLimit: 1
   template:
-    {{- with .Values.job.podAnnotations }}
     metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.zookeeper.component }}-sts-cleanup
+      {{- with .Values.job.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}
     spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}-sts-cleanup"
       restartPolicy: Never
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.zookeeper.securityContext "root" . "indent" 6) }}
       {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
     {{- if .Values.zookeeper.nodeSelector }}
       nodeSelector:
@@ -124,6 +128,7 @@ spec:
         - name: sts-cleanup
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
           imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.kubectl "root" .) }}"
+          {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.zookeeper.containerSecurityContext "root" . "indent" 10) }}
           command:
             - sh
             - -c

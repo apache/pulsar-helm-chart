@@ -66,6 +66,8 @@ spec:
           {{- toYaml . | nindent 10 }}
     {{- end }}
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.oxia.coordinator "default" (list (dict "path" "/tmp" "sizeLimit" "1Gi")) "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.oxia.coordinator.securityContext "root" . "indent" 6) }}
       containers:
         - command:
 {{- if .Values.oxia.coordinator.entrypoint }}
@@ -75,6 +77,7 @@ spec:
 {{- end }}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
           imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
+          {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "root" . "indent" 10) }}
           name: coordinator
           ports:
             {{- range $key, $value := .Values.oxia.coordinator.ports }}
@@ -85,9 +88,14 @@ spec:
             limits:
               cpu: {{ .Values.oxia.coordinator.cpuLimit }}
               memory: {{ .Values.oxia.coordinator.memoryLimit }}
-      {{- if .Values.oxia.coordinator.extraVolumeMounts }}
+      {{- if or .Values.oxia.coordinator.extraVolumeMounts (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .)) }}
           volumeMounts:
-        {{- toYaml .Values.oxia.coordinator.extraVolumeMounts | nindent 12 }}
+            {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .) }}
+            {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 12 }}
+            {{- end }}
+            {{- if .Values.oxia.coordinator.extraVolumeMounts }}
+            {{- toYaml .Values.oxia.coordinator.extraVolumeMounts | nindent 12 }}
+            {{- end }}
       {{- end }}
           livenessProbe:
             {{- include "oxia-cluster.probe" .Values.oxia.coordinator.ports.internal | nindent 12 }}
@@ -96,8 +104,13 @@ spec:
       {{- if .Values.oxia.coordinator.extraContainers }}
         {{- toYaml .Values.oxia.coordinator.extraContainers | nindent 8 }}
       {{- end }}
-      {{- if .Values.oxia.coordinator.extraVolumes }}
+      {{- if or .Values.oxia.coordinator.extraVolumes (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .)) }}
       volumes:
-{{- toYaml .Values.oxia.coordinator.extraVolumes | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 8 }}
+        {{- end }}
+        {{- if .Values.oxia.coordinator.extraVolumes }}
+        {{- toYaml .Values.oxia.coordinator.extraVolumes | nindent 8 }}
+        {{- end }}
       {{- end }}
 {{- end }}

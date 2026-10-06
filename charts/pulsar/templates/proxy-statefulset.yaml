@@ -117,11 +117,17 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.proxy.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.proxy "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.proxy.securityContext "root" . "indent" 6) }}
       initContainers:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.seedContainer" (dict "volumes" $edv "image" .Values.images.proxy "securityContext" .Values.proxy.containerSecurityContext "root" .) | nindent 6 }}
+      {{- end }}
       {{- if .Values.tls.proxy.cacerts.enabled }}
       - name: combine-certs
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.proxy.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -129,6 +135,9 @@ spec:
             bin/certs-combine-pem.sh /pulsar/certs/cacerts/ca-combined.pem {{ template "pulsar.certs.cacerts" (dict "certs" .Values.tls.proxy.cacerts.certs) }}
         volumeMounts:
         {{- include "pulsar.proxy.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if and .Values.components.zookeeper (not .Values.standalone.enabled) .Values.proxy.waitZookeeperTimeout (gt (.Values.proxy.waitZookeeperTimeout | int) 0) }}
       # This init container will wait for zookeeper to be ready before
@@ -136,6 +145,7 @@ spec:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.proxy.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.proxy.waitZookeeperTimeout }}", "sh", "-c"]
         args:
@@ -154,11 +164,16 @@ spec:
               echo "pulsar cluster {{ template "pulsar.cluster.name" . }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
             done;
             {{- end}}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end}}
       {{- if and .Values.components.oxia (not .Values.standalone.enabled) .Values.proxy.waitOxiaTimeout (gt (.Values.proxy.waitOxiaTimeout | int) 0) }}
       - name: wait-oxia-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.proxy.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.proxy.waitOxiaTimeout }}", "sh", "-c"]
         args:
@@ -166,7 +181,11 @@ spec:
             until nslookup {{ template "pulsar.oxia.server.service" . }}; do
               sleep 3;
             done;
-      {{- end }}      
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
+      {{- end }}
       {{- if and .Values.proxy.waitBrokerTimeout (gt (.Values.proxy.waitBrokerTimeout | int) 0) }}
       {{- $backendService := ternary (include "pulsar.standalone.service" .) (printf "%s-%s" (include "pulsar.fullname" .) .Values.broker.component) .Values.standalone.enabled }}
       # This init container waits for the broker backend (either the broker
@@ -175,6 +194,7 @@ spec:
       - name: wait-broker-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.proxy.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.proxy.waitBrokerTimeout }}", "sh", "-c"]
         args:
@@ -186,6 +206,10 @@ spec:
               sleep 10;
               brokerServiceNumber="$(nslookup -timeout=10 {{ $backendService }} | grep Name | wc -l)";
             done;
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+        volumeMounts:
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end}}
       {{- if .Values.proxy.initContainers }}
         {{- toYaml .Values.proxy.initContainers | nindent 6 }}
@@ -194,6 +218,7 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.proxy "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.proxy "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.proxy.containerSecurityContext "root" . "indent" 8) }}
         {{- if .Values.proxy.probe.liveness.enabled }}
         livenessProbe:
           httpGet:
@@ -263,8 +288,11 @@ spec:
         envFrom:
         - configMapRef:
             name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
-        {{- if or .Values.proxy.extraVolumeMounts .Values.auth.authentication.enabled (and .Values.tls.enabled (or .Values.tls.proxy.enabled .Values.tls.broker.enabled)) }}
+        {{- if or .Values.proxy.extraVolumeMounts .Values.auth.authentication.enabled (and .Values.tls.enabled (or .Values.tls.proxy.enabled .Values.tls.broker.enabled)) (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .)) }}
         volumeMounts:
+          {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+          {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 10 }}
+          {{- end }}
           {{- if .Values.auth.authentication.enabled }}
           {{- if .Values.auth.authentication.jwt.enabled }}
           - mountPath: "/pulsar/keys"
@@ -281,8 +309,11 @@ spec:
           {{- end }}
       {{- end}}
       {{- include "pulsar.imagePullSecrets" . | nindent 6}}
-      {{- if or .Values.proxy.extraVolumes .Values.auth.authentication.enabled (and .Values.tls.enabled .Values.tls.proxy.enabled) }}
+      {{- if or .Values.proxy.extraVolumes .Values.auth.authentication.enabled (and .Values.tls.enabled .Values.tls.proxy.enabled) (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .)) }}
       volumes:
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.proxy.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 8 }}
+        {{- end }}
         {{- if .Values.proxy.extraVolumes }}
 {{ toYaml .Values.proxy.extraVolumes | indent 8 }}
         {{- end }}

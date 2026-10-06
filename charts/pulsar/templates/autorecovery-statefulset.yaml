@@ -119,11 +119,17 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+      {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.autorecovery "root" .)) }}
+      {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.autorecovery.securityContext "root" . "indent" 6) }}
       initContainers:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.autorecovery.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.seedContainer" (dict "volumes" $edv "image" .Values.images.autorecovery "securityContext" .Values.autorecovery.containerSecurityContext "root" .) | nindent 6 }}
+      {{- end }}
       {{- if .Values.tls.autorecovery.cacerts.enabled }}
       - name: cacerts
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.autorecovery.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["sh", "-c"]
         args:
@@ -134,6 +140,9 @@ spec:
 {{ toYaml .Values.autorecovery.initContainersExtraVolumeMounts | indent 8 }}
         {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.autorecovery.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if and .Values.autorecovery.waitBookkeeperTimeout (gt (.Values.autorecovery.waitBookkeeperTimeout | int) 0) }}
       # This initContainer will wait for bookkeeper initnewcluster to complete
@@ -141,6 +150,7 @@ spec:
       - name: pulsar-bookkeeper-verify-clusterid
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.autorecovery.containerSecurityContext "root" . "indent" 8) }}
         resources: {{ toYaml .Values.initContainer.resources | nindent 10 }}
         command: ["timeout", "{{ .Values.autorecovery.waitBookkeeperTimeout }}", "sh", "-c"]
         args:
@@ -154,6 +164,9 @@ spec:
 {{ toYaml .Values.autorecovery.initContainersExtraVolumeMounts | indent 8 }}
         {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.autorecovery.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- if .Values.autorecovery.initContainers }}
         {{- toYaml .Values.autorecovery.initContainers | nindent 6 }}
@@ -162,6 +175,54 @@ spec:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.autorecovery "root" .) }}"
         imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.autorecovery "root" .) }}"
+        {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.autorecovery.containerSecurityContext "root" . "indent" 8) }}
+        {{- /*
+        The autorecovery daemon does not start BookKeeper's HTTP service, so there is no
+        /api/v1 endpoint to probe as there is on a bookie. It does start the Prometheus
+        stats endpoint on autorecovery.ports.http, which is the same endpoint the
+        PodMonitor scrapes, so /metrics is what these probes target.
+
+        Every lookup below goes through `dig`, because `autorecovery.probe` is a new key:
+        under `helm upgrade --reuse-values` the new chart's defaults are not coalesced in,
+        so the map is absent and a direct dereference aborts the whole render.
+
+        All three are off by default, so this adds a knob rather than behaviour. /metrics
+        is served by the image's BookKeeper stats provider rather than by anything the
+        chart configures, so a cluster overriding statsProviderClass or
+        prometheusStatsHttpPort through autorecovery.configData would break liveness
+        (restart loop) and readiness (permanently unready, stalling the rollout) alike.
+        */}}
+        {{- $probe := .Values.autorecovery.probe | default dict }}
+        {{- if dig "liveness" "enabled" false $probe }}
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: {{ .Values.autorecovery.ports.http }}
+          initialDelaySeconds: {{ dig "liveness" "initialDelaySeconds" 10 $probe }}
+          periodSeconds: {{ dig "liveness" "periodSeconds" 30 $probe }}
+          timeoutSeconds: {{ dig "liveness" "timeoutSeconds" 5 $probe }}
+          failureThreshold: {{ dig "liveness" "failureThreshold" 60 $probe }}
+        {{- end }}
+        {{- if dig "readiness" "enabled" false $probe }}
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: {{ .Values.autorecovery.ports.http }}
+          initialDelaySeconds: {{ dig "readiness" "initialDelaySeconds" 10 $probe }}
+          periodSeconds: {{ dig "readiness" "periodSeconds" 30 $probe }}
+          timeoutSeconds: {{ dig "readiness" "timeoutSeconds" 5 $probe }}
+          failureThreshold: {{ dig "readiness" "failureThreshold" 60 $probe }}
+        {{- end }}
+        {{- if dig "startup" "enabled" false $probe }}
+        startupProbe:
+          httpGet:
+            path: /metrics
+            port: {{ .Values.autorecovery.ports.http }}
+          initialDelaySeconds: {{ dig "startup" "initialDelaySeconds" 10 $probe }}
+          periodSeconds: {{ dig "startup" "periodSeconds" 30 $probe }}
+          timeoutSeconds: {{ dig "startup" "timeoutSeconds" 5 $probe }}
+          failureThreshold: {{ dig "startup" "failureThreshold" 60 $probe }}
+        {{- end }}
       {{- if .Values.autorecovery.resources }}
         resources:
 {{ toYaml .Values.autorecovery.resources | indent 10 }}
@@ -188,7 +249,13 @@ spec:
 {{ toYaml .Values.autorecovery.extraVolumeMounts | indent 8 }}
         {{- end }}
         {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+        {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.autorecovery.containerSecurityContext "volumes" $edv "root" .) }}
+        {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 8 }}
+        {{- end }}
       volumes:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.autorecovery.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 6 }}
+      {{- end }}
       {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
       {{- if .Values.autorecovery.extraVolumes }}
 {{ toYaml .Values.autorecovery.extraVolumes | indent 6 }}

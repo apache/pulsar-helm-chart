@@ -116,6 +116,74 @@ affinity:
   # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
   type: requiredDuringSchedulingIgnoredDuringExecution
 
+## SecurityContext
+##
+## Global security contexts applied to every pod and every container this chart
+## renders, including initContainers and the init/cleanup Jobs. Both are empty by
+## default, so the chart's rendered output is unchanged unless you set them.
+##
+## Each is merged with the matching per-component override, and the per-component
+## value wins on a per-key basis:
+##
+##   podSecurityContext        <- merged with <component>.securityContext
+##   containerSecurityContext  <- merged with <component>.containerSecurityContext
+##
+## Use these when a cluster policy engine (Pod Security Admission, OPA Gatekeeper,
+## Kyverno) requires settings the chart does not set by default. For example:
+##
+##   podSecurityContext:
+##     runAsNonRoot: true
+##     runAsUser: 10000
+##     runAsGroup: 10000
+##     fsGroup: 10000
+##     fsGroupChangePolicy: OnRootMismatch
+##     supplementalGroups: [10000]
+##   containerSecurityContext:
+##     allowPrivilegeEscalation: false
+##     capabilities:
+##       drop: ["ALL"]
+##     seccompProfile:
+##       type: RuntimeDefault
+##
+## Note that zookeeper, bookkeeper, broker and oxia.server ship
+## `securityContext.fsGroup: 0` by default, and a per-component value takes
+## precedence over the global one. To move those four components off GID 0 you must
+## also override their own `securityContext` (see the comment on
+## `zookeeper.securityContext`), and be aware that changing `fsGroup` on a cluster
+## with existing volumes triggers a recursive ownership change on first mount.
+##
+## Setting `readOnlyRootFilesystem: true` is supported: the chart then mounts the
+## writable volumes the Pulsar images need. See `emptyDirVolumes` below.
+podSecurityContext: {}
+containerSecurityContext: {}
+
+## Writable volumes mounted when a component sets `readOnlyRootFilesystem: true`; the
+## Pulsar images rewrite /pulsar/conf on startup, log to /pulsar/logs, and use /tmp.
+## Ignored while `readOnlyRootFilesystem` is unset, so the default output is unchanged.
+##
+## Per entry: `path` (required, absolute; the volume name is derived from it, so two
+## paths that sanitise alike are rejected), `seedFromImage` (copy the image's contents
+## there first, via a `copy-pulsar-conf` initContainer, since an emptyDir starts empty),
+## and `sizeLimit` (an uncapped emptyDir can fill the node and get the pod evicted).
+##
+## `<component>.emptyDirVolumes` REPLACES this list rather than extending it; use `[]`
+## for "this component needs none" -- but a component with `readOnlyRootFilesystem: true`
+## and an empty list has no writable path at all, so supply them yourself through
+## `<component>.extraVolumes` / `<component>.extraVolumeMounts`. A path the component
+## already mounts through `extraVolumeMounts` is skipped, since duplicate mountPaths are
+## rejected.
+## See the README for the components that need something other than this default.
+##
+## Keep in sync with the fallback in the `pulsar.emptyDirVolumes.resolve` helper, which
+## applies when the key is absent (`helm upgrade --reuse-values`).
+emptyDirVolumes:
+  - path: /pulsar/conf
+    seedFromImage: true
+  - path: /pulsar/logs
+    sizeLimit: 1Gi
+  - path: /tmp
+    sizeLimit: 1Gi
+
 ## Components
 ##
 ## Control what components of Apache Pulsar to deploy for the cluster
@@ -450,6 +518,9 @@ auth:
         enabled: false
         # nodeSelector:
         #   cloud.google.com/gke-nodepool: default-pool
+        # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+        securityContext: {}
+        containerSecurityContext: {}
         tolerations: []
         affinity:
           anti_affinity: false
@@ -658,9 +729,15 @@ zookeeper:
   extraVolumes: []
   extraVolumeMounts: []
   # Ensures 2.10.0 non-root docker image works correctly.
+  # Merged over the global `podSecurityContext`; these keys win over it. Override
+  # `fsGroup` here if a cluster policy constrains group IDs. `fsGroup` is added as a
+  # supplementary group, so `runAsGroup` does not need to match it.
   securityContext:
     fsGroup: 0
     fsGroupChangePolicy: "OnRootMismatch"
+  # Container-level securityContext, merged over the global `containerSecurityContext`.
+  # Applied to the zookeeper container and its initContainers.
+  containerSecurityContext: {}
   volumes:
     useSeparateDiskForTxlog: false
     # use a persistent volume or emptyDir
@@ -774,6 +851,9 @@ oxia:
       annotations: {}
     service_account:
       annotations: {}
+    # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+    securityContext: {}
+    containerSecurityContext: {}
     tolerations: []
     # nodeSelector:
       # cloud.google.com/gke-nodepool: default-pool
@@ -842,9 +922,14 @@ oxia:
         annotations: {}
     service_account:
       annotations: {}
+    # Merged over the global `podSecurityContext`; these keys win over it. Override
+    # `fsGroup` here if a cluster policy constrains group IDs. `fsGroup` is added as a
+    # supplementary group, so `runAsGroup` does not need to match it.
     securityContext:
       fsGroup: 0
       fsGroupChangePolicy: "OnRootMismatch"
+    # Merged over the global `containerSecurityContext`.
+    containerSecurityContext: {}
     affinity:
       anti_affinity: true
       anti_affinity_topology_key: kubernetes.io/hostname
@@ -978,9 +1063,16 @@ bookkeeper:
   extraVolumes: []
   extraVolumeMounts: []
   # Ensures 2.10.0 non-root docker image works correctly.
+  # Merged over the global `podSecurityContext`; these keys win over it. Override
+  # `fsGroup` here if a cluster policy constrains group IDs. `fsGroup` is added as a
+  # supplementary group, so `runAsGroup` does not need to match it.
+  # This context is also applied to the bookkeeper cluster-initialize Job.
   securityContext:
     fsGroup: 0
     fsGroupChangePolicy: "OnRootMismatch"
+  # Container-level securityContext, merged over the global `containerSecurityContext`.
+  # Applied to the bookie container, its initContainers and the cluster-initialize Job.
+  containerSecurityContext: {}
   volumes:
     # use a persistent volume or emptyDir
     persistence: true
@@ -1152,6 +1244,44 @@ autorecovery:
   restartPodsOnConfigMapChange: false
   ports:
     http: 8000
+  # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+  # Unlike zookeeper/bookkeeper/broker this component mounts no data volume, so it
+  # carries no `fsGroup: 0` default.
+  securityContext: {}
+  containerSecurityContext: {}
+  # The autorecovery daemon does not start BookKeeper's HTTP service, so the probes
+  # target the Prometheus stats endpoint on `ports.http` -- the same endpoint the
+  # PodMonitor scrapes -- rather than a /api/v1 health endpoint.
+  #
+  # Both are off by default on purpose, so enabling them is opt-in and this chart's
+  # rendered output is unchanged for existing deployments.
+  #
+  # /metrics is served by the image's BookKeeper stats provider, not by anything this
+  # chart configures. A cluster that overrides `statsProviderClass` or
+  # `prometheusStatsHttpPort` through `autorecovery.configData` -- settings that were
+  # previously inert here -- would break both probes: liveness turns a working daemon
+  # into a restart loop, and readiness leaves the pod permanently unready, which stalls
+  # the StatefulSet rollout. Enable them once you have confirmed that `ports.http`
+  # serves /metrics in your deployment.
+  probe:
+    liveness:
+      enabled: false
+      failureThreshold: 60
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+    readiness:
+      enabled: false
+      failureThreshold: 60
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+    startup:
+      enabled: false
+      failureThreshold: 30
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 5
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   # priorityClassName: high-priority-nonpreempting
@@ -1235,6 +1365,10 @@ pulsar_metadata:
   waitBookkeeperTimeout: 120
   ## Timeout for running metadata initialization
   initTimeout: 60
+  ## Security contexts for the `pulsar-cluster-initialize` job, merged over the
+  ## global `podSecurityContext` / `containerSecurityContext`.
+  securityContext: {}
+  containerSecurityContext: {}
 
   ## Allow read-only operations on the metadata store when the metadata store is not available.
   ## This is useful when you want to continue serving requests even if the metadata store is not fully available with quorum.
@@ -1341,6 +1475,9 @@ standalone:
     https: 8443
     pulsar: 6650
     pulsarssl: 6651
+  # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+  securityContext: {}
+  containerSecurityContext: {}
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool
   # priorityClassName: high-priority-nonpreempting
@@ -1419,10 +1556,15 @@ broker:
   # GID 0 (the group the pulsar user, uid 10000, belongs to) and made group-writable, so the broker can
   # read/write it. Required when packageManagement.fileSystemStorage is enabled (the broker mounts a
   # PersistentVolumeClaim as the FileSystemPackagesStorage directory); harmless otherwise. Mirrors the
-  # bookkeeper/zookeeper securityContext.
+  # bookkeeper/zookeeper securityContext. Merged over the global `podSecurityContext`;
+  # these keys win over it. This context is also applied to the broker sts-cleanup
+  # pre-upgrade hook Job.
   securityContext:
     fsGroup: 0
     fsGroupChangePolicy: "OnRootMismatch"
+  # Container-level securityContext, merged over the global `containerSecurityContext`.
+  # Applied to the broker container, its initContainers and the sts-cleanup hook Job.
+  containerSecurityContext: {}
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -1767,6 +1909,9 @@ function_worker:
   ports:
     http: 6750
     https: 6751
+  # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+  securityContext: {}
+  containerSecurityContext: {}
   # podManagementPolicy for the StatefulSet
   podManagementPolicy: Parallel
   # This is how Victoria Metrics or Prometheus discovers this component
@@ -1881,6 +2026,9 @@ proxy:
   # so the metrics are correctly rendered in grafana dashboard
   component: proxy
   replicaCount: 3
+  # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+  securityContext: {}
+  containerSecurityContext: {}
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -2106,6 +2254,9 @@ toolset:
   useProxy: true
   replicaCount: 1
   initContainers: []
+  # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+  securityContext: {}
+  containerSecurityContext: {}
   # True includes annotation for statefulset that contains hash of corresponding configmap, which will cause pods to restart on configmap change
   restartPodsOnConfigMapChange: false
   # nodeSelector:
@@ -2404,6 +2555,9 @@ dekaf:
     annotations: {}
     podAnnotations: {}
     nodeSelector: {}
+    # Merged over the global `podSecurityContext` / `containerSecurityContext`.
+    securityContext: {}
+    containerSecurityContext: {}
     tolerations: []
     # priorityClassName: high-priority-nonpreempting
     affinity:

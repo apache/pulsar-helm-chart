@@ -1,0 +1,108 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Run the cluster under a policy that constrains *group IDs* to a numeric range, and so
+# rejects the chart's `fsGroup: 0` defaults. Examples of such a policy:
+#
+#   - Gatekeeper's PodSecurityPolicy-derived K8sPSPAllowedUsers constraint template with
+#       fsGroup:            {rule: MustRunAs, ranges: [{min: 1, max: 65535}]}
+#       supplementalGroups: {rule: MustRunAs, ranges: [{min: 1, max: 65535}]}
+#       runAsGroup:         {rule: MustRunAs, ranges: [{min: 1, max: 65535}]}
+#   - a Kyverno policy doing the same
+#   - an OpenShift SCC whose fsGroup rule is MustRunAs against a preallocated range
+#
+# This is not what the Kubernetes `restricted` Pod Security Standard requires: PSA
+# `restricted` places no constraint on fsGroup, fsGroupChangePolicy or supplementalGroups
+# and admits `fsGroup: 0` unchanged. If `restricted` is all you need, prefer
+# values-psa-restricted.yaml, which leaves the fsGroup defaults alone.
+#
+# Changing fsGroup on a cluster that already has provisioned volumes triggers a recursive
+# ownership change on first mount. `fsGroupChangePolicy: OnRootMismatch` limits that to the
+# first pass, but it can still take a long time on large bookie ledger volumes, so test on
+# a copy first.
+#
+# Not an OpenShift example: under the stock `restricted-v2` SCC an explicit fsGroup of
+# 10000 is rejected just as 0 is, since MustRunAs validates against the namespace's
+# preallocated range. There you want to omit the group settings and let admission inject
+# them, which means clearing the chart defaults (`zookeeper: {securityContext: null}` and
+# so on) rather than overriding them.
+
+# The bundled monitoring stack is disabled: the settings below do not reach subchart
+# templates, so its pods are rejected by a group-range policy while Pulsar comes up fine.
+# Deploy monitoring separately into a namespace with a policy that suits it.
+victoria-metrics-k8s-stack:
+  enabled: false
+
+# Applied to every pod the chart renders, including the init/cleanup Jobs.
+podSecurityContext:
+  runAsNonRoot: true
+  # 10000 is the uid of the `pulsar` user in the apachepulsar images.
+  runAsUser: 10000
+  runAsGroup: 10000
+  fsGroup: 10000
+  fsGroupChangePolicy: OnRootMismatch
+  supplementalGroups: [10000]
+
+# Applied to every container and initContainer the chart renders.
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+# If your policy also requires a liveness and readiness probe on every long-running
+# workload, note that the autorecovery StatefulSet has none by default. You can enable
+# them, but only if you have not overridden `statsProviderClass` or
+# `prometheusStatsHttpPort` in `autorecovery.configData` -- both probes target the
+# /metrics endpoint served by the image's BookKeeper stats provider, so changing either
+# setting breaks them.
+#
+# autorecovery:
+#   probe:
+#     liveness:
+#       enabled: true
+#     readiness:
+#       enabled: true
+
+# zookeeper, bookkeeper, broker and oxia.server ship `securityContext.fsGroup: 0`, and a
+# per-component value takes precedence over the global one, so each has to be overridden
+# explicitly for a group-range policy to admit them.
+#
+# `fsGroup` is added as a supplementary group, so `runAsGroup` above does not need to
+# match these values.
+zookeeper:
+  securityContext:
+    fsGroup: 10000
+    fsGroupChangePolicy: OnRootMismatch
+bookkeeper:
+  securityContext:
+    fsGroup: 10000
+    fsGroupChangePolicy: OnRootMismatch
+broker:
+  securityContext:
+    fsGroup: 10000
+    fsGroupChangePolicy: OnRootMismatch
+# Only used when the metadata store is Oxia (components.oxia: true).
+oxia:
+  server:
+    securityContext:
+      fsGroup: 10000
+      fsGroupChangePolicy: OnRootMismatch

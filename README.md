@@ -302,6 +302,161 @@ multiple times (later files win), or use the [`merge-values.sh`](examples/merge-
 helper to merge several into a single file. See [`examples/README.md`](examples/README.md)
 for the full list and usage details.
 
+## Pod and container security contexts
+
+Two global values apply a security context to every pod and every container the chart
+itself renders, including its initContainers and the init/cleanup Jobs. Containers you
+supply through `<component>.initContainers`, `oxia.coordinator.extraContainers` or
+`dekaf.deployment.extraContainers` are passed through verbatim and are not merged with
+these settings -- set a `securityContext` on those yourself:
+
+```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10000
+  runAsGroup: 10000
+  fsGroup: 10000
+  fsGroupChangePolicy: OnRootMismatch
+  supplementalGroups: [10000]
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+```
+
+Both are empty by default, so the chart's rendered output is unchanged unless you set
+them. Use them when a cluster policy engine (Pod Security Admission, OPA Gatekeeper,
+Kyverno) requires settings the chart does not set on its own.
+
+The `containerSecurityContext` block above is what the Kubernetes `restricted` Pod
+Security Standard actually enforces, together with `runAsNonRoot`. See
+[`examples/values-psa-restricted.yaml`](examples/values-psa-restricted.yaml).
+
+Each global value is merged with the matching per-component override, and the
+per-component value wins on a per-key basis:
+
+| Global | Per-component |
+|---|---|
+| `podSecurityContext` | `<component>.securityContext` |
+| `containerSecurityContext` | `<component>.containerSecurityContext` |
+
+The per-component keys exist for `zookeeper`, `bookkeeper`, `broker`, `autorecovery`,
+`proxy`, `toolset`, `function_worker`, `standalone`, `oxia.server`,
+`oxia.coordinator`, `pulsar_metadata`, `dekaf.deployment` and
+`auth.authentication.jwt.generateSecrets`. Component-owned Jobs follow the component
+they belong to: the bookkeeper cluster-initialize Job uses `bookkeeper.*`, the
+zookeeper and broker `sts-cleanup` upgrade hooks use `zookeeper.*` and `broker.*`, and
+the `pulsar-cluster-initialize` Job uses `pulsar_metadata.*`.
+
+### Overriding fsGroup, if a policy constrains group IDs
+
+`zookeeper`, `bookkeeper`, `broker` and `oxia.server` ship `securityContext.fsGroup: 0`
+so that mounted volumes are group-owned by GID 0, the group the `pulsar` user (UID 10000)
+belongs to. That is deliberate, and it is what lets the images run under an arbitrary
+assigned UID — the model OpenShift uses. **`fsGroup: 0` is not a privilege**: group 0
+inside a container is an ordinary group, and root power comes from UID 0 and capabilities,
+neither of which this grants.
+
+Most policies do not require you to change it. In particular the Kubernetes `restricted`
+Pod Security Standard places **no constraint on `fsGroup`, `fsGroupChangePolicy` or
+`supplementalGroups`**, and the PSS policy sets that Gatekeeper and Kyverno ship mirror
+PSA, so `fsGroup: 0` is admitted there as-is.
+
+Override it only when a policy actually constrains group IDs to a numeric range — for
+example Gatekeeper's PodSecurityPolicy-derived `K8sPSPAllowedUsers` with
+`fsGroup: {rule: MustRunAs, ranges: [{min: 1, ...}]}`, or an OpenShift SCC. Because a
+per-component value takes precedence over the global one, setting a global `fsGroup`
+alone does **not** change these four components — override their own `securityContext`
+as well:
+
+```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10000
+  runAsGroup: 10000
+  fsGroup: 10000
+  fsGroupChangePolicy: OnRootMismatch
+  supplementalGroups: [10000]
+bookkeeper:
+  securityContext:
+    fsGroup: 10000
+    fsGroupChangePolicy: OnRootMismatch
+```
+
+`fsGroup` is applied as a *supplementary* group, so `runAsGroup` does not need to match
+it -- the process keeps its own primary GID and still gets access to the volume.
+
+On a cluster with existing volumes, changing `fsGroup` triggers a recursive ownership
+change on first mount; `fsGroupChangePolicy: OnRootMismatch` keeps that to the first pass,
+but it can still take a long time on large bookie ledger volumes. Test on a copy before
+changing a production cluster.
+
+### readOnlyRootFilesystem
+
+The Pulsar images do not run on a read-only root filesystem unaided. They rewrite their
+configuration under `/pulsar/conf` on startup (`bin/apply-config-from-env.py`), write logs
+under `/pulsar/logs`, and the JVM and the functions worker use `/tmp`.
+
+Setting `containerSecurityContext.readOnlyRootFilesystem: true` is nevertheless enough.
+For each entry in `emptyDirVolumes` the chart then mounts an `emptyDir` at that path on
+every container and initContainer of the component, and for entries marked
+`seedFromImage: true` it prepends a `copy-pulsar-conf` initContainer that copies the
+image's contents into the volume first — an `emptyDir` starts empty, and
+`apply-config-from-env.py` edits files that must already exist.
+
+The chart-wide default describes the Pulsar images:
+
+```yaml
+emptyDirVolumes:
+  - path: /pulsar/conf
+    seedFromImage: true
+  - path: /pulsar/logs
+    sizeLimit: 1Gi
+  - path: /tmp
+    sizeLimit: 1Gi
+```
+
+`sizeLimit` matters: without it an `emptyDir` is unbounded and a busy `/pulsar/logs` can
+fill a node's ephemeral storage and get pods evicted.
+
+This is driven by the effective (merged) container securityContext, so a single global
+`readOnlyRootFilesystem: true` covers the release, and a component that overrides it back
+to `false` also loses the volumes.
+
+#### Per-component paths
+
+Every component takes its own `<component>.emptyDirVolumes`, which **replaces** the list
+it would otherwise inherit rather than adding to it — Helm merges maps per key but
+replaces lists wholesale. Use `[]` for "this component needs none".
+
+The three paths above describe the Pulsar images, so they are not applied to components
+that run something else. Those carry their own default and never inherit the chart-wide
+list:
+
+| Component | Default | Why |
+|---|---|---|
+| `oxia.server`, `oxia.coordinator` | `/tmp` | the `oxia` binary keeps its own state under its data directory, but `/tmp` is provided so that a Go dependency or a future version falling back to `os.TempDir()` cannot take the metadata store down |
+| `dekaf.deployment` | `/tmp` | the JVM writes scratch files there |
+| everything else | the three above | Pulsar images |
+
+Setting `<component>.emptyDirVolumes` still overrides either default.
+
+To hand a path back to yourself, drop its entry and declare it through
+`<component>.extraVolumes` / `<component>.extraVolumeMounts`. Declaring just the mount is
+enough: an entry whose path the component already mounts via `extraVolumeMounts` is
+skipped, because a duplicate `mountPath` is rejected by the API server. Bear in mind that
+whatever you mount over `/pulsar/conf` has to be populated, since nothing seeds it for you.
+
+Rejected at render time rather than at apply time: a relative path, an unknown entry key,
+two paths that reduce to the same volume name (`/pulsar/logs` and `/pulsar-logs` both give
+`pulsar-logs`), and a path long enough to exceed the 63-character limit on a name.
+
+Note that logs written to an `emptyDir` do not survive pod replacement. If you rely on
+reading `/pulsar/logs` from inside a pod, ship them off-node or keep
+`readOnlyRootFilesystem` disabled.
+
 ## Disabling victoria-metrics-k8s-stack components
 
 In order to disable the victoria-metrics-k8s-stack, you can add the following to your `values.yaml`.
