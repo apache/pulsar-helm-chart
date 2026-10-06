@@ -2277,6 +2277,9 @@ dekaf:
 # pulsar-helm-chart/charts/pulsar/templates/bookkeeper-cluster-initialize.yaml
 job:
   annotations: {}
+  # Annotations for the pods created by the chart's Jobs, for example
+  # sidecar.istio.io/inject: "false" so that an Istio sidecar doesn't keep a Job from completing
+  podAnnotations: {}
   ttl:
     enabled: false
     secondsAfterFinished: 3600

@@ -237,9 +237,12 @@ auth:
     client: "admin"
 
 # -----------------------------------------------------------------------------
-# Job TTL -- exercises `if and .Values.job.ttl.enabled` in *-cluster-initialize
+# Jobs -- exercises `if and .Values.job.ttl.enabled` in *-cluster-initialize
+# and `with .Values.job.podAnnotations` in the Job pod templates
 # -----------------------------------------------------------------------------
 job:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
   ttl:
     enabled: true
     secondsAfterFinished: 300
