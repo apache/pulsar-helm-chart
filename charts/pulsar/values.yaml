@@ -450,6 +450,17 @@ auth:
           # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard)
           # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guarantee
           type: preferredDuringSchedulingIgnoredDuringExecution
+          # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+          # Unset by default, so no node affinity is applied. See
+          # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+          nodeAffinity: {}
+          #   requiredDuringSchedulingIgnoredDuringExecution:
+          #     nodeSelectorTerms:
+          #       - matchExpressions:
+          #           - key: node-pool
+          #             operator: In
+          #             values:
+          #               - pulsar-pool
       # Annotations to apply to secrets created by the generateSecrets job
       secretAnnotations:
         # Annotations added to the signing key secret (asymmetric-key or symmetric-key)
@@ -603,6 +614,17 @@ zookeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # annotations for the app (statefulset/deployment)
@@ -748,6 +770,18 @@ oxia:
     # nodeSelector:
       # cloud.google.com/gke-nodepool: default-pool
     # priorityClassName: high-priority-nonpreempting
+    affinity:
+      # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+      # Unset by default, so no node affinity is applied. See
+      # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+      nodeAffinity: {}
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     nodeSelectorTerms:
+      #       - matchExpressions:
+      #           - key: node-pool
+      #             operator: In
+      #             values:
+      #               - pulsar-pool
     extraContainers: []
     extraVolumes: []
     extraVolumeMounts: []
@@ -810,6 +844,17 @@ oxia:
       # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
       # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
       type: requiredDuringSchedulingIgnoredDuringExecution
+      # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+      # Unset by default, so no node affinity is applied. See
+      # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+      nodeAffinity: {}
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     nodeSelectorTerms:
+      #       - matchExpressions:
+      #           - key: node-pool
+      #             operator: In
+      #             values:
+      #               - pulsar-pool
     # set topologySpreadConstraint to deploy pods across different zones
     topologySpreadConstraints: []
     tolerations: []
@@ -887,6 +932,17 @@ bookkeeper:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # annotations for the app (statefulset/deployment)
@@ -1098,6 +1154,17 @@ autorecovery:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # annotations for the app (statefulset/deployment)
@@ -1222,6 +1289,18 @@ pulsar_metadata:
   #     effect: "NoSchedule"
   # nodeSelector: {}
   #   cloud.google.com/gke-nodepool: default-pool
+  affinity:
+    # Native Kubernetes nodeAffinity for all init jobs, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
 
   ## optional, you can provide your own zookeeper metadata store for other components
   # to use this, you should explicit set components.zookeeper to false
@@ -1280,6 +1359,17 @@ standalone:
     anti_affinity: false
     anti_affinity_topology_key: kubernetes.io/hostname
     type: preferredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   appAnnotations: {}
   annotations: {}
   tolerations: []
@@ -1390,6 +1480,17 @@ broker:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: preferredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # annotations for the app (statefulset/deployment)
@@ -1706,6 +1807,17 @@ function_worker:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard)
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guarantee
     type: preferredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # priorityClassName: high-priority-nonpreempting
@@ -1819,6 +1931,17 @@ proxy:
     # requiredDuringSchedulingIgnoredDuringExecution - rules must be met for pod to be scheduled (hard) requires at least one node per replica
     # preferredDuringSchedulingIgnoredDuringExecution - scheduler will try to enforce but not guranentee
     type: requiredDuringSchedulingIgnoredDuringExecution
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
   # annotations for the app (statefulset/deployment)
@@ -1982,6 +2105,18 @@ toolset:
   # priorityClassName: high-priority-nonpreempting
   # set topologySpreadConstraint to deploy pods across different zones
   topologySpreadConstraints: []
+  affinity:
+    # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+    # Unset by default, so no node affinity is applied. See
+    # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeAffinity: {}
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: node-pool
+    #             operator: In
+    #             values:
+    #               - pulsar-pool
   # annotations for the app (statefulset/deployment)
   appAnnotations: {}
   annotations: {}
@@ -2263,6 +2398,18 @@ dekaf:
     nodeSelector: {}
     tolerations: []
     # priorityClassName: high-priority-nonpreempting
+    affinity:
+      # Native Kubernetes nodeAffinity for this component, passed through verbatim.
+      # Unset by default, so no node affinity is applied. See
+      # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+      nodeAffinity: {}
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     nodeSelectorTerms:
+      #       - matchExpressions:
+      #           - key: node-pool
+      #             operator: In
+      #             values:
+      #               - pulsar-pool
     extraVolumes: []
     extraVolumeMounts: []
     extraContainers: []

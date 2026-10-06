@@ -101,6 +101,11 @@ spec:
       tolerations:
 {{ toYaml .Values.standalone.tolerations | indent 8 }}
     {{- end }}
+    {{- with .Values.standalone.affinity.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ .Values.standalone.gracePeriod }}
       {{- if .Values.standalone.initContainers }}
       initContainers:

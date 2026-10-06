@@ -95,9 +95,35 @@ spec:
     spec:
       serviceAccountName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sts-cleanup"
       restartPolicy: Never
+      {{- include "pulsar.imagePullSecrets" . | nindent 6 }}
+    {{- if .Values.broker.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.broker.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.broker.priorityClassName }}
+      priorityClassName: {{ .Values.broker.priorityClassName }}
+    {{- end }}
+    {{- if .Values.broker.tolerations }}
+      tolerations:
+{{ toYaml .Values.broker.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.broker.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.broker.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
+    {{- /* This short-lived cleanup hook intentionally has no pod anti-affinity: spreading a
+         single-shot kubectl pod across nodes buys nothing, and inheriting the component's
+         required anti-affinity would make the hook unschedulable once every node already
+         runs a broker pod. */}}
+    {{- with .Values.broker.affinity.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       containers:
         - name: sts-cleanup
           image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.kubectl "root" .) }}"
+          imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.kubectl "root" .) }}"
           command:
             - sh
             - -c

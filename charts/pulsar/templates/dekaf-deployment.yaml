@@ -57,6 +57,12 @@ spec:
       priorityClassName: {{ .Values.dekaf.deployment.priorityClassName }}
       {{- end }}
 
+      {{- with (((.Values.dekaf).deployment).affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+
       containers:
         - name: dekaf
           image: "{{ .Values.images.dekaf.repository }}:{{ .Values.images.dekaf.tag }}"

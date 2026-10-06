@@ -65,6 +65,10 @@ spec:
       priorityClassName: {{ .Values.oxia.server.priorityClassName }}
     {{- end }}
       affinity:
+        {{- with .Values.oxia.server.affinity.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.oxia.server.affinity.anti_affinity}}
         podAntiAffinity:
           {{ if eq .Values.oxia.server.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}

@@ -52,6 +52,11 @@ spec:
       nodeSelector:
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
     {{- end }}
+    {{- with (.Values.pulsar_metadata.affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       initContainers:
       {{- if .Values.tls.toolset.cacerts.enabled }}
       - name: cacerts

@@ -71,6 +71,10 @@ spec:
         {{- toYaml .Values.proxy.topologySpreadConstraints | nindent 8 }}
     {{- end }}
       affinity:
+        {{- with .Values.proxy.affinity.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if and .Values.affinity.anti_affinity .Values.proxy.affinity.anti_affinity}}
         podAntiAffinity:
         {{ if eq .Values.proxy.affinity.type "requiredDuringSchedulingIgnoredDuringExecution"}}

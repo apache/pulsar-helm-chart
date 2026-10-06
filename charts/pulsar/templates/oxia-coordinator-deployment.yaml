@@ -60,6 +60,11 @@ spec:
     {{- if .Values.oxia.coordinator.priorityClassName }}
       priorityClassName: {{ .Values.oxia.coordinator.priorityClassName }}
     {{- end }}
+    {{- with (.Values.oxia.coordinator.affinity).nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-coordinator
       containers:
         - command:

@@ -216,6 +216,24 @@ We provide some instructions to guide you through the preparation: http://pulsar
       anti_affinity: false
     ```
 
+   To pin a component to specific nodes (for example a dedicated GKE node pool), set that component's
+   `affinity.nodeAffinity`. It is passed through to the pod spec verbatim, so any native
+   [node affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity)
+   expression works, and it composes with the chart's own pod anti-affinity rather than replacing them:
+
+    ```yaml
+    broker:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-nodepool
+                    operator: In
+                    values:
+                      - pulsar-pool
+    ```
+
 2. Install the chart:
 
     ```bash
