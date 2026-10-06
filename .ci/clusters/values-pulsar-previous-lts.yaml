@@ -17,45 +17,11 @@
 # under the License.
 #
 
-defaultPulsarImageTag: 3.0.17
-
-# Pulsar 3.0.x runs on JDK 17, which doesn't support -XX:+ZGeneration, therefore it's necessary to
-# override the PULSAR_GC options to use ZGC.
-
-zookeeper:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
-bookkeeper:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
-broker:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
-
-proxy:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
+# Previous LTS Pulsar version. This is also used in all upgrade tests that install a previously released
+# chart version so that Pulsar 5.0 is never deployed with an older chart version.
+# Pulsar 5.0.0 no longer publishes the apachepulsar/pulsar-all image. Set the repository explicitly since
+# previously released chart versions default to apachepulsar/pulsar-all.
+# Chart versions before 4.6.0 can't run the apachepulsar/pulsar 4.0.x image (they hard-code a BookKeeper
+# statsProviderClass that isn't included in it), so upgrade tests must start from 4.6.0 or later.
+defaultPulsarImageRepository: apachepulsar/pulsar
+defaultPulsarImageTag: 4.0.14

@@ -24,7 +24,7 @@ if [ -z "$PULSAR_VERSION" ]; then
         PULSAR_VERSION=$(yq .appVersion charts/pulsar/Chart.yaml)
     else
         # use a default version if yq is not installed
-        PULSAR_VERSION="4.0.3"
+        PULSAR_VERSION="5.0.0"
     fi
 fi
 # shellcheck disable=SC2034
