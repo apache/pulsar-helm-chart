@@ -150,7 +150,7 @@ components:
   dekaf: false
 
 # default image repository for pulsar images
-defaultPulsarImageRepository: apachepulsar/pulsar-all
+defaultPulsarImageRepository: apachepulsar/pulsar
 
 # default image tag for pulsar images
 # uses chart's appVersion when unspecified
@@ -661,14 +661,11 @@ zookeeper:
   configData:
     PULSAR_MEM: >
       -Xms64m -Xmx128m
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+ZGenerational
       -XX:+AlwaysPreTouch
       -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
+    # PULSAR_GC is intentionally unset so that the Pulsar launcher selects the garbage collector options
+    # appropriate for the Java version in the image.
   ## Add a custom command to the start up process of the zookeeper pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
   ## Zookeeper service
@@ -990,14 +987,11 @@ bookkeeper:
       -Xms128m
       -Xmx256m
       -XX:MaxDirectMemorySize=256m
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+ZGenerational
       -XX:+AlwaysPreTouch
       -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
+    # PULSAR_GC is intentionally unset so that the Pulsar launcher selects the garbage collector options
+    # appropriate for the Java version in the image.
     #
     # Bookkeeper configuration reference: https://bookkeeper.apache.org/docs/reference/config
     #
@@ -1284,9 +1278,8 @@ standalone:
   configData:
     PULSAR_MEM: >
       -Xms256m -Xmx512m -XX:MaxDirectMemorySize=512m
-    PULSAR_GC: >
-      -XX:+UseG1GC
-      -XX:MaxGCPauseMillis=10
+    # PULSAR_GC is intentionally unset so that the Pulsar launcher selects the garbage collector options
+    # appropriate for the Java version in the image.
 
 ## Pulsar: Broker cluster
 ## templates/broker-statefulset.yaml
@@ -1413,14 +1406,11 @@ broker:
   configData:
     PULSAR_MEM: >
       -Xms128m -Xmx256m -XX:MaxDirectMemorySize=256m
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+ZGenerational
       -XX:+AlwaysPreTouch
       -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
+    # PULSAR_GC is intentionally unset so that the Pulsar launcher selects the garbage collector options
+    # appropriate for the Java version in the image.
     managedLedgerDefaultEnsembleSize: "2"
     managedLedgerDefaultWriteQuorum: "2"
     managedLedgerDefaultAckQuorum: "2"
@@ -1732,8 +1722,8 @@ function_worker:
   configData:
     PULSAR_MEM: >
       -Xms128m -Xmx256m -XX:MaxDirectMemorySize=256m
-    PULSAR_GC: >
-      -XX:+UseG1GC
+    # PULSAR_GC is intentionally unset so that the Pulsar launcher selects the garbage collector options
+    # appropriate for the Java version in the image.
 
 ## Pulsar: Proxy Cluster
 ## templates/proxy-statefulset.yaml
@@ -1847,14 +1837,11 @@ proxy:
   configData:
     PULSAR_MEM: >
       -Xms64m -Xmx128m -XX:MaxDirectMemorySize=128m
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+ZGenerational
       -XX:+AlwaysPreTouch
       -XX:+UseTransparentHugePages
       -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
+    # PULSAR_GC is intentionally unset so that the Pulsar launcher selects the garbage collector options
+    # appropriate for the Java version in the image.
     httpNumThreads: "8"
   ## Add a custom command to the start up process of the proxy pods (e.g. update-ca-certificates, jvm commands, etc)
   additionalCommand:
