@@ -338,7 +338,7 @@ jobs:
               values_file: .ci/clusters/values-victoria-metrics-grafana.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
               shortname: victoria-metrics-grafana
               type: upgrade
-              upgradeFromVersion: 3.2.0
+              upgradeFromVersion: 4.6.0
           - k8sVersion:
               version: "1.25.16"
               kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
