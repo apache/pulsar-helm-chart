@@ -356,7 +356,7 @@ jobs:
       k8sVersion: ${{ matrix.k8sVersion.kind_image_tag }}
       KUBECTL_VERSION: ${{ matrix.k8sVersion.version }}
       HELM_VERSION: ${{ matrix.helmVersion || '3.14.4' }}
-      CERTMANAGER_VERSION: ${{ matrix.certmanager_version || '' }}
+      CERTMANAGER_VERSION: ${{ matrix.k8sVersion.certmanager_version || '' }}
     steps:
       - name: checkout
         uses: actions/checkout@v7
