@@ -146,9 +146,13 @@ spec:
 {{- end }}
   duration: "{{ .root.Values.tls.common.duration }}"
   renewBefore: "{{ .root.Values.tls.common.renewBefore }}"
+{{- if hasKey .root.Values.tls.common "organization" -}}
+{{- fail "tls.common.organization is no longer supported. Please configure tls.common.subject instead" -}}
+{{- end -}}
+{{- if .root.Values.tls.common.subject }}
   subject:
-    organizations:
-{{ toYaml .root.Values.tls.common.organization | indent 4 }}
+{{ toYaml .root.Values.tls.common.subject | indent 4 }}
+{{- end }}
   # The use of the common name field has been deprecated since 2000 and is
   # discouraged from being used.
   commonName: "{{ template "pulsar.fullname" .root }}-{{ $component }}"

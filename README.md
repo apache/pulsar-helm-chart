@@ -547,6 +547,33 @@ For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs
 
 ## Upgrading to Helm chart version 4.8.0
 
+### X.509 certificate subject
+
+In order to define the various parameters of the X.509 certificate subject, you need to update `tls.common` values :
+
+```
+# before
+tls:
+  common:
+    organization:
+      - pulsar
+# after
+tls:
+  common:
+    subject:
+      organizations:
+        - pulsar
+      # countries: []
+      # organizationalUnits: []
+      # localities: []
+      # provinces: []
+      # streetAddresses: []
+      # postalCodes: []
+      # serialNumber: ""
+```
+
+The upgrade will fail if you still use the old value `tls.common.organization`.
+
 ### Default Apache Pulsar version is now 5.0.0
 
 The chart now deploys Apache Pulsar 5.0.0 by default, using the `apachepulsar/pulsar:5.0.0` image. Before

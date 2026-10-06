@@ -260,8 +260,16 @@ tls:
     duration: 2160h
     # 15d
     renewBefore: 360h
-    organization:
-      - pulsar
+    subject:
+      organizations:
+        - pulsar
+      # countries: []
+      # organizationalUnits: []
+      # localities: []
+      # provinces: []
+      # streetAddresses: []
+      # postalCodes: []
+      # serialNumber: ""
     keySize: 4096
     keyAlgorithm: RSA
     keyEncoding: PKCS8
