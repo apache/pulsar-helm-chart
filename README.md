@@ -364,6 +364,58 @@ kubectl port-forward svc/$(kubectl get svc -l component=dekaf -o jsonpath='{.ite
 
 - Open <http://localhost:8090> in browser.
 
+## Choosing the metadata store: use Oxia for new clusters
+
+Pulsar stores its metadata in a metadata store. This chart can deploy either
+[Apache ZooKeeper](https://zookeeper.apache.org/) or [Oxia](https://github.com/oxia-db/oxia) as the metadata
+store.
+
+**For new production clusters, Oxia is the recommended metadata store.** Use Oxia to get the full feature
+set of the [scalable topics](https://pulsar.apache.org/docs/concepts-scalable-topics/) introduced in Pulsar
+5.0. ZooKeeper remains supported.
+
+The chart currently defaults to ZooKeeper (`components.zookeeper: true`, `components.oxia: false`). The
+default will change to Oxia in a future chart version.
+
+### Deploying a new cluster with Oxia
+
+Choose the metadata store when you first install the cluster. Disable ZooKeeper and enable Oxia in your
+`values.yaml`:
+
+```yaml
+components:
+  zookeeper: false
+  oxia: true
+```
+
+[`examples/values-oxia.yaml`](examples/values-oxia.yaml) contains a ready-made example. The chart deploys
+an Oxia coordinator and an Oxia server StatefulSet with 3 replicas, and configures the brokers and bookies to
+use Oxia. Size Oxia for your workload with the `oxia` values, such as `oxia.server.replicas`,
+`oxia.server.cpuLimit`, `oxia.server.memoryLimit`, `oxia.server.dbCacheSizeMb`, `oxia.server.storageSize`,
+`oxia.initialShardCount` and `oxia.replicationFactor`.
+
+If you run Pulsar Functions on Oxia, you must also enable `FileSystemPackagesStorage`. See
+[Pulsar Functions package storage](#pulsar-functions-package-storage-required-for-oxia).
+
+### Existing ZooKeeper-based installations
+
+Don't switch an existing release from ZooKeeper to Oxia by changing `components.zookeeper` and
+`components.oxia`. The chart doesn't migrate metadata, so the brokers and bookies would start with an empty
+metadata store, and the cluster would lose all its topics, subscriptions and ledger metadata.
+
+Pulsar supports migrating an existing cluster from ZooKeeper to Oxia with a special procedure. See
+[Migrate metadata store from ZooKeeper to Oxia](https://pulsar.apache.org/docs/administration-metadata-store-migration/).
+This Helm chart doesn't support that migration yet.
+
+To keep an existing installation on ZooKeeper when a future chart version changes the default to Oxia, set
+the components explicitly in your `values.yaml` now:
+
+```yaml
+components:
+  zookeeper: true
+  oxia: false
+```
+
 ## Pulsar Functions package storage (required for Oxia)
 
 The Pulsar **Packages Management Service** — which stores uploaded function packages
@@ -525,6 +577,8 @@ too.
 
 #### Other Pulsar 5.0 changes to review
 
+- **Metadata store:** Oxia is recommended for new production clusters. Existing installations stay on
+  ZooKeeper. See [Choosing the metadata store](#choosing-the-metadata-store-use-oxia-for-new-clusters).
 - **Package management rollback:** if you set `broker.packageManagement.enabled: true` and may need to roll
   back to Pulsar 4.x, keep package metadata in the format that 4.x can read. Set these values before the first
   Pulsar 5.0 broker starts:
