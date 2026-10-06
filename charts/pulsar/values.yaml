@@ -357,9 +357,13 @@ images:
 ##   store. Clients that authenticate with TLS client certificates (mTLS) need certificates from a private CA
 ##   for the same reason, since a public certificate without the clientAuth usage can't be used as a client
 ##   certificate.
-##   When clients connect to the brokers directly instead of through the proxy, the brokers must advertise
-##   addresses that the clients can reach by configuring `advertisedListeners` for an external listener. The
-##   chart doesn't support this yet. See
+##   When clients connect to the brokers directly instead of through the proxy, a topic lookup returns the
+##   address advertised by the broker that owns the topic, and the client verifies the broker certificate
+##   against that address. By default, the brokers advertise their pod FQDN in the broker headless service,
+##   which external clients can't reach and a public CA can't issue certificates for. Direct access from
+##   outside the cluster requires an external listener in `advertisedListeners` with a reachable DNS name for
+##   each broker, and a broker certificate that matches each of these names, either with a wildcard or with an
+##   individual name for each broker. The chart doesn't support this yet. See
 ##   https://pulsar.apache.org/docs/next/concepts-multiple-advertised-listeners/#kubernetes-deployment-suggestions
 ##
 ## Certificates that you manage yourself (`createCert: false`):
