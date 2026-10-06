@@ -52,10 +52,9 @@ victoria-metrics-k8s-stack:
 affinity:
   anti_affinity: false
 
-# disable auto recovery and pulsar manager
+# disable auto recovery
 components:
   autorecovery: false
-  pulsar_manager: false
   # enable functions by default in CI
   functions: true
 

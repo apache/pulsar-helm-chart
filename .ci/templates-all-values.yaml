@@ -47,7 +47,7 @@
 
 # -----------------------------------------------------------------------------
 # Components -- enable every optional component
-# Exercises: pulsar-manager-*.yaml, dekaf-*.yaml, broker-rbac.yaml,
+# Exercises: dekaf-*.yaml, broker-rbac.yaml,
 #            broker-cluster-role-binding.yaml, jwt-secret-init.yaml
 # -----------------------------------------------------------------------------
 components:
@@ -59,7 +59,6 @@ components:
   functions: true       # exercises function RBAC / serviceaccount paths
   proxy: true
   toolset: true
-  pulsar_manager: true  # exercises pulsar-manager-*.yaml
   dekaf: true           # exercises dekaf-*.yaml
 
 # -----------------------------------------------------------------------------
@@ -236,7 +235,6 @@ auth:
     broker: "broker-admin"
     proxy: "proxy-admin"
     client: "admin"
-    manager: "manager-admin"
 
 # -----------------------------------------------------------------------------
 # Job TTL -- exercises `if and .Values.job.ttl.enabled` in *-cluster-initialize
@@ -844,73 +842,6 @@ oxia:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
         whenUnsatisfiable: ScheduleAnyway
-
-# -----------------------------------------------------------------------------
-# Pulsar Manager -- enabled with ingress + admin secret credentials
-# Exercises: pulsar-manager-statefulset.yaml, pulsar-manager-service.yaml,
-#            pulsar-manager-ingress.yaml (TLS branch),
-#            pulsar-manager-admin-secret.yaml,
-#            pulsar-manager-cluster-initialize.yaml.
-# -----------------------------------------------------------------------------
-pulsar_manager:
-  priorityClassName: high-priority-nonpreempting
-  appAnnotations:
-    deploy/owner: pulsar-team
-    deploy/policy: rolling
-  annotations:
-    prometheus.io/scrape: "true"
-    audit.k8s.io/log: "true"
-  tolerations:
-    - key: dedicated
-      operator: Equal
-      value: pulsar-manager
-      effect: NoSchedule
-    - key: arch
-      operator: Equal
-      value: amd64
-      effect: NoSchedule
-  topologySpreadConstraints:
-    - maxSkew: 1
-      topologyKey: topology.kubernetes.io/zone
-      whenUnsatisfiable: DoNotSchedule
-    - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: ScheduleAnyway
-  extraVolumes:
-    - name: extra-cm-pm-1
-      configMap:
-        name: extra-cm-1
-    - name: extra-cm-pm-2
-      configMap:
-        name: extra-cm-2
-  extraVolumeMounts:
-    - name: extra-cm-pm-1
-      mountPath: /extra/cm1
-      readOnly: true
-    - name: extra-cm-pm-2
-      mountPath: /extra/cm2
-      readOnly: true
-  service:
-    annotations:
-      service.beta.kubernetes.io/aws-load-balancer-scheme: internal
-      service.beta.kubernetes.io/aws-load-balancer-type: nlb
-  ingress:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: ca-issuer
-    ingressClassName: nginx
-    tls:
-      enabled: true
-      secretName: pulsar-manager-ingress-tls
-    hostname: pulsar-manager.example.com
-    path: /
-    pathType: Prefix
-  admin:
-    ui_username: pulsar
-    ui_password: change-me     # pragma: allowlist secret
-    db_username: pulsar
-    db_password: change-me-db  # pragma: allowlist secret
 
 # -----------------------------------------------------------------------------
 # Dekaf UI -- enabled with persistence + multi-element extras

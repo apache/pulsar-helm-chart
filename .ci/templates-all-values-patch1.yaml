@@ -199,9 +199,6 @@ certs:
 #   - JWT (symmetric) -> OpenID Connect (exercises the openid path in
 #     broker/proxy/standalone configmaps; jwt-secret-init.yaml renders
 #     nothing because JWT is fully off)
-#   - drop manager superuser (exercises the `if .auth.superUsers.manager`
-#     branches in pulsar-manager-cluster-initialize.yaml /
-#     broker-configmap.yaml that omit the manager-token wiring)
 # -----------------------------------------------------------------------------
 auth:
   authentication:
@@ -219,5 +216,3 @@ auth:
         - pulsar
       openIDRoleClaim: sub
       openIDRequireIssuersUseHttps: "true"
-  superUsers:
-    manager: ""

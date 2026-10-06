@@ -117,9 +117,9 @@ cluster is shut down — use it only for ephemeral testing/CI.
 ## A note on the management UI
 
 These examples use [Dekaf](https://pulsar.apache.org/docs/next/administration-dekaf-ui/)
-(`components.dekaf: true`) as the web UI rather than the legacy
-`pulsar-manager`. Dekaf connects directly to the broker, so it is only enabled
-in examples that deploy a broker.
+(`components.dekaf: true`) as the web UI. Dekaf connects directly to the broker,
+so it is only enabled in examples that deploy a broker. The legacy
+`pulsar-manager` component has been removed from this chart.
 
 ## Examples by category
 

@@ -23,9 +23,8 @@ pulsar_metadata:
   configurationStore: pulsar-cs-zookeeper
   configurationStoreMetadataPrefix: "/configuration-store"
 
-## use the Dekaf UI instead of pulsar-manager
+## enable the Dekaf UI
 components:
-  pulsar_manager: false
   dekaf: true
 
 ## disable monitoring stack
