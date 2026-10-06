@@ -17,7 +17,7 @@
 # under the License.
 #
 
-# deploy broker PodMonitor only when `$.Values.broker.podMonitor.enabled` is true
-{{- if and $.Values.broker.podMonitor.enabled (not $.Values.standalone.enabled) }}
+# deploy broker PodMonitor only when the broker component and `$.Values.broker.podMonitor.enabled` are both enabled
+{{- if and $.Values.components.broker $.Values.broker.podMonitor.enabled (not $.Values.standalone.enabled) }}
 {{- include "pulsar.podMonitor" (list . "broker" (printf "component: %s" .Values.broker.component)) }}
 {{- end }}

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-# deploy proxy PodMonitor only when `$.Values.proxy.podMonitor.enabled` is true
-{{- if $.Values.proxy.podMonitor.enabled }}
+# deploy proxy PodMonitor only when the proxy component and `$.Values.proxy.podMonitor.enabled` are both enabled
+{{- if and $.Values.components.proxy $.Values.proxy.podMonitor.enabled }}
 {{- include "pulsar.podMonitor" (list . "proxy" (printf "component: %s" .Values.proxy.component) "sts-http") }}
 {{- end }}
