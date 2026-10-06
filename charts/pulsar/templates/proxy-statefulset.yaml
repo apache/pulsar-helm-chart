@@ -28,7 +28,7 @@ metadata:
     {{- include "pulsar.standardLabels" . | nindent 4 }}
     component: {{ .Values.proxy.component }}
 spec:
-  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+  serviceName: "{{ template "pulsar.proxy.service" . }}"
   {{- if not .Values.proxy.autoscaling.enabled }}
   replicas: {{ .Values.proxy.replicaCount }}
   {{- end }}

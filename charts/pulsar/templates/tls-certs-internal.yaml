@@ -21,41 +21,41 @@
 
 {{- if .Values.tls.proxy.enabled }}
 {{- if .Values.tls.proxy.createCert }}
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.proxy "tlsConfig" .Values.tls.proxy) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "proxy" "componentConfig" .Values.proxy "tlsConfig" .Values.tls.proxy) }}
 ---
 {{- end }}
 {{- end }}
 
 {{- if or .Values.tls.broker.enabled (or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled) }}
 {{- if not .Values.standalone.enabled }}
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.broker "tlsConfig" .Values.tls.broker) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "broker" "componentConfig" .Values.broker "tlsConfig" .Values.tls.broker) }}
 ---
 {{- end }}
 {{- end }}
 
 {{- if .Values.tls.function_worker.enabled }}
 {{- if and .Values.components.function_worker .Values.tls.function_worker.createCert }}
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.function_worker "tlsConfig" .Values.tls.function_worker) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "function_worker" "componentConfig" .Values.function_worker "tlsConfig" .Values.tls.function_worker) }}
 ---
 {{- end }}
 {{- end }}
 
 {{- if .Values.standalone.enabled }}
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.standalone "tlsConfig" .Values.tls.standalone) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "standalone" "componentConfig" .Values.standalone "tlsConfig" .Values.tls.standalone) }}
 ---
 {{- end }}
 
 {{- if or .Values.tls.bookie.enabled .Values.tls.zookeeper.enabled }}
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.bookkeeper "tlsConfig" .Values.tls.bookie) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "bookkeeper" "componentConfig" .Values.bookkeeper "tlsConfig" .Values.tls.bookie) }}
 ---
 {{- end }}
 
 {{- if .Values.tls.zookeeper.enabled }}
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.autorecovery "tlsConfig" .Values.tls.autorecovery) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "autorecovery" "componentConfig" .Values.autorecovery "tlsConfig" .Values.tls.autorecovery) }}
 ---
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.toolset "tlsConfig" .Values.tls.toolset) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "toolset" "componentConfig" .Values.toolset "tlsConfig" .Values.tls.toolset) }}
 ---
-{{ include "pulsar.cert.template" (dict "root" . "componentConfig" .Values.zookeeper "tlsConfig" .Values.tls.zookeeper) }}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "zookeeper" "componentConfig" .Values.zookeeper "tlsConfig" .Values.tls.zookeeper) }}
 {{- end }}
 
 {{- end }}
