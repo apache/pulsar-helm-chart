@@ -137,7 +137,7 @@ service_name() {
   local component=${2:-$component_key}
 
   case "$component_key" in
-    broker|zookeeper)
+    broker|zookeeper|function-worker)
       printf '%s-pulsar-%s-headless' "$release_name" "$component"
       ;;
     *)
@@ -162,14 +162,18 @@ for san_mode in wildcard fqdn none; do
     assert_contains "$certificate_manifest" "\"$service\"" "$component $san_mode SANs"
 
     case "$san_mode:$component" in
-      wildcard:proxy|wildcard:standalone)
+      wildcard:proxy|wildcard:standalone|wildcard:function-worker)
         assert_contains "$certificate_manifest" "\"*.$service.$namespace.svc.cluster.local\"" "$component wildcard SANs"
         ;;
       wildcard:*)
         assert_contains "$certificate_manifest" "\"*.$(service_name "$component").$namespace.svc.cluster.local\"" "$component wildcard SANs"
         ;;
-      fqdn:proxy|fqdn:standalone)
+      fqdn:proxy)
         assert_not_contains "$certificate_manifest" "-$component-0." "$component FQDN SANs"
+        ;;
+      fqdn:standalone)
+        assert_not_contains "$certificate_manifest" "-$component-0." "$component FQDN SANs"
+        assert_contains "$certificate_manifest" "\"$component.$release_name-pulsar-$component-headless.$namespace.svc.cluster.local\"" "$component FQDN SANs"
         ;;
       fqdn:*)
         assert_contains "$certificate_manifest" "\"$service-0.$(service_name "$component").$namespace.svc.cluster.local\"" "$component FQDN SANs"

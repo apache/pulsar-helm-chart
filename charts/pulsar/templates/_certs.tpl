@@ -115,6 +115,13 @@ Usage: {{- include "pulsar.cert.template" (dict "root" . "componentKey" "proxy" 
 {{- $serviceHeadless = include "pulsar.certs.component.service.headless" (dict "root" .root "componentKey" .componentKey "component" $component) -}}
 {{- $serviceDns = $serviceHeadless -}}
 {{- end -}}
+{{- /* Per-pod FQDNs are under the service the pod's DNS records are published in: the StatefulSet's
+serviceName, or the standalone Deployment's subdomain. These are headless services for broker, zookeeper,
+function_worker and standalone. */ -}}
+{{- $podServiceDns := $serviceDns -}}
+{{- if or (eq .componentKey "function_worker") (eq .componentKey "standalone") }}
+{{- $podServiceDns = include "pulsar.certs.component.service.headless" (dict "root" .root "componentKey" .componentKey "component" $component) -}}
+{{- end -}}
 {{- $sanMode := .root.Values.tls.common.sanMode -}}
 {{- if not (has $sanMode (list "wildcard" "fqdn" "none")) -}}
 {{- fail (printf "tls.common.sanMode must be one of: wildcard, fqdn, none (got %q)" $sanMode) -}}
@@ -166,10 +173,14 @@ spec:
       {{- $replicaCount := (include "pulsar.certs.component.replicaCount" (dict "componentKey" .componentKey "componentConfig" .componentConfig) | int) -}}
       {{- if gt $replicaCount 0 }}
         {{- range $i := until $replicaCount }}
-    - {{ printf "%s-%s-%d.%s.%s.svc.%s" $fullname $component $i $serviceDns $namespace $clusterDomain | quote }}
+    - {{ printf "%s-%s-%d.%s.%s.svc.%s" $fullname $component $i $podServiceDns $namespace $clusterDomain | quote }}
         {{- end }}
       {{- end }}
 {{ end }}
+{{- /* The standalone pod uses its component name as hostname in the headless service subdomain. */}}
+{{- if and (eq $sanMode "fqdn") (eq .componentKey "standalone") }}
+    - {{ printf "%s.%s.%s.svc.%s" $component $podServiceDns $namespace $clusterDomain | quote }}
+{{- end }}
 {{ if or (eq .componentKey "broker") (eq .componentKey "zookeeper") }}
     - {{ printf "%s.%s.svc.%s" $serviceHeadless $namespace $clusterDomain | quote }}
 {{ end }}
