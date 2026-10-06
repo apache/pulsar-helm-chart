@@ -477,6 +477,67 @@ For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs
 
 ## Upgrading to Helm chart version 4.8.0
 
+### Default Apache Pulsar version is now 5.0.0
+
+The chart now deploys Apache Pulsar 5.0.0 by default, using the `apachepulsar/pulsar:5.0.0` image. Before
+upgrading, read the [Upgrading to Pulsar 5.0.x](https://pulsar.apache.org/docs/administration-upgrade-to-5.0.x/)
+guide. It recommends first upgrading to the latest Pulsar 4.0.x or 4.2.x release and running it as a stable
+baseline that you can roll back to.
+
+To keep running Pulsar 4.x with this chart version, pin the image tag in your `values.yaml`:
+
+```yaml
+defaultPulsarImageTag: 4.0.14
+```
+
+#### `apachepulsar/pulsar-all` is no longer used
+
+Pulsar 5.0.0 no longer publishes the `apachepulsar/pulsar-all` image, so `defaultPulsarImageRepository` now
+defaults to `apachepulsar/pulsar`. If your `values.yaml` sets `defaultPulsarImageRepository`,
+`images.<component>.repository` or `pulsar_metadata.image.repository` to `apachepulsar/pulsar-all`, change it
+to `apachepulsar/pulsar` or remove the key.
+
+The `apachepulsar/pulsar` 5.0.0 image includes the tiered-storage offloader for AWS S3 (and S3-compatible
+storage), Google Cloud Storage, Azure Blob Storage and Aliyun OSS, so `broker.storageOffload` keeps working.
+The filesystem offloader and the Pulsar IO connector NARs are no longer bundled. If you use them, build a
+custom image that adds the required NAR files.
+
+#### `PULSAR_GC` defaults have been removed
+
+Pulsar 5.0.0 runs on Java 25 with ZGC, and the Pulsar launcher selects the garbage collector options for the
+Java version in the image. The chart no longer sets `PULSAR_GC` in the `configData` of any component.
+`-XX:+AlwaysPreTouch`, `-XX:+UseTransparentHugePages` and `-XX:+ExitOnOutOfMemoryError` were moved to the
+default `PULSAR_MEM` values.
+
+If your `values.yaml` sets `PULSAR_GC` for any component, remove it, and also remove garbage collector
+selection options from `PULSAR_MEM` and `PULSAR_EXTRA_OPTS`. If you override `PULSAR_MEM`, add the flags
+listed above to your value if you want to keep them. For Transparent Huge Pages, the Kubernetes nodes must
+also be configured for it; see
+[JVM and Linux host tuning](https://pulsar.apache.org/docs/performance-broker/#jvm-and-linux-host-tuning).
+
+#### Other Pulsar 5.0 changes to review
+
+- **Package management rollback:** if you set `broker.packageManagement.enabled: true` and may need to roll
+  back to Pulsar 4.x, keep package metadata in the format that 4.x can read. Set these values before the first
+  Pulsar 5.0 broker starts:
+
+  ```yaml
+  broker:
+    configData:
+      PULSAR_PREFIX_packagesManagementJsonSerializationEnabled: "false"
+      PULSAR_PREFIX_packagesManagementAllowLegacyJavaSerialization: "true"
+  ```
+
+- **TLS hostname verification** is now enabled by default for outbound TLS connections from brokers,
+  proxies and Functions workers. The certificates issued by the chart include the service hostnames.
+  If you provide your own certificates, check that they include matching subject alternative names.
+- **BookKeeper metrics provider:** if you set `statsProviderClass` in `bookkeeper.configData`, replace
+  `org.apache.pulsar.metrics.prometheus.bookkeeper.PrometheusMetricsProvider` with
+  `org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider`. Otherwise bookies fail to start.
+- Review your `configData` overrides against the
+  [configuration default changes](https://pulsar.apache.org/docs/administration-upgrade-to-5.0.x-configuration/).
+  Some settings have been removed, and explicit values keep their old behavior.
+
 ### Pulsar Manager support has been removed
 
 **Pulsar Manager support has been removed from this Helm chart.** The upstream

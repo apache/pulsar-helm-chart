@@ -17,45 +17,28 @@
 # under the License.
 #
 
-defaultPulsarImageTag: 3.0.17
+# Previous LTS Pulsar version. This is also used in all upgrade tests that install a previously released
+# chart version so that Pulsar 5.0 is never deployed with an older chart version.
+# Pulsar 5.0.0 no longer publishes the apachepulsar/pulsar-all image, so use apachepulsar/pulsar.
+defaultPulsarImageRepository: apachepulsar/pulsar
+defaultPulsarImageTag: 4.0.14
 
-# Pulsar 3.0.x runs on JDK 17, which doesn't support -XX:+ZGeneration, therefore it's necessary to
-# override the PULSAR_GC options to use ZGC.
+# Older chart versions used in upgrade tests (such as 3.2.0) don't support defaultPulsarImageRepository
+# and default to apachepulsar/pulsar-all, so set the image repository for each component explicitly.
+images:
+  zookeeper:
+    repository: apachepulsar/pulsar
+  bookie:
+    repository: apachepulsar/pulsar
+  autorecovery:
+    repository: apachepulsar/pulsar
+  broker:
+    repository: apachepulsar/pulsar
+  proxy:
+    repository: apachepulsar/pulsar
+  functions:
+    repository: apachepulsar/pulsar
 
-zookeeper:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
-bookkeeper:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
-broker:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
-
-proxy:
-  configData:
-    PULSAR_GC: >
-      -XX:+UseZGC
-      -XX:+AlwaysPreTouch
-      -XX:+UseTransparentHugePages
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+DisableExplicitGC
-      -XX:+PerfDisableSharedMem
+pulsar_metadata:
+  image:
+    repository: apachepulsar/pulsar

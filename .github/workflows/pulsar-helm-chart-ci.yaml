@@ -270,7 +270,7 @@ jobs:
             certmanager_version: v1.21.0
         testScenario:
           - name: Upgrade latest released version
-            values_file: .ci/clusters/values-upgrade.yaml
+            values_file: .ci/clusters/values-upgrade.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
             shortname: upgrade
             type: upgrade
           - name: Use previous LTS Pulsar Image
@@ -327,7 +327,7 @@ jobs:
               kind_image_tag: v1.25.16@sha256:6110314339b3b44d10da7d27881849a87e092124afab5956f2e10ecdb463b025
             testScenario:
               name: "Upgrade TLS"
-              values_file: .ci/clusters/values-tls.yaml
+              values_file: .ci/clusters/values-tls.yaml --values .ci/clusters/values-pulsar-previous-lts.yaml
               shortname: tls
               type: upgrade
           - k8sVersion:

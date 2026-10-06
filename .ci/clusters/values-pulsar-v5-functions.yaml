@@ -20,15 +20,11 @@
 # Test Pulsar v5 together with Oxia and Pulsar Functions.
 #
 # This combines the examples/values-oxia.yaml and examples/values-functions-fs-storage.yaml scenarios on the
-# Pulsar 5.0.0-M1 image: it runs Functions on an Oxia-backed cluster (no ZooKeeper). Functions require the
+# Pulsar 5.0.0 image: it runs Functions on an Oxia-backed cluster (no ZooKeeper). Functions require the
 # broker-hosted Packages Management Service; its default BookKeeper package storage needs ZooKeeper, so
 # FileSystemPackagesStorage is enabled instead (no ZooKeeper dependency). The function smoke test
 # (ci::test_pulsar_function) creates a function from a JAR, which uploads the package via the broker's
 # FileSystem-backed Packages Management Service.
-
-# Use the slim apachepulsar/pulsar image (not the default apachepulsar/pulsar-all) at the v5 milestone tag.
-defaultPulsarImageRepository: apachepulsar/pulsar
-defaultPulsarImageTag: 5.0.0-M1
 
 # From examples/values-oxia.yaml and examples/values-functions-fs-storage.yaml.
 components:
