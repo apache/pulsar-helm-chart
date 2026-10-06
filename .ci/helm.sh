@@ -71,7 +71,8 @@ function ci::delete_cluster() {
 function ci::install_cert_manager() {
     echo "Installing the cert-manager ..."
     ${KUBECTL} create namespace cert-manager
-    "${CHARTS_HOME}"/scripts/cert-manager/install-cert-manager.sh
+    # uses the default version of install-cert-manager.sh when CERTMANAGER_VERSION is unset
+    "${CHARTS_HOME}"/scripts/cert-manager/install-cert-manager.sh ${CERTMANAGER_VERSION:+"${CERTMANAGER_VERSION}"}
     WC=$(${KUBECTL} get pods -n cert-manager --field-selector=status.phase=Running | wc -l)
     while [[ ${WC} -lt 3 ]]; do
       echo "${WC}";

@@ -364,6 +364,58 @@ kubectl port-forward svc/$(kubectl get svc -l component=dekaf -o jsonpath='{.ite
 
 - Open <http://localhost:8090> in browser.
 
+## Choosing the metadata store: use Oxia for new clusters
+
+Pulsar stores its metadata in a metadata store. This chart can deploy either
+[Apache ZooKeeper](https://zookeeper.apache.org/) or [Oxia](https://github.com/oxia-db/oxia) as the metadata
+store.
+
+**For new production clusters, Oxia is the recommended metadata store.** Use Oxia to get the full feature
+set of the [scalable topics](https://pulsar.apache.org/docs/concepts-scalable-topics/) introduced in Pulsar
+5.0. ZooKeeper remains supported.
+
+The chart currently defaults to ZooKeeper (`components.zookeeper: true`, `components.oxia: false`). The
+default will change to Oxia in a future chart version.
+
+### Deploying a new cluster with Oxia
+
+Choose the metadata store when you first install the cluster. Disable ZooKeeper and enable Oxia in your
+`values.yaml`:
+
+```yaml
+components:
+  zookeeper: false
+  oxia: true
+```
+
+[`examples/values-oxia.yaml`](examples/values-oxia.yaml) contains a ready-made example. The chart deploys
+an Oxia coordinator and an Oxia server StatefulSet with 3 replicas, and configures the brokers and bookies to
+use Oxia. Size Oxia for your workload with the `oxia` values, such as `oxia.server.replicas`,
+`oxia.server.cpuLimit`, `oxia.server.memoryLimit`, `oxia.server.dbCacheSizeMb`, `oxia.server.storageSize`,
+`oxia.initialShardCount` and `oxia.replicationFactor`.
+
+If you run Pulsar Functions on Oxia, you must also enable `FileSystemPackagesStorage`. See
+[Pulsar Functions package storage](#pulsar-functions-package-storage-required-for-oxia).
+
+### Existing ZooKeeper-based installations
+
+Don't switch an existing release from ZooKeeper to Oxia by changing `components.zookeeper` and
+`components.oxia`. The chart doesn't migrate metadata, so the brokers and bookies would start with an empty
+metadata store, and the cluster would lose all its topics, subscriptions and ledger metadata.
+
+Pulsar supports migrating an existing cluster from ZooKeeper to Oxia with a special procedure. See
+[Migrate metadata store from ZooKeeper to Oxia](https://pulsar.apache.org/docs/administration-metadata-store-migration/).
+This Helm chart doesn't support that migration yet.
+
+To keep an existing installation on ZooKeeper when a future chart version changes the default to Oxia, set
+the components explicitly in your `values.yaml` now:
+
+```yaml
+components:
+  zookeeper: true
+  oxia: false
+```
+
 ## Pulsar Functions package storage (required for Oxia)
 
 The Pulsar **Packages Management Service** — which stores uploaded function packages
@@ -476,6 +528,77 @@ helm upgrade -n <namespace> -f values.yaml <pulsar-release-name> apachepulsar/pu
 For more detailed information, see our [Upgrading](http://pulsar.apache.org/docs/helm-upgrade/) guide.
 
 ## Upgrading to Helm chart version 4.8.0
+
+### Default Apache Pulsar version is now 5.0.0
+
+The chart now deploys Apache Pulsar 5.0.0 by default, using the `apachepulsar/pulsar:5.0.0` image. Before
+upgrading, read the [Upgrading to Pulsar 5.0.x](https://pulsar.apache.org/docs/administration-upgrade-to-5.0.x/)
+guide. It recommends first upgrading to the latest Pulsar 4.0.x or 4.2.x release and running it as a stable
+baseline that you can roll back to.
+
+To keep running Pulsar 4.x with this chart version, pin the image tag in your `values.yaml`:
+
+```yaml
+defaultPulsarImageTag: 4.0.14
+```
+
+#### `apachepulsar/pulsar-all` is no longer used
+
+Pulsar 5.0.0 no longer publishes the `apachepulsar/pulsar-all` image, so `defaultPulsarImageRepository` now
+defaults to `apachepulsar/pulsar`. If your `values.yaml` sets `defaultPulsarImageRepository`,
+`images.<component>.repository` or `pulsar_metadata.image.repository` to `apachepulsar/pulsar-all`, change it
+to `apachepulsar/pulsar` or remove the key.
+
+The `apachepulsar/pulsar` 5.0.0 image includes the tiered-storage offloader for AWS S3 (and S3-compatible
+storage), Google Cloud Storage, Azure Blob Storage and Aliyun OSS, so `broker.storageOffload` keeps working.
+The filesystem offloader and the Pulsar IO connector NARs are no longer bundled. If you use them, build a
+custom image that adds the required NAR files.
+
+#### `PULSAR_GC` defaults have been removed
+
+Pulsar 5.0.0 runs on Java 25 with ZGC, and the Pulsar launcher selects the garbage collector options for the
+Java version in the image. The chart no longer sets `PULSAR_GC` in the `configData` of any component.
+`-XX:+AlwaysPreTouch`, `-XX:+UseTransparentHugePages` and `-XX:+ExitOnOutOfMemoryError` were moved to the
+default `PULSAR_MEM` values.
+
+If your `values.yaml` sets `PULSAR_GC` for any component, remove it, and also remove garbage collector
+selection options from `PULSAR_MEM` and `PULSAR_EXTRA_OPTS`. If you override `PULSAR_MEM`, add the flags
+listed above to your value if you want to keep them.
+
+`-XX:+UseTransparentHugePages` only lets the JVM request Transparent Huge Pages (THP). Pulsar benefits from
+them only when the Linux kernel on the Kubernetes nodes that run the Pulsar pods is configured in a specific
+way. Pod settings can't change the node's kernel settings. For example, ZGC keeps its heap in shared memory,
+so the node's `/sys/kernel/mm/transparent_hugepage/shmem_enabled` must allow huge pages (`advise`). With `never`, which is the
+Linux kernel default, the heap doesn't use huge pages even though the flag is set. Configure the nodes as
+described in
+[Configure Linux hosts and Kubernetes nodes](https://pulsar.apache.org/docs/performance-broker/#configure-linux-hosts-and-kubernetes-nodes),
+and make the settings part of the node image or provisioning so that replaced and autoscaled nodes get them
+too.
+
+#### Other Pulsar 5.0 changes to review
+
+- **Metadata store:** Oxia is recommended for new production clusters. Existing installations stay on
+  ZooKeeper. See [Choosing the metadata store](#choosing-the-metadata-store-use-oxia-for-new-clusters).
+- **Package management rollback:** if you set `broker.packageManagement.enabled: true` and may need to roll
+  back to Pulsar 4.x, keep package metadata in the format that 4.x can read. Set these values before the first
+  Pulsar 5.0 broker starts:
+
+  ```yaml
+  broker:
+    configData:
+      PULSAR_PREFIX_packagesManagementJsonSerializationEnabled: "false"
+      PULSAR_PREFIX_packagesManagementAllowLegacyJavaSerialization: "true"
+  ```
+
+- **TLS hostname verification** is now enabled by default for outbound TLS connections from brokers,
+  proxies and Functions workers. The certificates issued by the chart include the service hostnames.
+  If you provide your own certificates, check that they include matching subject alternative names.
+- **BookKeeper metrics provider:** if you set `statsProviderClass` in `bookkeeper.configData`, replace
+  `org.apache.pulsar.metrics.prometheus.bookkeeper.PrometheusMetricsProvider` with
+  `org.apache.bookkeeper.stats.prometheus.PrometheusMetricsProvider`. Otherwise bookies fail to start.
+- Review your `configData` overrides against the
+  [configuration default changes](https://pulsar.apache.org/docs/administration-upgrade-to-5.0.x-configuration/).
+  Some settings have been removed, and explicit values keep their old behavior.
 
 ### Pulsar Manager support has been removed
 
