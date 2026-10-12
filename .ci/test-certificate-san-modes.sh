@@ -88,6 +88,20 @@ render_renamed_standalone_certificate() {
     --set standalone.component=renamed-standalone
 }
 
+render_oxia_certificate() {
+  local san_mode=$1
+
+  "$helm_bin" template "$release_name" "$chart_dir" \
+    --namespace "$namespace" \
+    --show-only templates/tls-certs-internal.yaml \
+    --set certs.internal_issuer.enabled=true \
+    --set tls.enabled=true \
+    --set tls.common.sanMode="$san_mode" \
+    --set components.zookeeper=false \
+    --set components.oxia=true \
+    --set tls.oxia.enabled=true
+}
+
 render_autoscaled_broker_certificate() {
   "$helm_bin" template "$release_name" "$chart_dir" \
     --namespace "$namespace" \
@@ -219,5 +233,32 @@ assert_contains "$autoscaled_broker_certificate" \
 assert_not_contains "$autoscaled_broker_certificate" \
   "\"$release_name-pulsar-broker-5.$release_name-pulsar-broker-headless.$namespace.svc.cluster.local\"" \
   "autoscaled broker FQDN SANs"
+
+# Oxia: the servers' pods are "<release>-pulsar-oxia-server-<n>" in the headless service
+# "<release>-pulsar-oxia-svc". The servers and the coordinator verify the certificate against the
+# headless service name, so it must be present in every mode.
+oxia_service="$release_name-pulsar-oxia-svc"
+for san_mode in wildcard fqdn none; do
+  oxia_certificate=$(render_oxia_certificate "$san_mode" | certificate "$release_name-pulsar-tls-oxia")
+
+  assert_contains "$oxia_certificate" "name: \"$release_name-pulsar-tls-oxia\"" "oxia certificate"
+  assert_contains "$oxia_certificate" "\"$oxia_service\"" "oxia $san_mode SANs"
+  assert_contains "$oxia_certificate" "\"$oxia_service.$namespace.svc.cluster.local\"" "oxia $san_mode SANs"
+
+  case "$san_mode" in
+    wildcard)
+      assert_contains "$oxia_certificate" "\"*.$oxia_service.$namespace.svc.cluster.local\"" "oxia wildcard SANs"
+      ;;
+    fqdn)
+      assert_contains "$oxia_certificate" \
+        "\"$release_name-pulsar-oxia-server-2.$oxia_service.$namespace.svc.cluster.local\"" "oxia FQDN SANs"
+      assert_not_contains "$oxia_certificate" "-oxia-server-3." "oxia FQDN SANs"
+      ;;
+    none)
+      assert_not_contains "$oxia_certificate" "\"*." "oxia none SANs"
+      assert_not_contains "$oxia_certificate" "-oxia-server-0." "oxia none SANs"
+      ;;
+  esac
+done
 
 echo "Certificate SAN mode rendering checks passed"

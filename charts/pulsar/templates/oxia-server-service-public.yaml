@@ -31,12 +31,12 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
+  # Clients only need the public endpoint. The Oxia servers and the coordinator use the
+  # headless service for the internal endpoint, and the PodMonitor scrapes the pods directly.
   ports:
-    {{- range $key, $value := .Values.oxia.server.ports }}
-    - name: {{ $key }}
-      port: {{ $value }}
-      targetPort: {{ $key }}
-    {{- end}}
+    - name: public
+      port: {{ .Values.oxia.server.ports.public }}
+      targetPort: public
   selector:
     {{- include "pulsar.matchLabels" . | nindent 4 }}
     component: {{ .Values.oxia.component }}-server

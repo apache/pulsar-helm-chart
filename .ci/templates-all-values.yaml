@@ -154,6 +154,10 @@ tls:
     enabled: true
   oxia:
     enabled: true
+    clientAuth: true
+    dnsNames:
+      - oxia-a.example.com
+      - oxia-b.example.com
   pulsar_metadata:
     cacerts:
       enabled: true
@@ -823,11 +827,37 @@ toolset:
 # Oxia -- left disabled here (Zookeeper is the metadata store in the base
 # render). patch1 flips this on. Multi-element ports and tolerations stay
 # defined so the values are exercised when patch1 is layered.
-# Exercises (in patch1): oxia-coordinator-*.yaml, oxia-server-*.yaml.
+# Exercises (in patch1): oxia-coordinator-*.yaml, oxia-server-*.yaml,
+#                        oxia-networkpolicy.yaml.
 # -----------------------------------------------------------------------------
 oxia:
   initialShardCount: 3
   replicationFactor: 3
+  networkPolicy:
+    enabled: true
+    public:
+      from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pulsar-clients
+        - podSelector:
+            matchLabels:
+              app: oxia-client
+    metrics:
+      from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+        - ipBlock:
+            cidr: 10.0.0.0/8
+    internal:
+      from:
+        - podSelector:
+            matchLabels:
+              app: oxia-admin
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: oxia-tools
   coordinator:
     affinity:
       nodeAffinity: *nodeAffinity

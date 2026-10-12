@@ -56,6 +56,13 @@ Define the pulsar oxia
 {{- end }}
 
 {{/*
+Service name for the Oxia certificate (see pulsar.cert.template): the servers' headless service
+*/}}
+{{- define "pulsar.oxia.service" -}}
+{{ template "pulsar.oxia.server.service" . }}
+{{- end }}
+
+{{/*
 oxia url for broker metadata
 */}}
 {{- define "pulsar.oxia.metadata.url.broker" -}}
@@ -133,4 +140,60 @@ Define coordinator entrypoint
 {{- if .Values.oxia.pprofEnabled }}
 - "--profile"
 {{- end}}
+{{- if include "pulsar.oxia.tls.enabled" . }}
+{{ include "pulsar.oxia.peer.tls.args" . }}
+{{- end }}
 {{- end}}
+
+{{/*
+Whether TLS is enabled for the traffic between the Oxia processes
+*/}}
+{{- define "pulsar.oxia.tls.enabled" -}}
+{{- if and .Values.components.oxia .Values.tls.enabled .Values.tls.oxia.enabled -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
+Client TLS flags for the connections to the servers' internal endpoint: replication between the
+servers and the coordinator's calls. The servers share one certificate, so the connections verify
+it against the headless service name, which the certificate includes in every SAN mode.
+*/}}
+{{- define "pulsar.oxia.peer.tls.args" -}}
+- "--peer-tls-cert-file=/pulsar/certs/oxia/tls.crt"
+- "--peer-tls-key-file=/pulsar/certs/oxia/tls.key"
+- "--peer-tls-trusted-ca-file=/pulsar/certs/ca/ca.crt"
+- "--peer-tls-server-name={{ template "pulsar.oxia.server.service" . }}"
+{{- end }}
+
+{{/*
+Define Oxia TLS certs mounts (when pulsar.oxia.tls.enabled)
+*/}}
+{{- define "pulsar.oxia.certs.volumeMounts" -}}
+- mountPath: "/pulsar/certs/oxia"
+  name: oxia-certs
+  readOnly: true
+- mountPath: "/pulsar/certs/ca"
+  name: ca
+  readOnly: true
+{{- end }}
+
+{{/*
+Define Oxia TLS certs volumes (when pulsar.oxia.tls.enabled)
+*/}}
+{{- define "pulsar.oxia.certs.volumes" -}}
+- name: oxia-certs
+  secret:
+    secretName: "{{ .Release.Name }}-{{ .Values.tls.oxia.cert_name }}"
+    items:
+      - key: tls.crt
+        path: tls.crt
+      - key: tls.key
+        path: tls.key
+- name: ca
+  secret:
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
+    items:
+      - key: ca.crt
+        path: ca.crt
+{{- end }}

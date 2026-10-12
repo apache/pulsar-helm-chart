@@ -50,6 +50,12 @@
 ---
 {{- end }}
 
+{{- if and (include "pulsar.oxia.tls.enabled" .) (include "pulsar.tls.createCert" .Values.tls.oxia) }}
+{{- /* Issued for the servers' pods and headless service, and shared with the coordinator */}}
+{{ include "pulsar.cert.template" (dict "root" . "componentKey" "oxia" "componentConfig" (dict "component" (printf "%s-server" .Values.oxia.component) "replicaCount" .Values.oxia.server.replicas) "tlsConfig" .Values.tls.oxia) }}
+---
+{{- end }}
+
 {{- if .Values.tls.zookeeper.enabled }}
 {{- if include "pulsar.tls.createCert" .Values.tls.autorecovery }}
 {{ include "pulsar.cert.template" (dict "root" . "componentKey" "autorecovery" "componentConfig" .Values.autorecovery "tlsConfig" .Values.tls.autorecovery) }}

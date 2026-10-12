@@ -570,6 +570,37 @@ use Oxia. Size Oxia for your workload with the `oxia` values, such as `oxia.serv
 If you run Pulsar Functions on Oxia, you must also enable `FileSystemPackagesStorage`. See
 [Pulsar Functions package storage](#pulsar-functions-package-storage-required-for-oxia).
 
+### Oxia network access and TLS
+
+The Oxia servers use their internal endpoint for replication, and the coordinator uses it to manage the
+shards. It has no authentication by default, so the chart limits who can reach it:
+
+- The `<release>-pulsar-oxia` Service only exposes the public endpoint (`oxia.server.ports.public`), which
+  the Pulsar components connect to. The Oxia servers and the coordinator reach the internal endpoint through
+  the headless `<release>-pulsar-oxia-svc` Service.
+- A NetworkPolicy (`oxia.networkPolicy`, enabled by default) allows only the Oxia pods of the release to
+  connect to the internal endpoints of the servers and the coordinator, and to the coordinator's admin
+  endpoint (6651). The public and metrics endpoints stay open. Restrict them with
+  `oxia.networkPolicy.public.from` and `oxia.networkPolicy.metrics.from`, and allow other clients of the
+  internal endpoints with `oxia.networkPolicy.internal.from`. The policy needs a CNI plugin that enforces
+  NetworkPolicy.
+
+To encrypt the traffic between the Oxia processes, enable `tls.oxia` together with `tls.enabled`. Set
+`tls.oxia.clientAuth` to also require certificates (mTLS) on the internal endpoint:
+
+```yaml
+tls:
+  enabled: true
+  oxia:
+    enabled: true
+    clientAuth: true
+```
+
+The public endpoint stays plaintext, because the Oxia Java client in Pulsar only trusts the JVM's default CA
+certificates. Turning `tls.oxia` on or off in an existing release restarts the Oxia pods, and the Oxia servers
+that already use the new setting can't replicate with the ones that don't yet. Parts of the metadata store
+can be unavailable until all the Oxia pods have restarted.
+
 ### Existing ZooKeeper-based installations
 
 Don't switch an existing release from ZooKeeper to Oxia by changing `components.zookeeper` and
