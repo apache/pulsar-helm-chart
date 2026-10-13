@@ -582,8 +582,9 @@ shards. It has no authentication by default, so the chart limits who can reach i
   connect to the internal endpoints of the servers and the coordinator, and to the coordinator's admin
   endpoint (6651). The public and metrics endpoints stay open. Restrict them with
   `oxia.networkPolicy.public.from` and `oxia.networkPolicy.metrics.from`, and allow other clients of the
-  internal endpoints with `oxia.networkPolicy.internal.from`. The policy needs a CNI plugin that enforces
-  NetworkPolicy.
+  internal endpoints with `oxia.networkPolicy.internal.from`. The pods of the release can always connect to
+  the public endpoint, so a restricted `public.from` doesn't cut off the Pulsar components. The policy needs
+  a CNI plugin that enforces NetworkPolicy.
 
 To encrypt the traffic between the Oxia processes, enable `tls.oxia` together with `tls.enabled`. Set
 `tls.oxia.clientAuth` to also require certificates (mTLS) on the internal endpoint:

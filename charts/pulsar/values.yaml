@@ -960,7 +960,8 @@ oxia:
   networkPolicy:
     enabled: true
     # Public endpoint (oxia.server.ports.public), used by the Pulsar components.
-    # Empty: allowed from anywhere.
+    # Empty: allowed from anywhere. Otherwise allowed from these sources and, always, from the pods
+    # of this release, so the Pulsar components keep their access to the metadata store.
     public:
       from: []
     # Server and coordinator metrics endpoints. Empty: allowed from anywhere, so Prometheus can

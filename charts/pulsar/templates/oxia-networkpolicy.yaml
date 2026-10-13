@@ -44,6 +44,10 @@ spec:
         - port: {{ .Values.oxia.server.ports.public }}
       {{- with .Values.oxia.networkPolicy.public.from }}
       from:
+        # The pods of this release (brokers, bookies, proxies, jobs, ...) always keep access
+        - podSelector:
+            matchLabels:
+              {{- include "pulsar.matchLabels" $ | nindent 14 }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
     # Server and coordinator metrics
