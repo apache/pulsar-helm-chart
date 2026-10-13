@@ -112,9 +112,14 @@ spec:
       serviceAccountName: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}
       {{- $edv := fromJsonArray (include "pulsar.emptyDirVolumes.resolve" (dict "component" .Values.oxia.server "default" (list (dict "path" "/tmp" "sizeLimit" "1Gi")) "root" .)) }}
       {{- include "pulsar.podSecurityContext" (dict "securityContext" .Values.oxia.server.securityContext "root" . "indent" 6) }}
-      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.server.containerSecurityContext "volumes" $edv "root" .) }}
+      {{- if or (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.server.containerSecurityContext "volumes" $edv "root" .)) (include "pulsar.oxia.tls.enabled" .) }}
       volumes:
+      {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.server.containerSecurityContext "volumes" $edv "root" .) }}
       {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 6 }}
+      {{- end }}
+      {{- if include "pulsar.oxia.tls.enabled" . }}
+      {{- include "pulsar.oxia.certs.volumes" . | nindent 6 }}
+      {{- end }}
       {{- end }}
       containers:
         - command:
@@ -130,6 +135,15 @@ spec:
             {{- if .Values.oxia.pprofEnabled }}
             - "--profile"
             {{- end}}
+            {{- if include "pulsar.oxia.tls.enabled" . }}
+            - "--internal-tls-cert-file=/pulsar/certs/oxia/tls.crt"
+            - "--internal-tls-key-file=/pulsar/certs/oxia/tls.key"
+            - "--internal-tls-trusted-ca-file=/pulsar/certs/ca/ca.crt"
+            {{- if .Values.tls.oxia.clientAuth }}
+            - "--internal-tls-client-auth"
+            {{- end }}
+            {{- include "pulsar.oxia.peer.tls.args" . | nindent 12 }}
+            {{- end }}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
           imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.oxia.server.containerSecurityContext "root" . "indent" 10) }}
@@ -149,12 +163,21 @@ spec:
             {{- end }}
             - name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data
               mountPath: /data
+            {{- if include "pulsar.oxia.tls.enabled" . }}
+            {{- include "pulsar.oxia.certs.volumeMounts" . | nindent 12 }}
+            {{- end }}
+          {{- /* "oxia health" only speaks plaintext: with TLS on the internal endpoint, probe the
+          public endpoint, which serves the same health service */}}
+          {{- $probePort := .Values.oxia.server.ports.internal }}
+          {{- if include "pulsar.oxia.tls.enabled" . }}
+          {{- $probePort = .Values.oxia.server.ports.public }}
+          {{- end }}
           livenessProbe:
-            {{- include "oxia-cluster.probe" .Values.oxia.server.ports.internal | nindent 12 }}
+            {{- include "oxia-cluster.probe" $probePort | nindent 12 }}
           readinessProbe:
-            {{- include "oxia-cluster.readiness-probe" .Values.oxia.server.ports.internal | nindent 12 }}
+            {{- include "oxia-cluster.readiness-probe" $probePort | nindent 12 }}
           startupProbe:
-            {{- include "oxia-cluster.startup-probe" .Values.oxia.server.ports.internal | nindent 12 }}
+            {{- include "oxia-cluster.startup-probe" $probePort | nindent 12 }}
   volumeClaimTemplates:
     - metadata:
         name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data

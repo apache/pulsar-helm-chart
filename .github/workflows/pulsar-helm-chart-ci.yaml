@@ -314,6 +314,9 @@ jobs:
           - name: Oxia + FileSystemPackagesStorage
             values_file: .ci/clusters/values-oxia.yaml
             shortname: oxia
+          - name: Oxia TLS
+            values_file: .ci/clusters/values-oxia-tls.yaml
+            shortname: oxia-tls
           - name: Separate Function Worker
             values_file: .ci/clusters/values-function-worker.yaml
             shortname: function-worker

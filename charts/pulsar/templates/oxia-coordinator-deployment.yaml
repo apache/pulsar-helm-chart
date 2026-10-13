@@ -88,13 +88,16 @@ spec:
             limits:
               cpu: {{ .Values.oxia.coordinator.cpuLimit }}
               memory: {{ .Values.oxia.coordinator.memoryLimit }}
-      {{- if or .Values.oxia.coordinator.extraVolumeMounts (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .)) }}
+      {{- if or .Values.oxia.coordinator.extraVolumeMounts (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .)) (include "pulsar.oxia.tls.enabled" .) }}
           volumeMounts:
             {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .) }}
             {{- include "pulsar.emptyDirVolumes.mounts" $edv | nindent 12 }}
             {{- end }}
             {{- if .Values.oxia.coordinator.extraVolumeMounts }}
             {{- toYaml .Values.oxia.coordinator.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+            {{- if include "pulsar.oxia.tls.enabled" . }}
+            {{- include "pulsar.oxia.certs.volumeMounts" . | nindent 12 }}
             {{- end }}
       {{- end }}
           livenessProbe:
@@ -104,13 +107,16 @@ spec:
       {{- if .Values.oxia.coordinator.extraContainers }}
         {{- toYaml .Values.oxia.coordinator.extraContainers | nindent 8 }}
       {{- end }}
-      {{- if or .Values.oxia.coordinator.extraVolumes (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .)) }}
+      {{- if or .Values.oxia.coordinator.extraVolumes (include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .)) (include "pulsar.oxia.tls.enabled" .) }}
       volumes:
         {{- if include "pulsar.emptyDirVolumes.enabled" (dict "securityContext" .Values.oxia.coordinator.containerSecurityContext "volumes" $edv "root" .) }}
         {{- include "pulsar.emptyDirVolumes.volumes" $edv | nindent 8 }}
         {{- end }}
         {{- if .Values.oxia.coordinator.extraVolumes }}
         {{- toYaml .Values.oxia.coordinator.extraVolumes | nindent 8 }}
+        {{- end }}
+        {{- if include "pulsar.oxia.tls.enabled" . }}
+        {{- include "pulsar.oxia.certs.volumes" . | nindent 8 }}
         {{- end }}
       {{- end }}
 {{- end }}

@@ -1,0 +1,48 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Oxia as the metadata store, with mTLS on the traffic between the Oxia processes:
+# replication between the servers and the coordinator's calls to them.
+components:
+  zookeeper: false
+  oxia: true
+  # .ci/values-common.yaml enables functions, which on Oxia need FileSystemPackagesStorage
+  # (covered by values-oxia.yaml)
+  functions: false
+
+tls:
+  enabled: true
+  oxia:
+    enabled: true
+    clientAuth: true
+
+certs:
+  internal_issuer:
+    enabled: true
+    type: selfsigning
+
+oxia:
+  initialShardCount: 3
+  replicationFactor: 3
+  server:
+    replicas: 3
+    cpuLimit: 333m
+    memoryLimit: 200Mi
+    dbCacheSizeMb: 100
+    storageSize: 1Gi
