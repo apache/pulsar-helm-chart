@@ -51,6 +51,11 @@ Define autorecovery tls certs mounts
 - name: ca
   mountPath: "/pulsar/certs/ca"
   readOnly: true
+{{- else if include "pulsar.oxia.tls.public.enabled" . }}
+{{- /* The CA alone, for the Oxia client's TLS */}}
+- name: ca
+  mountPath: "/pulsar/certs/ca"
+  readOnly: true
 {{- end }}
 {{- if .Values.tls.autorecovery.cacerts.enabled }}
 - mountPath: "/pulsar/certs/cacerts"
@@ -90,6 +95,13 @@ Define autorecovery tls certs volumes
     items:
     - key: ca.crt
       path: ca.crt
+{{- else if include "pulsar.oxia.tls.public.enabled" . }}
+- name: ca
+  secret:
+    secretName: "{{ template "pulsar.certs.issuers.ca.secretName" . }}"
+    items:
+    - key: ca.crt
+      path: ca.crt
 {{- end }}
 {{- if .Values.tls.autorecovery.cacerts.enabled }}
 - name: autorecovery-cacerts
@@ -118,6 +130,7 @@ Define autorecovery init container : verify cluster id
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 export BOOKIE_MEM="-Xmx128M";
 {{- include "pulsar.autorecovery.zookeeper.tls.settings" . }}
+{{- include "pulsar.oxia.client.tls.settings" . }}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;

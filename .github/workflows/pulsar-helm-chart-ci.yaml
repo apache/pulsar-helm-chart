@@ -317,6 +317,9 @@ jobs:
           - name: Oxia TLS
             values_file: .ci/clusters/values-oxia-tls.yaml
             shortname: oxia-tls
+          - name: Oxia TLS on the public endpoint
+            values_file: .ci/clusters/values-oxia-tls-public.yaml
+            shortname: oxia-tls-public
           - name: Separate Function Worker
             values_file: .ci/clusters/values-function-worker.yaml
             shortname: function-worker

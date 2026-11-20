@@ -597,10 +597,29 @@ tls:
     clientAuth: true
 ```
 
-The public endpoint stays plaintext, because the Oxia Java client in Pulsar only trusts the JVM's default CA
-certificates. Turning `tls.oxia` on or off in an existing release restarts the Oxia pods, and the Oxia servers
-that already use the new setting can't replicate with the ones that don't yet. Parts of the metadata store
-can be unavailable until all the Oxia pods have restarted.
+Turning `tls.oxia` on or off in an existing release restarts the Oxia pods, and the Oxia servers that already
+use the new setting can't replicate with the ones that don't yet. Parts of the metadata store can be
+unavailable until all the Oxia pods have restarted.
+
+To also encrypt the public endpoint, which the brokers, bookies and other Pulsar components connect to, set
+`tls.oxia.publicEndpoint`:
+
+```yaml
+tls:
+  enabled: true
+  oxia:
+    enabled: true
+    clientAuth: true
+    publicEndpoint: true
+```
+
+The Oxia Java client in Pulsar has a single TLS setting and verifies the servers against the JVM's default trust
+store. So each container that connects to Oxia starts by writing the client's configuration file and a copy of
+the JVM's trust store with the chart's CA added, under `/tmp/oxia-client`, and passes the trust store to the JVM
+with `-Djavax.net.ssl.trustStore`, through `conf/pulsar_env.sh` and `conf/bkenv.sh` so that tools run in the
+container later use it too. The brokers' `metadataStoreConfigPath` and the BookKeeper metadata service URI point
+at the configuration file. Turning `publicEndpoint` on or off in an existing release restarts the Oxia servers
+and the Pulsar components, and the metadata store is unavailable until they have all restarted.
 
 ### Existing ZooKeeper-based installations
 

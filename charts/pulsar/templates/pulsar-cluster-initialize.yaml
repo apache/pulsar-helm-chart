@@ -156,6 +156,9 @@ spec:
           echo Setting the memory to a lower value to avoid OOM as operations below are not memory intensive.;
           export BOOKIE_MEM="-Xmx128M";
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
+          {{- if include "pulsar.oxia.tls.public.enabled" . }}
+          {{- include "pulsar.oxia.client.tls.settings" . | nindent 10 }}
+          {{- end }}
           until timeout 15 bin/bookkeeper shell whatisinstanceid; do
             sleep 3;
           done;
@@ -201,11 +204,19 @@ spec:
         {{- else if .Values.components.oxia }}
         args:
           - | # Use the pipe character for the YAML multiline string. Workaround for kubernetes-sigs/kustomize#4201
+            {{- if include "pulsar.oxia.tls.public.enabled" . }}
+            {{- include "pulsar.oxia.client.tls.settings" . | nindent 12 }}
+            {{- end }}
             export PULSAR_MEM="-Xmx128M";
             bin/pulsar initialize-cluster-metadata \
               --cluster {{ template "pulsar.cluster.name" . }} \
               --metadata-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
               --configuration-store "{{ template "pulsar.oxia.metadata.url.broker" . }}" \
+              {{- if include "pulsar.oxia.tls.public.enabled" . }}
+              --metadata-store-config-path "{{ template "pulsar.oxia.client.configPath" . }}" \
+              --configuration-metadata-store-config-path "{{ template "pulsar.oxia.client.configPath" . }}" \
+              --existing-bk-metadata-service-uri "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}" \
+              {{- end }}
               --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.http }}/ \
               --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.https }}/ \
               --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.{{ .Values.clusterDomain }}:{{ .Values.broker.ports.pulsar }}/ \

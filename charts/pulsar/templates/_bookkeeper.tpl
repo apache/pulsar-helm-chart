@@ -196,6 +196,7 @@ Define bookie init container : verify cluster id
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 export BOOKIE_MEM="-Xmx128M";
 {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . }}
+{{- include "pulsar.oxia.client.tls.settings" . }}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;
@@ -206,6 +207,7 @@ set -e;
 bin/apply-config-from-env.py conf/bookkeeper.conf;
 export BOOKIE_MEM="-Xmx128M";
 {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . }}
+{{- include "pulsar.oxia.client.tls.settings" . }}
 until timeout 15 bin/bookkeeper shell whatisinstanceid; do
   sleep 3;
 done;

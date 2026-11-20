@@ -40,6 +40,10 @@ data:
   {{- if .Values.components.oxia }}
   metadataStoreUrl: "{{ template "pulsar.oxia.metadata.url.broker" . }}"
   bookkeeperMetadataServiceUri: "{{ template "pulsar.oxia.metadata.url.bookkeeper" . }}"
+  {{- if include "pulsar.oxia.tls.public.enabled" . }}
+  metadataStoreConfigPath: "{{ template "pulsar.oxia.client.configPath" . }}"
+  configurationMetadataStoreConfigPath: "{{ template "pulsar.oxia.client.configPath" . }}"
+  {{- end }}
   {{- end }}
 
   {{- if hasKey .Values.pulsar_metadata "metadataStoreAllowReadOnlyOperations" }}
