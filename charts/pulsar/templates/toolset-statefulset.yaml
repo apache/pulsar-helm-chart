@@ -129,6 +129,9 @@ spec:
           bin/apply-config-from-env.py conf/client.conf;
           bin/apply-config-from-env.py conf/bookkeeper.conf;
           {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
+          {{- if include "pulsar.oxia.tls.public.enabled" . }}
+          {{- include "pulsar.oxia.client.tls.settings" . | nindent 10 }}
+          {{- end }}
           sleep 10000000000
         envFrom:
         - configMapRef:

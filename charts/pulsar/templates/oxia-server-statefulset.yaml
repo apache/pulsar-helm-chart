@@ -144,6 +144,11 @@ spec:
             {{- end }}
             {{- include "pulsar.oxia.peer.tls.args" . | nindent 12 }}
             {{- end }}
+            {{- if include "pulsar.oxia.tls.public.enabled" . }}
+            - "--tls-cert-file=/pulsar/certs/oxia/tls.crt"
+            - "--tls-key-file=/pulsar/certs/oxia/tls.key"
+            - "--tls-trusted-ca-file=/pulsar/certs/ca/ca.crt"
+            {{- end }}
           image: "{{ .Values.images.oxia.repository }}:{{ .Values.images.oxia.tag }}"
           imagePullPolicy: "{{ template "pulsar.imagePullPolicy" (dict "image" .Values.images.oxia "root" .) }}"
           {{- include "pulsar.containerSecurityContext" (dict "securityContext" .Values.oxia.server.containerSecurityContext "root" . "indent" 10) }}
@@ -172,12 +177,30 @@ spec:
           {{- if include "pulsar.oxia.tls.enabled" . }}
           {{- $probePort = .Values.oxia.server.ports.public }}
           {{- end }}
+          {{- if include "pulsar.oxia.tls.public.enabled" . }}
+          {{- /* "oxia health" only speaks plaintext, and with TLS on both endpoints no plaintext port is left */}}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.oxia.server.ports.public }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.oxia.server.ports.public }}
+            timeoutSeconds: 10
+          startupProbe:
+            tcpSocket:
+              port: {{ .Values.oxia.server.ports.public }}
+            periodSeconds: 10
+            failureThreshold: 60
+          {{- else }}
           livenessProbe:
             {{- include "oxia-cluster.probe" $probePort | nindent 12 }}
           readinessProbe:
             {{- include "oxia-cluster.readiness-probe" $probePort | nindent 12 }}
           startupProbe:
             {{- include "oxia-cluster.startup-probe" $probePort | nindent 12 }}
+          {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: {{ template "pulsar.fullname" . }}-{{ .Values.oxia.component }}-data

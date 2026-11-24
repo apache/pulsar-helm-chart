@@ -587,12 +587,12 @@ tls:
   # settings for generating certs for Oxia (when components.oxia is true)
   # Secures the traffic between the Oxia processes: the servers' internal endpoint
   # (oxia.server.ports.internal), which the servers use for replication and the coordinator uses to
-  # manage the shards. The servers and the coordinator share this certificate. The public endpoint that
-  # the Pulsar components connect to stays plaintext, because the Oxia Java client only trusts the
-  # JVM's default CA certificates, not the chart's CA.
+  # manage the shards. The servers and the coordinator share this certificate. With `publicEndpoint`,
+  # it also secures the public endpoint (oxia.server.ports.public) that the Pulsar components connect to.
   # The connections verify the certificate against the servers' headless service name,
   # "<release>-pulsar-oxia-svc", which a certificate provided with `createCert: false` must include.
-  # "oxia health" only speaks plaintext, so the server probes use the public endpoint instead.
+  # "oxia health" only speaks plaintext, so the server probes use the public endpoint instead, or a TCP
+  # check when `publicEndpoint` is true.
   # A custom oxia.coordinator.entrypoint must add the coordinator's --peer-tls-* flags itself.
   oxia:
     enabled: false
@@ -603,6 +603,13 @@ tls:
     # Require the connections to the internal endpoint to present a certificate signed by the CA (mTLS).
     # The servers and the coordinator present the Oxia certificate.
     clientAuth: false
+    # Also use TLS on the servers' public endpoint, the one the brokers, bookies, autorecovery, the
+    # toolset and the initialization jobs connect to. The Oxia Java client verifies the servers against
+    # the JVM's default trust store, so each of these containers starts by writing a copy of it with the
+    # chart's CA added, under /tmp, and passes it to the JVM with -Djavax.net.ssl.trustStore.
+    # Changing it in an existing release restarts the Oxia servers and the Pulsar components; the
+    # metadata store is unavailable until they have all restarted.
+    publicEndpoint: false
     # The dnsNames field specifies a list of Subject Alternative Names to be associated with the certificate.
     # Works in addition to the automatically generated SANs (if any) based on the `sanMode` setting.
     dnsNames:

@@ -77,6 +77,9 @@ oxia url for bookkeeper metadata
 {{- define "pulsar.oxia.metadata.url.bookkeeper" -}}
 {{- if .Values.components.oxia -}}
 metadata-store:oxia://{{ template "pulsar.oxia.server.service" . }}:{{ .Values.oxia.server.ports.public }}/bookkeeper
+{{- if include "pulsar.oxia.tls.public.enabled" . -}}
+?configFilePath={{ include "pulsar.oxia.client.configPath" . | urlquery }}
+{{- end }}
 {{- end -}}
 {{- end -}}
 
@@ -153,6 +156,43 @@ Whether TLS is enabled for the traffic between the Oxia processes
 true
 {{- end -}}
 {{- end -}}
+
+{{/*
+Whether TLS is also enabled on the servers' public endpoint, the one the Pulsar components connect to
+*/}}
+{{- define "pulsar.oxia.tls.public.enabled" -}}
+{{- if and (include "pulsar.oxia.tls.enabled" .) .Values.tls.oxia.publicEndpoint -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
+The Oxia Java client's configuration file, written by "pulsar.oxia.client.tls.settings"
+*/}}
+{{- define "pulsar.oxia.client.configPath" -}}
+/tmp/oxia-client/oxia-client.properties
+{{- end -}}
+
+{{/*
+Prepare a Pulsar component's Oxia client for TLS to the servers' public endpoint. The Oxia Java client
+has a single TLS setting, enableTls, and verifies the servers against the JVM's default trust store,
+so this writes the client configuration file and a copy of the JVM's trust store with the chart's CA
+added, and passes the trust store to the JVM through conf/pulsar_env.sh and conf/bkenv.sh, so that
+tools run later in the container use it too.
+*/}}
+{{- define "pulsar.oxia.client.tls.settings" -}}
+{{- if include "pulsar.oxia.tls.public.enabled" . }}
+mkdir -p /tmp/oxia-client;
+echo "enableTls=true" > {{ template "pulsar.oxia.client.configPath" . }};
+cp "${JAVA_HOME}/lib/security/cacerts" /tmp/oxia-client/truststore.p12;
+chmod u+w /tmp/oxia-client/truststore.p12;
+"${JAVA_HOME}/bin/keytool" -importcert -noprompt -alias pulsar-ca -file /pulsar/certs/ca/ca.crt -keystore /tmp/oxia-client/truststore.p12 -storepass changeit > /dev/null;
+echo $'\n' >> conf/pulsar_env.sh
+echo "PULSAR_EXTRA_OPTS=\"\${PULSAR_EXTRA_OPTS} -Djavax.net.ssl.trustStore=/tmp/oxia-client/truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit\"" >> conf/pulsar_env.sh
+echo $'\n' >> conf/bkenv.sh
+echo "BOOKIE_EXTRA_OPTS=\"\${BOOKIE_EXTRA_OPTS} -Djavax.net.ssl.trustStore=/tmp/oxia-client/truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit\"" >> conf/bkenv.sh
+{{- end }}
+{{- end }}
 
 {{/*
 Client TLS flags for the connections to the servers' internal endpoint: replication between the
